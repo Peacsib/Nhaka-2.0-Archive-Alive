@@ -28,16 +28,25 @@ export const HeroSection = ({ onStartDemo, onUpload }: HeroSectionProps) => {
   return (
     <section ref={sectionRef} className="relative min-h-[90vh] flex items-center justify-center overflow-hidden">
       {/* Background Effects with Parallax */}
-      <div className="absolute inset-0 bg-gradient-to-b from-background via-secondary/50 to-secondary/30" />
-      <div className="absolute inset-0 bg-gradient-radial from-accent/8 via-accent/3 to-transparent" />
-      
-      {/* Subtle ambient glow - parallax slower */}
+      <div className="absolute inset-0 bg-hero-gradient" />
       <div 
-        className="absolute inset-0 opacity-30 pointer-events-none"
+        className="absolute inset-0"
+        style={{ background: 'radial-gradient(ellipse at center, hsl(32 90% 50% / 0.12) 0%, hsl(32 90% 50% / 0.04) 40%, transparent 70%)' }}
+      />
+      
+      {/* Ambient glow orbs - parallax slower */}
+      <div 
+        className="absolute inset-0 pointer-events-none"
         style={{ transform: `translateY(${scrollY * 0.1}px)` }}
       >
-        <div className="absolute top-1/4 left-1/4 w-[600px] h-[600px] bg-gradient-radial from-accent/40 via-accent/10 to-transparent rounded-full blur-3xl" />
-        <div className="absolute bottom-1/4 right-1/4 w-[500px] h-[500px] bg-gradient-radial from-agent-scanner/30 via-agent-scanner/5 to-transparent rounded-full blur-3xl" />
+        <div 
+          className="absolute top-1/4 left-1/4 w-[600px] h-[600px] rounded-full blur-3xl opacity-40"
+          style={{ background: 'radial-gradient(circle, hsl(32 90% 50% / 0.5) 0%, hsl(32 90% 50% / 0.1) 50%, transparent 70%)' }}
+        />
+        <div 
+          className="absolute bottom-1/4 right-1/4 w-[500px] h-[500px] rounded-full blur-3xl opacity-30"
+          style={{ background: 'radial-gradient(circle, hsl(195 85% 42% / 0.4) 0%, hsl(195 85% 42% / 0.1) 50%, transparent 70%)' }}
+        />
       </div>
 
       <div 
