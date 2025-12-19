@@ -2,6 +2,7 @@ import { Header } from "@/components/Header";
 import { HeroSection } from "@/components/HeroSection";
 import { ProcessingSection } from "@/components/ProcessingSection";
 import { FeaturesSection } from "@/components/FeaturesSection";
+import { ImpactStats } from "@/components/ImpactStats";
 import { Footer } from "@/components/Footer";
 import { useRef } from "react";
 
@@ -27,6 +28,8 @@ const Index = () => {
         />
         
         <ProcessingSection />
+        
+        <ImpactStats />
         
         <FeaturesSection />
       </main>

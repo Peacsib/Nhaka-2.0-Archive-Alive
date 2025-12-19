@@ -1,5 +1,6 @@
 import { Button } from "@/components/ui/button";
-import { Upload, Sparkles, Clock } from "lucide-react";
+import { Upload, Archive, Clock } from "lucide-react";
+import { useEffect, useState, useRef } from "react";
 
 interface HeroSectionProps {
   onStartDemo: () => void;
@@ -7,27 +8,46 @@ interface HeroSectionProps {
 }
 
 export const HeroSection = ({ onStartDemo, onUpload }: HeroSectionProps) => {
+  const [scrollY, setScrollY] = useState(0);
+  const sectionRef = useRef<HTMLElement>(null);
+
+  useEffect(() => {
+    const handleScroll = () => {
+      if (sectionRef.current) {
+        const rect = sectionRef.current.getBoundingClientRect();
+        if (rect.bottom > 0) {
+          setScrollY(window.scrollY);
+        }
+      }
+    };
+
+    window.addEventListener("scroll", handleScroll, { passive: true });
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
+
   return (
-    <section className="relative min-h-[90vh] flex items-center justify-center overflow-hidden">
-      {/* Background Effects */}
-      <div className="absolute inset-0 bg-hero-gradient" />
-      <div className="absolute inset-0 opacity-30">
-        <div className="absolute top-20 left-20 w-72 h-72 bg-accent/20 rounded-full blur-3xl animate-pulse-soft" />
-        <div className="absolute bottom-20 right-20 w-96 h-96 bg-agent-scanner/10 rounded-full blur-3xl animate-pulse-soft delay-500" />
-      </div>
+    <section ref={sectionRef} className="relative min-h-[90vh] flex items-center justify-center overflow-hidden">
+      {/* Background Effects with Parallax */}
+      <div className="absolute inset-0 bg-gradient-to-b from-background via-secondary/30 to-background" />
+      <div className="absolute inset-0 bg-gradient-radial from-accent/5 via-transparent to-transparent" />
       
-      {/* Floating Document Fragments */}
-      <div className="absolute inset-0 pointer-events-none overflow-hidden">
-        <div className="absolute top-[15%] left-[10%] w-32 h-40 bg-card/60 rounded shadow-lg rotate-[-8deg] animate-float opacity-40" />
-        <div className="absolute top-[25%] right-[15%] w-28 h-36 bg-card/60 rounded shadow-lg rotate-[12deg] animate-float delay-300 opacity-40" />
-        <div className="absolute bottom-[20%] left-[20%] w-24 h-32 bg-card/60 rounded shadow-lg rotate-[5deg] animate-float delay-200 opacity-40" />
+      {/* Subtle ambient glow - parallax slower */}
+      <div 
+        className="absolute inset-0 opacity-20 pointer-events-none"
+        style={{ transform: `translateY(${scrollY * 0.1}px)` }}
+      >
+        <div className="absolute top-1/4 left-1/4 w-[600px] h-[600px] bg-gradient-radial from-accent/30 via-accent/5 to-transparent rounded-full blur-3xl" />
+        <div className="absolute bottom-1/4 right-1/4 w-[500px] h-[500px] bg-gradient-radial from-agent-scanner/20 via-transparent to-transparent rounded-full blur-3xl" />
       </div>
 
-      <div className="container relative z-10 px-4 md:px-6">
+      <div 
+        className="container relative z-10 px-4 md:px-6"
+        style={{ transform: `translateY(${scrollY * 0.15}px)` }}
+      >
         <div className="max-w-4xl mx-auto text-center">
           {/* Badge */}
-          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-secondary/80 border border-border mb-8 animate-fade-in">
-            <Sparkles className="w-4 h-4 text-accent" />
+          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-gradient-to-r from-secondary/80 to-secondary/60 border border-accent/20 mb-8 animate-fade-in shadow-sm">
+            <Archive className="w-4 h-4 text-accent" />
             <span className="text-sm font-medium text-secondary-foreground">
               AI-Powered Archive Restoration
             </span>
