@@ -1,9 +1,7 @@
 import { Sparkles, Github, Twitter, Mail } from "lucide-react";
 import { Button } from "./ui/button";
-
 export const Footer = () => {
-  return (
-    <footer className="py-12 bg-primary text-primary-foreground">
+  return <footer className="py-12 bg-primary text-primary-foreground">
       <div className="container px-4 md:px-6">
         <div className="grid md:grid-cols-3 gap-8 mb-8">
           {/* Brand */}
@@ -47,14 +45,13 @@ export const Footer = () => {
         </div>
 
         <div className="pt-8 border-t border-primary-foreground/10 flex flex-col md:flex-row justify-between items-center gap-4">
-          <p className="text-sm text-primary-foreground/50">
-            Built for Octopus Hackathon 2025
+          <p className="text-sm text-primary-foreground/50 b">
+            Built with ❤️ for the Baidu ERNIE AI Global Challenge 2025 | Powered by Novita AI & ERNIE 4.0
           </p>
           <p className="text-sm text-primary-foreground/50">
             Every story deserves to be remembered.
           </p>
         </div>
       </div>
-    </footer>
-  );
+    </footer>;
 };
