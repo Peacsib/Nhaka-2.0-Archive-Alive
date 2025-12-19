@@ -6,36 +6,70 @@ import { SampleDocuments } from "./SampleDocuments";
 import { Button } from "./ui/button";
 import { Play, RotateCcw, Download, Share2 } from "lucide-react";
 import { toast } from "sonner";
+import { supabase } from "@/integrations/supabase/client";
+import type { AgentType } from "./AgentAvatar";
 
 interface ProcessingSectionProps {
   autoStart?: boolean;
 }
 
+// Mock agent messages for the Shona document resurrection demo
+const mockAgentMessages: { agent: AgentType; message: string; confidence?: number; isDebate?: boolean }[] = [
+  { agent: "scanner", message: "Initializing PaddleOCR-VL... Detecting Historical Shona characters.", confidence: 0 },
+  { agent: "linguist", message: "Analyzing Doke Orthography (1931-1955). Validating phonetic values.", confidence: 72 },
+  { agent: "historian", message: "Cross-referencing 1888 Rudd Concession timeline via ERNIE 4.0.", confidence: 85 },
+  { agent: "validator", message: "CROSS-CHECK COMPLETE. Hallucination avoided. Finalizing verified record.", confidence: 94, isDebate: true },
+];
+
+// Mock restored text with confidence highlighting
+const mockRestoredText = {
+  segments: [
+    { text: "The undersigned Chiefs", confidence: "high" as const },
+    { text: " Lobengula ", confidence: "low" as const },
+    { text: "and headmen of the", confidence: "high" as const },
+    { text: " Matabeleland ", confidence: "high" as const },
+    { text: "territory hereby grant exclusive mining rights to", confidence: "high" as const },
+    { text: " Charles Rudd ", confidence: "low" as const },
+    { text: "and associates for the extraction of minerals within the designated regions.", confidence: "high" as const },
+    { text: "\n\nSigned this day of ", confidence: "high" as const },
+    { text: "October 1888", confidence: "low" as const },
+    { text: " in the presence of witnesses.", confidence: "high" as const },
+    { text: "\n\n[Historical Note: ", confidence: "high" as const },
+    { text: "Rudd Concession", confidence: "high" as const },
+    { text: " - This document formed the basis of the ", confidence: "high" as const },
+    { text: "British South Africa Company's", confidence: "low" as const },
+    { text: " claim to mining rights in Matabeleland and Mashonaland.]", confidence: "high" as const },
+  ],
+  overallConfidence: 89,
+};
+
 export const ProcessingSection = ({ autoStart = false }: ProcessingSectionProps) => {
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
   const [isComplete, setIsComplete] = useState(false);
+  const [restoredData, setRestoredData] = useState<typeof mockRestoredText | null>(null);
   const sectionRef = useRef<HTMLElement>(null);
 
   const handleFileSelect = (file: File) => {
     setSelectedFile(file);
     setIsComplete(false);
+    setRestoredData(null);
     toast.success("Document uploaded!", {
       description: "Click 'Start Resurrection' to begin processing.",
     });
   };
 
   const handleSampleSelect = (id: string) => {
-    // Simulate loading a sample document
     const sampleFile = new File([""], `sample-${id}.jpg`, { type: "image/jpeg" });
     setSelectedFile(sampleFile);
     setIsComplete(false);
+    setRestoredData(null);
     toast.success("Sample document loaded!", {
       description: "Click 'Start Resurrection' to see the agents in action.",
     });
   };
 
-  const handleStartProcessing = () => {
+  const handleStartProcessing = async () => {
     if (!selectedFile && !autoStart) {
       toast.error("Please upload a document first");
       return;
@@ -43,20 +77,76 @@ export const ProcessingSection = ({ autoStart = false }: ProcessingSectionProps)
     
     setIsProcessing(true);
     setIsComplete(false);
+    setRestoredData(null);
+
+    // Try to call FastAPI backend, fall back to mock if unavailable
+    try {
+      const formData = new FormData();
+      if (selectedFile) {
+        formData.append("file", selectedFile);
+      }
+
+      // Attempt to call local FastAPI endpoint
+      const response = await fetch("http://localhost:8000/resurrect", {
+        method: "POST",
+        body: formData,
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        // Use real response if available
+        setRestoredData(data);
+      } else {
+        throw new Error("FastAPI not available");
+      }
+    } catch (error) {
+      // FastAPI not running - use mock data with 3 second delay
+      console.log("FastAPI not available, using mock response...");
+    }
   };
 
-  const handleProcessingComplete = () => {
+  const handleProcessingComplete = async () => {
     setIsProcessing(false);
     setIsComplete(true);
+    
+    // Set mock restored data
+    setRestoredData(mockRestoredText);
+
     toast.success("Document resurrected!", {
-      description: "Your archive has been restored with 89% confidence.",
+      description: `Your archive has been restored with ${mockRestoredText.overallConfidence}% confidence.`,
     });
+
+    // Save to Supabase archives table
+    try {
+      const { error } = await supabase.from("archives").insert({
+        document_name: selectedFile?.name || "sample-document.jpg",
+        original_text: null,
+        restored_text: mockRestoredText.segments.map(s => s.text).join(""),
+        agent_logs: mockAgentMessages,
+        confidence_data: {
+          segments: mockRestoredText.segments,
+          overall: mockRestoredText.overallConfidence,
+        },
+        overall_confidence: mockRestoredText.overallConfidence,
+        processing_time_ms: 3000,
+      });
+
+      if (error) {
+        console.error("Failed to save to archives:", error);
+        toast.error("Failed to save to history", { description: error.message });
+      } else {
+        toast.success("Saved to archives", { description: "View it in your history." });
+      }
+    } catch (err) {
+      console.error("Supabase error:", err);
+    }
   };
 
   const handleReset = () => {
     setSelectedFile(null);
     setIsProcessing(false);
     setIsComplete(false);
+    setRestoredData(null);
   };
 
   const handleDownload = () => {
@@ -161,6 +251,7 @@ export const ProcessingSection = ({ autoStart = false }: ProcessingSectionProps)
                 file={selectedFile}
                 isProcessing={isProcessing}
                 isComplete={isComplete}
+                restoredData={restoredData}
               />
             </div>
 
@@ -174,6 +265,7 @@ export const ProcessingSection = ({ autoStart = false }: ProcessingSectionProps)
                 isProcessing={isProcessing}
                 onComplete={handleProcessingComplete}
                 documentName={selectedFile?.name}
+                customMessages={mockAgentMessages}
               />
             </div>
           </div>

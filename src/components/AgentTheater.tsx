@@ -19,14 +19,15 @@ interface Message {
   isDebate?: boolean;
 }
 
-interface AgentTheaterProps {
+export interface AgentTheaterProps {
   isProcessing: boolean;
   onComplete?: () => void;
   documentName?: string;
   onMessagesUpdate?: (messages: Message[]) => void;
+  customMessages?: Omit<Message, "id" | "timestamp">[];
 }
 
-const demoMessages: Omit<Message, "id" | "timestamp">[] = [
+const defaultDemoMessages: Omit<Message, "id" | "timestamp">[] = [
   { agent: "scanner", message: "Initializing document analysis... Detecting image format and quality metrics.", confidence: 0 },
   { agent: "scanner", message: "Handwritten script detected. Estimating era: 1940s based on ink patterns and paper degradation.", documentSection: "Header region" },
   { agent: "scanner", message: "OCR confidence: 73% overall. Flagging 12 unclear sections for collaborative review.", confidence: 73 },
@@ -44,7 +45,7 @@ const demoMessages: Omit<Message, "id" | "timestamp">[] = [
   { agent: "reconstructor", message: "Final document ready. Overall confidence: 89%. 3 sections marked as interpretive.", confidence: 89 },
 ];
 
-export const AgentTheater = ({ isProcessing, onComplete, documentName, onMessagesUpdate }: AgentTheaterProps) => {
+export const AgentTheater = ({ isProcessing, onComplete, documentName, onMessagesUpdate, customMessages }: AgentTheaterProps) => {
   const [messages, setMessages] = useState<Message[]>([]);
   const [currentTyping, setCurrentTyping] = useState<AgentType | null>(null);
   const [progress, setProgress] = useState(0);
@@ -61,15 +62,17 @@ export const AgentTheater = ({ isProcessing, onComplete, documentName, onMessage
       return;
     }
 
+    const messagesToUse = customMessages || defaultDemoMessages;
+    
     const addNextMessage = () => {
-      if (messageIndex.current >= demoMessages.length) {
+      if (messageIndex.current >= messagesToUse.length) {
         setCurrentTyping(null);
         setProgress(100);
         onComplete?.();
         return;
       }
 
-      const msg = demoMessages[messageIndex.current];
+      const msg = messagesToUse[messageIndex.current];
       setActiveAgent(msg.agent);
       setCurrentTyping(msg.agent);
 
@@ -91,7 +94,7 @@ export const AgentTheater = ({ isProcessing, onComplete, documentName, onMessage
           return updated;
         });
         setCurrentTyping(null);
-        setProgress(((messageIndex.current + 1) / demoMessages.length) * 100);
+        setProgress(((messageIndex.current + 1) / messagesToUse.length) * 100);
         messageIndex.current++;
 
         // Schedule next message
@@ -138,12 +141,12 @@ export const AgentTheater = ({ isProcessing, onComplete, documentName, onMessage
       </div>
 
       {/* Desktop Agent Status Bar */}
-      <div className="hidden md:flex gap-4 p-3 border-b border-border bg-muted/30">
-        {(["scanner", "historian", "reconstructor"] as AgentType[]).map((agent) => (
+      <div className="hidden md:flex gap-2 p-3 border-b border-border bg-muted/30 overflow-x-auto">
+        {(["scanner", "linguist", "historian", "validator"] as AgentType[]).map((agent) => (
           <div
             key={agent}
             className={cn(
-              "flex-1 p-2 rounded-lg transition-all duration-300",
+              "flex-1 min-w-0 p-2 rounded-lg transition-all duration-300",
               activeAgent === agent ? "bg-secondary ring-1 ring-accent shadow-sm" : "opacity-50"
             )}
           >
@@ -178,7 +181,7 @@ export const AgentTheater = ({ isProcessing, onComplete, documentName, onMessage
           mobileTimelineOpen ? "max-h-40" : "max-h-0"
         )}>
           <div className="p-3 space-y-2 bg-muted/20">
-            {(["scanner", "historian", "reconstructor"] as AgentType[]).map((agent, idx) => (
+            {(["scanner", "linguist", "historian", "validator"] as AgentType[]).map((agent, idx) => (
               <div
                 key={agent}
                 className={cn(
@@ -188,7 +191,7 @@ export const AgentTheater = ({ isProcessing, onComplete, documentName, onMessage
               >
                 <div className="relative">
                   <AgentAvatar agent={agent} size="sm" isActive={activeAgent === agent} />
-                  {idx < 2 && (
+                  {idx < 3 && (
                     <div className="absolute top-full left-1/2 w-0.5 h-3 bg-border -translate-x-1/2" />
                   )}
                 </div>

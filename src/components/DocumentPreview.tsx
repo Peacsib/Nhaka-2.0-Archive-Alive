@@ -6,13 +6,24 @@ import { cn } from "@/lib/utils";
 import { Eye, FileText, CheckCircle2 } from "lucide-react";
 import sampleLetterImage from "@/assets/sample-letter.jpg";
 
+interface TextSegment {
+  text: string;
+  confidence: "high" | "low";
+}
+
+interface RestoredData {
+  segments: TextSegment[];
+  overallConfidence: number;
+}
+
 interface DocumentPreviewProps {
   file: File | null;
   isProcessing: boolean;
   isComplete: boolean;
+  restoredData?: RestoredData | null;
 }
 
-const sampleRestoredText = `December 15, 1943
+const defaultRestoredText = `December 15, 1943
 
 My Dearest Margaret,
 
@@ -34,7 +45,7 @@ William
 Sections 3, 7, 12 marked as interpretive
 `;
 
-export const DocumentPreview = ({ file, isProcessing, isComplete }: DocumentPreviewProps) => {
+export const DocumentPreview = ({ file, isProcessing, isComplete, restoredData }: DocumentPreviewProps) => {
   const [imageUrl, setImageUrl] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<string>("original");
 
@@ -68,6 +79,8 @@ export const DocumentPreview = ({ file, isProcessing, isComplete }: DocumentPrev
     );
   }
 
+  const overallConfidence = restoredData?.overallConfidence ?? 89;
+
   return (
     <Card className="overflow-hidden border-2 border-border">
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
@@ -85,8 +98,8 @@ export const DocumentPreview = ({ file, isProcessing, isComplete }: DocumentPrev
             </TabsList>
             
             {isComplete && (
-              <Badge variant="default" className="bg-agent-reconstructor">
-                89% Confidence
+              <Badge variant="default" className="bg-agent-validator">
+                {overallConfidence}% Confidence
               </Badge>
             )}
           </div>
@@ -129,11 +142,46 @@ export const DocumentPreview = ({ file, isProcessing, isComplete }: DocumentPrev
           <div className="h-[450px] overflow-auto p-6 bg-[hsl(40_30%_97%)]">
             <div 
               className={cn(
-                "font-mono text-sm whitespace-pre-wrap leading-relaxed text-foreground",
+                "font-mono text-sm leading-relaxed text-foreground",
                 isComplete && "animate-reveal-document"
               )}
             >
-              {sampleRestoredText}
+              {restoredData ? (
+                // Render with confidence highlighting
+                <div className="whitespace-pre-wrap">
+                  {restoredData.segments.map((segment, idx) => (
+                    <span
+                      key={idx}
+                      className={cn(
+                        "transition-colors",
+                        segment.confidence === "high" 
+                          ? "bg-confidence-high/20 text-foreground border-b-2 border-confidence-high/50" 
+                          : "bg-confidence-low/20 text-foreground border-b-2 border-confidence-low/50"
+                      )}
+                    >
+                      {segment.text}
+                    </span>
+                  ))}
+                  
+                  {/* Legend */}
+                  <div className="mt-6 pt-4 border-t border-border">
+                    <p className="text-xs text-muted-foreground mb-2 font-semibold">CONFIDENCE LEGEND:</p>
+                    <div className="flex gap-4 text-xs">
+                      <span className="flex items-center gap-2">
+                        <span className="w-4 h-3 bg-confidence-high/30 border-b-2 border-confidence-high rounded" />
+                        High Confidence (Verified)
+                      </span>
+                      <span className="flex items-center gap-2">
+                        <span className="w-4 h-3 bg-confidence-low/30 border-b-2 border-confidence-low rounded" />
+                        Low OCR Confidence
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              ) : (
+                // Fallback to default text
+                <div className="whitespace-pre-wrap">{defaultRestoredText}</div>
+              )}
             </div>
           </div>
         </TabsContent>

@@ -64,10 +64,18 @@ export default {
         agent: {
           scanner: "hsl(var(--agent-scanner))",
           "scanner-bg": "hsl(var(--agent-scanner-bg))",
+          linguist: "hsl(var(--agent-linguist))",
+          "linguist-bg": "hsl(var(--agent-linguist-bg))",
           historian: "hsl(var(--agent-historian))",
           "historian-bg": "hsl(var(--agent-historian-bg))",
+          validator: "hsl(var(--agent-validator))",
+          "validator-bg": "hsl(var(--agent-validator-bg))",
           reconstructor: "hsl(var(--agent-reconstructor))",
           "reconstructor-bg": "hsl(var(--agent-reconstructor-bg))",
+        },
+        confidence: {
+          high: "hsl(var(--confidence-high))",
+          low: "hsl(var(--confidence-low))",
         },
       },
       borderRadius: {

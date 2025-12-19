@@ -43,15 +43,25 @@
     /* Agent Colors - More Vibrant */
     --agent-scanner: 195 85% 42%;
     --agent-scanner-bg: 195 75% 93%;
+    --agent-linguist: 280 70% 55%;
+    --agent-linguist-bg: 280 60% 93%;
     --agent-historian: 35 95% 48%;
     --agent-historian-bg: 35 85% 92%;
+    --agent-validator: 145 75% 38%;
+    --agent-validator-bg: 145 65% 92%;
     --agent-reconstructor: 155 65% 38%;
     --agent-reconstructor-bg: 155 55% 92%;
+
+    /* Confidence colors */
+    --confidence-high: 145 75% 38%;
+    --confidence-low: 32 90% 50%;
 
     /* Special Effects */
     --glow-amber: 0 0 60px hsl(32 90% 50% / 0.35);
     --glow-scanner: 0 0 40px hsl(195 85% 42% / 0.35);
+    --glow-linguist: 0 0 40px hsl(280 70% 55% / 0.35);
     --glow-historian: 0 0 40px hsl(35 95% 48% / 0.35);
+    --glow-validator: 0 0 40px hsl(145 75% 38% / 0.35);
     --glow-reconstructor: 0 0 40px hsl(155 65% 38% / 0.35);
 
     /* Gradients - Enhanced & Richer */
@@ -104,7 +114,9 @@
     --ring: 35 85% 55%;
 
     --agent-scanner-bg: 190 60% 15%;
+    --agent-linguist-bg: 280 50% 20%;
     --agent-historian-bg: 38 60% 15%;
+    --agent-validator-bg: 145 50% 15%;
     --agent-reconstructor-bg: 152 40% 15%;
 
     --sidebar-background: 30 12% 10%;
@@ -177,8 +189,16 @@
     box-shadow: var(--glow-scanner);
   }
 
+  .glow-linguist {
+    box-shadow: var(--glow-linguist);
+  }
+
   .glow-historian {
     box-shadow: var(--glow-historian);
+  }
+
+  .glow-validator {
+    box-shadow: var(--glow-validator);
   }
 
   .glow-reconstructor {
