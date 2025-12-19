@@ -1,6 +1,7 @@
 import { cn } from "@/lib/utils";
 import { AgentAvatar, AgentType, agentConfig } from "./AgentAvatar";
 import { useEffect, useState } from "react";
+import { InlineConfidence } from "./ConfidenceIndicator";
 
 interface AgentMessageProps {
   agent: AgentType;
@@ -9,6 +10,9 @@ interface AgentMessageProps {
   isTyping?: boolean;
   animateIn?: boolean;
   delay?: number;
+  confidence?: number;
+  documentSection?: string;
+  isDebate?: boolean;
 }
 
 export const AgentMessage = ({
@@ -18,6 +22,9 @@ export const AgentMessage = ({
   isTyping = false,
   animateIn = true,
   delay = 0,
+  confidence,
+  documentSection,
+  isDebate = false,
 }: AgentMessageProps) => {
   const config = agentConfig[agent];
   const [visible, setVisible] = useState(!animateIn);
@@ -50,9 +57,9 @@ export const AgentMessage = ({
     <div
       className={cn(
         "flex gap-3 p-4 rounded-xl transition-all duration-500",
-        config.bgColor,
+        isDebate ? "bg-gradient-to-r from-accent/10 to-transparent" : config.bgColor,
         "border-l-4",
-        config.borderColor,
+        isDebate ? "border-accent" : config.borderColor,
         animateIn && "animate-slide-in-left"
       )}
       style={{ animationDelay: `${delay}ms` }}
@@ -60,13 +67,21 @@ export const AgentMessage = ({
       <AgentAvatar agent={agent} size="sm" isActive isTyping={isTyping} />
       
       <div className="flex-1 min-w-0">
-        <div className="flex items-center gap-2 mb-1">
+        <div className="flex items-center gap-2 mb-1 flex-wrap">
           <span className="font-semibold text-sm text-foreground">
             {config.name}
           </span>
           <span className="text-xs text-muted-foreground italic">
             {config.role}
           </span>
+          {documentSection && (
+            <span className="text-xs px-2 py-0.5 rounded-full bg-secondary text-secondary-foreground">
+              📍 {documentSection}
+            </span>
+          )}
+          {confidence !== undefined && confidence > 0 && (
+            <InlineConfidence value={confidence} />
+          )}
           {timestamp && (
             <span className="text-xs text-muted-foreground ml-auto">
               {timestamp}
@@ -74,7 +89,10 @@ export const AgentMessage = ({
           )}
         </div>
         
-        <div className="font-mono text-sm text-foreground/90 leading-relaxed">
+        <div className={cn(
+          "font-mono text-sm leading-relaxed",
+          isDebate ? "text-foreground font-medium" : "text-foreground/90"
+        )}>
           {isTyping ? (
             <div className="typing-indicator flex gap-1 py-2">
               <span />

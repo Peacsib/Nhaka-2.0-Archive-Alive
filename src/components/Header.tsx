@@ -1,4 +1,4 @@
-import { Sparkles, Menu, X } from "lucide-react";
+import { Archive, Menu, X } from "lucide-react";
 import { Button } from "./ui/button";
 import { useState } from "react";
 import { cn } from "@/lib/utils";
@@ -13,7 +13,7 @@ export const Header = () => {
           {/* Logo */}
           <a href="/" className="flex items-center gap-2 group">
             <div className="p-1.5 rounded-lg bg-accent/10 group-hover:bg-accent/20 transition-colors">
-              <Sparkles className="w-5 h-5 text-accent" />
+              <Archive className="w-5 h-5 text-accent" />
             </div>
             <span className="font-serif text-lg font-bold text-foreground">
               Archive Resurrection
