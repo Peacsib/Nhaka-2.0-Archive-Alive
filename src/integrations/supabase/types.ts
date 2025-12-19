@@ -14,7 +14,45 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      archives: {
+        Row: {
+          agent_logs: Json
+          confidence_data: Json
+          created_at: string
+          document_name: string
+          id: string
+          original_text: string | null
+          overall_confidence: number | null
+          processing_time_ms: number | null
+          restored_text: string
+          updated_at: string
+        }
+        Insert: {
+          agent_logs?: Json
+          confidence_data?: Json
+          created_at?: string
+          document_name: string
+          id?: string
+          original_text?: string | null
+          overall_confidence?: number | null
+          processing_time_ms?: number | null
+          restored_text: string
+          updated_at?: string
+        }
+        Update: {
+          agent_logs?: Json
+          confidence_data?: Json
+          created_at?: string
+          document_name?: string
+          id?: string
+          original_text?: string | null
+          overall_confidence?: number | null
+          processing_time_ms?: number | null
+          restored_text?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never

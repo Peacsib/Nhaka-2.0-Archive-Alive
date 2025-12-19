@@ -1,7 +1,7 @@
 import { cn } from "@/lib/utils";
-import { Scan, BookOpen, Wand2 } from "lucide-react";
+import { Scan, BookOpen, Wand2, Languages, ShieldCheck } from "lucide-react";
 
-export type AgentType = "scanner" | "historian" | "reconstructor";
+export type AgentType = "scanner" | "linguist" | "historian" | "validator" | "reconstructor";
 
 interface AgentAvatarProps {
   agent: AgentType;
@@ -10,29 +10,55 @@ interface AgentAvatarProps {
   isTyping?: boolean;
 }
 
-const agentConfig = {
+const agentConfig: Record<AgentType, {
+  icon: typeof Scan;
+  name: string;
+  role: string;
+  color: string;
+  bgColor: string;
+  borderColor: string;
+  glowClass: string;
+}> = {
   scanner: {
     icon: Scan,
     name: "Scanner",
-    role: "The Detective",
+    role: "OCR Specialist",
     color: "bg-agent-scanner",
     bgColor: "bg-agent-scanner-bg",
     borderColor: "border-agent-scanner",
     glowClass: "glow-scanner",
   },
+  linguist: {
+    icon: Languages,
+    name: "Linguist",
+    role: "Language Expert",
+    color: "bg-agent-linguist",
+    bgColor: "bg-agent-linguist-bg",
+    borderColor: "border-agent-linguist",
+    glowClass: "glow-linguist",
+  },
   historian: {
     icon: BookOpen,
     name: "Historian",
-    role: "The Scholar",
+    role: "Historical Context",
     color: "bg-agent-historian",
     bgColor: "bg-agent-historian-bg",
     borderColor: "border-agent-historian",
     glowClass: "glow-historian",
   },
+  validator: {
+    icon: ShieldCheck,
+    name: "Validator",
+    role: "Fact Checker",
+    color: "bg-agent-validator",
+    bgColor: "bg-agent-validator-bg",
+    borderColor: "border-agent-validator",
+    glowClass: "glow-validator",
+  },
   reconstructor: {
     icon: Wand2,
     name: "Reconstructor",
-    role: "The Artist",
+    role: "Document Artist",
     color: "bg-agent-reconstructor",
     bgColor: "bg-agent-reconstructor-bg",
     borderColor: "border-agent-reconstructor",
