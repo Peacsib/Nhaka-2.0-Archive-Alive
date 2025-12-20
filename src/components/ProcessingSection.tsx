@@ -1,4 +1,4 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useCallback } from "react";
 import { DocumentUpload } from "./DocumentUpload";
 import { DocumentPreview } from "./DocumentPreview";
 import { AgentTheater } from "./AgentTheater";
@@ -13,34 +13,85 @@ interface ProcessingSectionProps {
   autoStart?: boolean;
 }
 
-// Mock agent messages for the Shona document resurrection demo
-const mockAgentMessages: { agent: AgentType; message: string; confidence?: number; isDebate?: boolean }[] = [
-  { agent: "scanner", message: "Initializing PaddleOCR-VL... Detecting Historical Shona characters.", confidence: 0 },
-  { agent: "linguist", message: "Analyzing Doke Orthography (1931-1955). Validating phonetic values.", confidence: 72 },
-  { agent: "historian", message: "Cross-referencing 1888 Rudd Concession timeline via ERNIE 4.0.", confidence: 85 },
-  { agent: "validator", message: "CROSS-CHECK COMPLETE. Hallucination avoided. Finalizing verified record.", confidence: 94, isDebate: true },
+// Enhanced forensic mock agent messages for Shona document resurrection
+const mockAgentMessages: { 
+  agent: AgentType; 
+  message: string; 
+  confidence?: number; 
+  isDebate?: boolean;
+  highlightKeywords?: string[];
+}[] = [
+  { 
+    agent: "scanner", 
+    message: "Initializing PaddleOCR-VL... Detecting Historical Shona characters and iron-gall ink corrosion patterns.", 
+    confidence: 0,
+    highlightKeywords: ["Lobengula"]
+  },
+  { 
+    agent: "scanner", 
+    message: "Material degradation detected: 73% faded ink regions, 12% water damage. Enhancing contrast on signature blocks.", 
+    confidence: 68,
+    highlightKeywords: ["Charles Rudd"]
+  },
+  { 
+    agent: "linguist", 
+    message: "Analyzing Doke Orthography (1931-1955). Validating phonetic values for character ȿ in 'Matabeleland'.", 
+    confidence: 72,
+    highlightKeywords: ["Matabeleland"]
+  },
+  { 
+    agent: "linguist", 
+    message: "⚠️ ORTHOGRAPHIC ALERT: Detecting pre-standardization Shona script. Applying 1888-era character mappings.", 
+    confidence: 78,
+    isDebate: true
+  },
+  { 
+    agent: "historian", 
+    message: "Cross-referencing 1888 Rudd Concession timeline via ERNIE 4.0. Verifying Jameson's 1894 Land Grants.", 
+    confidence: 85,
+    highlightKeywords: ["October 1888"]
+  },
+  { 
+    agent: "historian", 
+    message: "Historical context: British South Africa Company charter records accessed. Matching signatory patterns.", 
+    confidence: 88,
+    highlightKeywords: ["British South Africa Company's"]
+  },
+  { 
+    agent: "validator", 
+    message: "⚡ CROSS-CHECK: Detected potential OCR error '188B' → Correcting to '1888' based on historical timeline.", 
+    confidence: 92,
+    isDebate: true,
+    highlightKeywords: ["October 1888"]
+  },
+  { 
+    agent: "validator", 
+    message: "CROSS-CHECK COMPLETE. Hallucination avoided. All dates verified against colonial archive records. Finalizing verified record.", 
+    confidence: 94,
+    highlightKeywords: ["Rudd Concession"]
+  },
 ];
 
-// Mock restored text with confidence highlighting
+// Mock restored text with confidence highlighting and keyword markers
 const mockRestoredText = {
   segments: [
-    { text: "The undersigned Chiefs", confidence: "high" as const },
-    { text: " Lobengula ", confidence: "low" as const },
-    { text: "and headmen of the", confidence: "high" as const },
-    { text: " Matabeleland ", confidence: "high" as const },
-    { text: "territory hereby grant exclusive mining rights to", confidence: "high" as const },
-    { text: " Charles Rudd ", confidence: "low" as const },
-    { text: "and associates for the extraction of minerals within the designated regions.", confidence: "high" as const },
-    { text: "\n\nSigned this day of ", confidence: "high" as const },
-    { text: "October 1888", confidence: "low" as const },
-    { text: " in the presence of witnesses.", confidence: "high" as const },
-    { text: "\n\n[Historical Note: ", confidence: "high" as const },
-    { text: "Rudd Concession", confidence: "high" as const },
-    { text: " - This document formed the basis of the ", confidence: "high" as const },
-    { text: "British South Africa Company's", confidence: "low" as const },
-    { text: " claim to mining rights in Matabeleland and Mashonaland.]", confidence: "high" as const },
+    { text: "The undersigned Chiefs", confidence: "high" as const, keyword: undefined },
+    { text: " Lobengula ", confidence: "low" as const, keyword: "Lobengula" },
+    { text: "and headmen of the", confidence: "high" as const, keyword: undefined },
+    { text: " Matabeleland ", confidence: "high" as const, keyword: "Matabeleland" },
+    { text: "territory hereby grant exclusive mining rights to", confidence: "high" as const, keyword: undefined },
+    { text: " Charles Rudd ", confidence: "low" as const, keyword: "Charles Rudd" },
+    { text: "and associates for the extraction of minerals within the designated regions.", confidence: "high" as const, keyword: undefined },
+    { text: "\n\nSigned this day of ", confidence: "high" as const, keyword: undefined },
+    { text: "October 1888", confidence: "low" as const, keyword: "October 1888" },
+    { text: " in the presence of witnesses.", confidence: "high" as const, keyword: undefined },
+    { text: "\n\n[Historical Note: ", confidence: "high" as const, keyword: undefined },
+    { text: "Rudd Concession", confidence: "high" as const, keyword: "Rudd Concession" },
+    { text: " - This document formed the basis of the ", confidence: "high" as const, keyword: undefined },
+    { text: "British South Africa Company's", confidence: "low" as const, keyword: "British South Africa Company's" },
+    { text: " claim to mining rights in Matabeleland and Mashonaland.]", confidence: "high" as const, keyword: undefined },
   ],
-  overallConfidence: 89,
+  overallConfidence: 94,
 };
 
 export const ProcessingSection = ({ autoStart = false }: ProcessingSectionProps) => {
@@ -48,12 +99,14 @@ export const ProcessingSection = ({ autoStart = false }: ProcessingSectionProps)
   const [isProcessing, setIsProcessing] = useState(false);
   const [isComplete, setIsComplete] = useState(false);
   const [restoredData, setRestoredData] = useState<typeof mockRestoredText | null>(null);
+  const [highlightedKeywords, setHighlightedKeywords] = useState<string[]>([]);
   const sectionRef = useRef<HTMLElement>(null);
 
   const handleFileSelect = (file: File) => {
     setSelectedFile(file);
     setIsComplete(false);
     setRestoredData(null);
+    setHighlightedKeywords([]);
     toast.success("Document uploaded!", {
       description: "Click 'Start Resurrection' to begin processing.",
     });
@@ -64,10 +117,15 @@ export const ProcessingSection = ({ autoStart = false }: ProcessingSectionProps)
     setSelectedFile(sampleFile);
     setIsComplete(false);
     setRestoredData(null);
+    setHighlightedKeywords([]);
     toast.success("Sample document loaded!", {
       description: "Click 'Start Resurrection' to see the agents in action.",
     });
   };
+
+  const handleHighlightChange = useCallback((keywords: string[]) => {
+    setHighlightedKeywords(keywords);
+  }, []);
 
   const handleStartProcessing = async () => {
     if (!selectedFile && !autoStart) {
@@ -78,6 +136,7 @@ export const ProcessingSection = ({ autoStart = false }: ProcessingSectionProps)
     setIsProcessing(true);
     setIsComplete(false);
     setRestoredData(null);
+    setHighlightedKeywords([]);
 
     // Try to call FastAPI backend, fall back to mock if unavailable
     try {
@@ -100,7 +159,7 @@ export const ProcessingSection = ({ autoStart = false }: ProcessingSectionProps)
         throw new Error("FastAPI not available");
       }
     } catch (error) {
-      // FastAPI not running - use mock data with 3 second delay
+      // FastAPI not running - use mock data (AgentTheater handles timing)
       console.log("FastAPI not available, using mock response...");
     }
   };
@@ -111,6 +170,7 @@ export const ProcessingSection = ({ autoStart = false }: ProcessingSectionProps)
     
     // Set mock restored data
     setRestoredData(mockRestoredText);
+    setHighlightedKeywords([]); // Clear highlights on completion
 
     toast.success("Document resurrected!", {
       description: `Your archive has been restored with ${mockRestoredText.overallConfidence}% confidence.`,
@@ -128,7 +188,7 @@ export const ProcessingSection = ({ autoStart = false }: ProcessingSectionProps)
           overall: mockRestoredText.overallConfidence,
         },
         overall_confidence: mockRestoredText.overallConfidence,
-        processing_time_ms: 3000,
+        processing_time_ms: mockAgentMessages.length * 800 * 2, // Approximate based on delays
       });
 
       if (error) {
@@ -147,6 +207,7 @@ export const ProcessingSection = ({ autoStart = false }: ProcessingSectionProps)
     setIsProcessing(false);
     setIsComplete(false);
     setRestoredData(null);
+    setHighlightedKeywords([]);
   };
 
   const handleDownload = () => {
@@ -252,6 +313,7 @@ export const ProcessingSection = ({ autoStart = false }: ProcessingSectionProps)
                 isProcessing={isProcessing}
                 isComplete={isComplete}
                 restoredData={restoredData}
+                highlightedKeywords={highlightedKeywords}
               />
             </div>
 
@@ -266,6 +328,7 @@ export const ProcessingSection = ({ autoStart = false }: ProcessingSectionProps)
                 onComplete={handleProcessingComplete}
                 documentName={selectedFile?.name}
                 customMessages={mockAgentMessages}
+                onHighlightChange={handleHighlightChange}
               />
             </div>
           </div>

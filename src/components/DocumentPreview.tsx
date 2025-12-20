@@ -3,12 +3,13 @@ import { Card } from "./ui/card";
 import { Badge } from "./ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "./ui/tabs";
 import { cn } from "@/lib/utils";
-import { Eye, FileText, CheckCircle2 } from "lucide-react";
+import { Eye, FileText, CheckCircle2, ShieldCheck } from "lucide-react";
 import sampleLetterImage from "@/assets/sample-letter.jpg";
 
 interface TextSegment {
   text: string;
   confidence: "high" | "low";
+  keyword?: string;
 }
 
 interface RestoredData {
@@ -21,6 +22,7 @@ interface DocumentPreviewProps {
   isProcessing: boolean;
   isComplete: boolean;
   restoredData?: RestoredData | null;
+  highlightedKeywords?: string[];
 }
 
 const defaultRestoredText = `December 15, 1943
@@ -45,7 +47,13 @@ William
 Sections 3, 7, 12 marked as interpretive
 `;
 
-export const DocumentPreview = ({ file, isProcessing, isComplete, restoredData }: DocumentPreviewProps) => {
+export const DocumentPreview = ({ 
+  file, 
+  isProcessing, 
+  isComplete, 
+  restoredData,
+  highlightedKeywords = []
+}: DocumentPreviewProps) => {
   const [imageUrl, setImageUrl] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<string>("original");
 
@@ -67,6 +75,15 @@ export const DocumentPreview = ({ file, isProcessing, isComplete, restoredData }
       setActiveTab("restored");
     }
   }, [isComplete]);
+
+  // Check if a segment should be highlighted based on active keywords
+  const isHighlighted = (segment: TextSegment): boolean => {
+    if (!segment.keyword || highlightedKeywords.length === 0) return false;
+    return highlightedKeywords.some(kw => 
+      segment.keyword?.toLowerCase().includes(kw.toLowerCase()) ||
+      kw.toLowerCase().includes(segment.keyword?.toLowerCase() || "")
+    );
+  };
 
   if (!file) {
     return (
@@ -98,8 +115,11 @@ export const DocumentPreview = ({ file, isProcessing, isComplete, restoredData }
             </TabsList>
             
             {isComplete && (
-              <Badge variant="default" className="bg-agent-validator">
-                {overallConfidence}% Confidence
+              <Badge 
+                className="bg-meta-verified text-foreground font-semibold gap-1"
+              >
+                <ShieldCheck className="w-3.5 h-3.5" />
+                {overallConfidence}% Verified
               </Badge>
             )}
           </div>
@@ -147,26 +167,31 @@ export const DocumentPreview = ({ file, isProcessing, isComplete, restoredData }
               )}
             >
               {restoredData ? (
-                // Render with confidence highlighting
+                // Render with confidence highlighting and keyword highlighting
                 <div className="whitespace-pre-wrap">
-                  {restoredData.segments.map((segment, idx) => (
-                    <span
-                      key={idx}
-                      className={cn(
-                        "transition-colors",
-                        segment.confidence === "high" 
-                          ? "bg-confidence-high/20 text-foreground border-b-2 border-confidence-high/50" 
-                          : "bg-confidence-low/20 text-foreground border-b-2 border-confidence-low/50"
-                      )}
-                    >
-                      {segment.text}
-                    </span>
-                  ))}
+                  {restoredData.segments.map((segment, idx) => {
+                    const highlighted = isHighlighted(segment);
+                    return (
+                      <span
+                        key={idx}
+                        className={cn(
+                          "transition-all duration-300",
+                          segment.confidence === "high" 
+                            ? "bg-confidence-high/20 text-foreground border-b-2 border-confidence-high/50" 
+                            : "bg-confidence-low/20 text-foreground border-b-2 border-confidence-low/50",
+                          // Active highlight when agent mentions this section
+                          highlighted && "ring-2 ring-accent ring-offset-1 bg-accent/30 animate-pulse"
+                        )}
+                      >
+                        {segment.text}
+                      </span>
+                    );
+                  })}
                   
                   {/* Legend */}
                   <div className="mt-6 pt-4 border-t border-border">
                     <p className="text-xs text-muted-foreground mb-2 font-semibold">CONFIDENCE LEGEND:</p>
-                    <div className="flex gap-4 text-xs">
+                    <div className="flex flex-wrap gap-4 text-xs">
                       <span className="flex items-center gap-2">
                         <span className="w-4 h-3 bg-confidence-high/30 border-b-2 border-confidence-high rounded" />
                         High Confidence (Verified)
@@ -174,6 +199,10 @@ export const DocumentPreview = ({ file, isProcessing, isComplete, restoredData }
                       <span className="flex items-center gap-2">
                         <span className="w-4 h-3 bg-confidence-low/30 border-b-2 border-confidence-low rounded" />
                         Low OCR Confidence
+                      </span>
+                      <span className="flex items-center gap-2">
+                        <span className="w-4 h-3 bg-accent/30 ring-2 ring-accent rounded" />
+                        Agent Focus
                       </span>
                     </div>
                   </div>

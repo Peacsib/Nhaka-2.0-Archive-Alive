@@ -77,6 +77,10 @@ export default {
           high: "hsl(var(--confidence-high))",
           low: "hsl(var(--confidence-low))",
         },
+        "meta-verified": {
+          DEFAULT: "hsl(var(--meta-verified))",
+          bg: "hsl(var(--meta-verified-bg))",
+        },
       },
       borderRadius: {
         lg: "var(--radius)",
