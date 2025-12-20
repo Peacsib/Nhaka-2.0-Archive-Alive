@@ -40,28 +40,32 @@
 
     --radius: 0.75rem;
 
-    /* Agent Colors - More Vibrant */
-    --agent-scanner: 195 85% 42%;
-    --agent-scanner-bg: 195 75% 93%;
-    --agent-linguist: 280 70% 55%;
-    --agent-linguist-bg: 280 60% 93%;
-    --agent-historian: 35 95% 48%;
-    --agent-historian-bg: 35 85% 92%;
-    --agent-validator: 145 75% 38%;
-    --agent-validator-bg: 145 65% 92%;
+    /* Agent Colors - Forensic Color-Coded */
+    --agent-scanner: 210 85% 50%;
+    --agent-scanner-bg: 210 75% 93%;
+    --agent-linguist: 142 70% 45%;
+    --agent-linguist-bg: 142 60% 93%;
+    --agent-historian: 280 65% 55%;
+    --agent-historian-bg: 280 55% 93%;
+    --agent-validator: 45 95% 50%;
+    --agent-validator-bg: 45 85% 92%;
     --agent-reconstructor: 155 65% 38%;
     --agent-reconstructor-bg: 155 55% 92%;
 
     /* Confidence colors */
-    --confidence-high: 145 75% 38%;
+    --confidence-high: 142 70% 45%;
     --confidence-low: 32 90% 50%;
+
+    /* Meta-verified badge */
+    --meta-verified: 45 95% 50%;
+    --meta-verified-bg: 45 90% 95%;
 
     /* Special Effects */
     --glow-amber: 0 0 60px hsl(32 90% 50% / 0.35);
-    --glow-scanner: 0 0 40px hsl(195 85% 42% / 0.35);
-    --glow-linguist: 0 0 40px hsl(280 70% 55% / 0.35);
-    --glow-historian: 0 0 40px hsl(35 95% 48% / 0.35);
-    --glow-validator: 0 0 40px hsl(145 75% 38% / 0.35);
+    --glow-scanner: 0 0 40px hsl(210 85% 50% / 0.45);
+    --glow-linguist: 0 0 40px hsl(142 70% 45% / 0.45);
+    --glow-historian: 0 0 40px hsl(280 65% 55% / 0.45);
+    --glow-validator: 0 0 40px hsl(45 95% 50% / 0.45);
     --glow-reconstructor: 0 0 40px hsl(155 65% 38% / 0.35);
 
     /* Gradients - Enhanced & Richer */
@@ -70,8 +74,10 @@
     --gradient-gold: linear-gradient(135deg, hsl(35 95% 48%) 0%, hsl(42 100% 55%) 50%, hsl(35 90% 50%) 100%);
     --gradient-card: linear-gradient(145deg, hsl(40 32% 92%) 0%, hsl(35 38% 88%) 100%);
     --gradient-accent: linear-gradient(135deg, hsl(32 90% 50%) 0%, hsl(38 95% 55%) 50%, hsl(32 85% 48%) 100%);
-    --gradient-scanner: linear-gradient(135deg, hsl(195 75% 93%) 0%, hsl(195 65% 88%) 100%);
-    --gradient-historian: linear-gradient(135deg, hsl(35 85% 92%) 0%, hsl(35 75% 87%) 100%);
+    --gradient-scanner: linear-gradient(135deg, hsl(210 75% 93%) 0%, hsl(210 65% 88%) 100%);
+    --gradient-linguist: linear-gradient(135deg, hsl(142 60% 93%) 0%, hsl(142 50% 88%) 100%);
+    --gradient-historian: linear-gradient(135deg, hsl(280 55% 93%) 0%, hsl(280 45% 88%) 100%);
+    --gradient-validator: linear-gradient(135deg, hsl(45 85% 92%) 0%, hsl(45 75% 87%) 100%);
     --gradient-reconstructor: linear-gradient(135deg, hsl(155 55% 92%) 0%, hsl(155 45% 87%) 100%);
 
     --sidebar-background: 40 30% 91%;
@@ -113,11 +119,14 @@
     --input: 30 10% 20%;
     --ring: 35 85% 55%;
 
-    --agent-scanner-bg: 190 60% 15%;
-    --agent-linguist-bg: 280 50% 20%;
-    --agent-historian-bg: 38 60% 15%;
-    --agent-validator-bg: 145 50% 15%;
+    --agent-scanner-bg: 210 60% 15%;
+    --agent-linguist-bg: 142 50% 15%;
+    --agent-historian-bg: 280 50% 18%;
+    --agent-validator-bg: 45 60% 15%;
     --agent-reconstructor-bg: 152 40% 15%;
+    
+    --meta-verified: 45 90% 55%;
+    --meta-verified-bg: 45 50% 20%;
 
     --sidebar-background: 30 12% 10%;
     --sidebar-foreground: 40 20% 85%;
@@ -231,6 +240,36 @@
 @keyframes pulse-glow {
   0%, 100% { opacity: 0.4; }
   50% { opacity: 0.8; }
+}
+
+@keyframes agent-processing {
+  0%, 100% { 
+    transform: scale(1);
+    box-shadow: 0 0 0 0 currentColor;
+  }
+  50% { 
+    transform: scale(1.15);
+    box-shadow: 0 0 12px 4px currentColor;
+  }
+}
+
+@keyframes slide-in-left {
+  0% {
+    opacity: 0;
+    transform: translateX(-20px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+.animate-slide-in-left {
+  animation: slide-in-left 0.4s ease-out forwards;
+}
+
+.animate-agent-processing {
+  animation: agent-processing 1.5s ease-in-out infinite;
 }
 
 @keyframes typewriter {

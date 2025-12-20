@@ -7,7 +7,7 @@ import { Progress } from "./ui/progress";
 import { ScrollArea } from "./ui/scroll-area";
 import { InlineConfidence } from "./ConfidenceIndicator";
 import { cn } from "@/lib/utils";
-import { ChevronDown, ChevronUp } from "lucide-react";
+import { ChevronDown, ChevronUp, ShieldCheck } from "lucide-react";
 
 interface Message {
   id: string;
@@ -17,6 +17,7 @@ interface Message {
   confidence?: number;
   documentSection?: string;
   isDebate?: boolean;
+  highlightKeywords?: string[];
 }
 
 export interface AgentTheaterProps {
@@ -25,6 +26,7 @@ export interface AgentTheaterProps {
   documentName?: string;
   onMessagesUpdate?: (messages: Message[]) => void;
   customMessages?: Omit<Message, "id" | "timestamp">[];
+  onHighlightChange?: (keywords: string[]) => void;
 }
 
 const defaultDemoMessages: Omit<Message, "id" | "timestamp">[] = [
@@ -45,12 +47,31 @@ const defaultDemoMessages: Omit<Message, "id" | "timestamp">[] = [
   { agent: "reconstructor", message: "Final document ready. Overall confidence: 89%. 3 sections marked as interpretive.", confidence: 89 },
 ];
 
-export const AgentTheater = ({ isProcessing, onComplete, documentName, onMessagesUpdate, customMessages }: AgentTheaterProps) => {
+// Agent processing status
+type AgentStatus = "idle" | "processing" | "complete";
+
+export const AgentTheater = ({ 
+  isProcessing, 
+  onComplete, 
+  documentName, 
+  onMessagesUpdate, 
+  customMessages,
+  onHighlightChange 
+}: AgentTheaterProps) => {
   const [messages, setMessages] = useState<Message[]>([]);
   const [currentTyping, setCurrentTyping] = useState<AgentType | null>(null);
   const [progress, setProgress] = useState(0);
   const [activeAgent, setActiveAgent] = useState<AgentType>("scanner");
   const [mobileTimelineOpen, setMobileTimelineOpen] = useState(false);
+  const [agentStatuses, setAgentStatuses] = useState<Record<AgentType, AgentStatus>>({
+    scanner: "idle",
+    linguist: "idle",
+    historian: "idle",
+    validator: "idle",
+    reconstructor: "idle",
+  });
+  const [isVerified, setIsVerified] = useState(false);
+  const [finalConfidence, setFinalConfidence] = useState(0);
   const scrollRef = useRef<HTMLDivElement>(null);
   const messageIndex = useRef(0);
 
@@ -59,6 +80,15 @@ export const AgentTheater = ({ isProcessing, onComplete, documentName, onMessage
       setMessages([]);
       setProgress(0);
       messageIndex.current = 0;
+      setAgentStatuses({
+        scanner: "idle",
+        linguist: "idle",
+        historian: "idle",
+        validator: "idle",
+        reconstructor: "idle",
+      });
+      setIsVerified(false);
+      setFinalConfidence(0);
       return;
     }
 
@@ -68,6 +98,21 @@ export const AgentTheater = ({ isProcessing, onComplete, documentName, onMessage
       if (messageIndex.current >= messagesToUse.length) {
         setCurrentTyping(null);
         setProgress(100);
+        
+        // Mark all agents as complete and show verification
+        setAgentStatuses({
+          scanner: "complete",
+          linguist: "complete",
+          historian: "complete",
+          validator: "complete",
+          reconstructor: "complete",
+        });
+        
+        // Find final confidence from validator or last message
+        const lastMsg = messagesToUse[messagesToUse.length - 1];
+        setFinalConfidence(lastMsg.confidence || 94);
+        setIsVerified(true);
+        
         onComplete?.();
         return;
       }
@@ -75,8 +120,19 @@ export const AgentTheater = ({ isProcessing, onComplete, documentName, onMessage
       const msg = messagesToUse[messageIndex.current];
       setActiveAgent(msg.agent);
       setCurrentTyping(msg.agent);
+      
+      // Update agent status to processing
+      setAgentStatuses(prev => ({
+        ...prev,
+        [msg.agent]: "processing",
+      }));
 
-      // Show typing for a moment
+      // Trigger highlight for keywords in message
+      if (msg.highlightKeywords && onHighlightChange) {
+        onHighlightChange(msg.highlightKeywords);
+      }
+
+      // Show typing for 800ms delay
       setTimeout(() => {
         const newMessage: Message = {
           id: `msg-${messageIndex.current}`,
@@ -86,6 +142,7 @@ export const AgentTheater = ({ isProcessing, onComplete, documentName, onMessage
           confidence: msg.confidence,
           documentSection: msg.documentSection,
           isDebate: msg.isDebate,
+          highlightKeywords: msg.highlightKeywords,
         };
 
         setMessages((prev) => {
@@ -94,18 +151,25 @@ export const AgentTheater = ({ isProcessing, onComplete, documentName, onMessage
           return updated;
         });
         setCurrentTyping(null);
+        
+        // Mark agent as complete after their message
+        setAgentStatuses(prev => ({
+          ...prev,
+          [msg.agent]: "complete",
+        }));
+        
         setProgress(((messageIndex.current + 1) / messagesToUse.length) * 100);
         messageIndex.current++;
 
-        // Schedule next message
-        setTimeout(addNextMessage, 1200 + Math.random() * 800);
-      }, 800 + Math.random() * 400);
+        // Schedule next message with 800ms delay
+        setTimeout(addNextMessage, 800);
+      }, 800);
     };
 
     // Start the sequence
     const timer = setTimeout(addNextMessage, 500);
     return () => clearTimeout(timer);
-  }, [isProcessing, onComplete]);
+  }, [isProcessing, onComplete, customMessages, onMessagesUpdate, onHighlightChange]);
 
   // Auto-scroll to bottom
   useEffect(() => {
@@ -113,6 +177,25 @@ export const AgentTheater = ({ isProcessing, onComplete, documentName, onMessage
       scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
     }
   }, [messages, currentTyping]);
+
+  const getStatusIndicator = (agent: AgentType) => {
+    const status = agentStatuses[agent];
+    if (status === "processing") {
+      return (
+        <span 
+          className={cn(
+            "w-2.5 h-2.5 rounded-full animate-agent-processing",
+            `bg-agent-${agent}`
+          )} 
+          style={{ color: `hsl(var(--agent-${agent}))` }}
+        />
+      );
+    }
+    if (status === "complete") {
+      return <span className="w-2.5 h-2.5 rounded-full bg-confidence-high" />;
+    }
+    return <span className="w-2.5 h-2.5 rounded-full bg-muted-foreground/30" />;
+  };
 
   return (
     <Card className="overflow-hidden border-2 border-border bg-gradient-to-b from-card to-card/80 backdrop-blur-sm">
@@ -123,11 +206,21 @@ export const AgentTheater = ({ isProcessing, onComplete, documentName, onMessage
             <div className="w-3 h-3 rounded-full bg-agent-scanner animate-pulse-soft" />
             <h3 className="font-serif text-lg font-semibold">Agent Theater</h3>
           </div>
-          {documentName && (
-            <Badge variant="secondary" className="font-mono text-xs">
-              {documentName}
-            </Badge>
-          )}
+          <div className="flex items-center gap-2">
+            {documentName && (
+              <Badge variant="secondary" className="font-mono text-xs">
+                {documentName}
+              </Badge>
+            )}
+            {isVerified && (
+              <Badge 
+                className="bg-meta-verified text-foreground font-semibold gap-1 animate-scale-in"
+              >
+                <ShieldCheck className="w-3.5 h-3.5" />
+                META-VERIFIED {finalConfidence}%
+              </Badge>
+            )}
+          </div>
         </div>
         
         {/* Progress Bar */}
@@ -140,17 +233,29 @@ export const AgentTheater = ({ isProcessing, onComplete, documentName, onMessage
         </div>
       </div>
 
-      {/* Desktop Agent Status Bar */}
+      {/* Desktop Agent Status Bar with Pulsing Indicators */}
       <div className="hidden md:flex gap-2 p-3 border-b border-border bg-muted/30 overflow-x-auto">
         {(["scanner", "linguist", "historian", "validator"] as AgentType[]).map((agent) => (
           <div
             key={agent}
             className={cn(
-              "flex-1 min-w-0 p-2 rounded-lg transition-all duration-300",
+              "flex-1 min-w-0 p-2 rounded-lg transition-all duration-300 relative",
               activeAgent === agent ? "bg-secondary ring-1 ring-accent shadow-sm" : "opacity-50"
             )}
           >
-            <AgentInfo agent={agent} />
+            <div className="flex items-center gap-2">
+              <div className="relative">
+                <AgentAvatar agent={agent} size="sm" isActive={activeAgent === agent} />
+                {/* Status Pulse Indicator */}
+                <div className="absolute -top-1 -right-1">
+                  {getStatusIndicator(agent)}
+                </div>
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-xs font-semibold capitalize truncate">{agentConfig[agent].name}</p>
+                <p className="text-[10px] text-muted-foreground truncate">{agentConfig[agent].role}</p>
+              </div>
+            </div>
           </div>
         ))}
       </div>
@@ -162,7 +267,7 @@ export const AgentTheater = ({ isProcessing, onComplete, documentName, onMessage
           className="w-full flex items-center justify-between p-3 bg-muted/30 hover:bg-muted/50 transition-colors"
         >
           <div className="flex items-center gap-2">
-            <div className={cn("w-2.5 h-2.5 rounded-full animate-pulse", `bg-agent-${activeAgent}`)} />
+            {getStatusIndicator(activeAgent)}
             <span className="text-sm font-medium capitalize">{activeAgent}</span>
             <span className="text-xs text-muted-foreground">
               {agentConfig[activeAgent].role}
@@ -191,6 +296,9 @@ export const AgentTheater = ({ isProcessing, onComplete, documentName, onMessage
               >
                 <div className="relative">
                   <AgentAvatar agent={agent} size="sm" isActive={activeAgent === agent} />
+                  <div className="absolute -top-1 -right-1">
+                    {getStatusIndicator(agent)}
+                  </div>
                   {idx < 3 && (
                     <div className="absolute top-full left-1/2 w-0.5 h-3 bg-border -translate-x-1/2" />
                   )}
@@ -199,13 +307,6 @@ export const AgentTheater = ({ isProcessing, onComplete, documentName, onMessage
                   <p className="text-sm font-medium capitalize">{agent}</p>
                   <p className="text-xs text-muted-foreground truncate">{agentConfig[agent].role}</p>
                 </div>
-                {activeAgent === agent && isProcessing && (
-                  <div className="typing-indicator flex gap-1">
-                    <span className="w-1.5 h-1.5" />
-                    <span className="w-1.5 h-1.5" />
-                    <span className="w-1.5 h-1.5" />
-                  </div>
-                )}
               </div>
             ))}
           </div>
