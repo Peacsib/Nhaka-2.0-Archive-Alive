@@ -1,1 +1,4 @@
 project_id = "qjqjanbfwxvjsfhseevc"
+
+[functions.resurrect-document]
+verify_jwt = false
