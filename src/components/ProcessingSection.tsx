@@ -13,14 +13,34 @@ interface ProcessingSectionProps {
   autoStart?: boolean;
 }
 
-// Enhanced forensic mock agent messages for Shona document resurrection
-const mockAgentMessages: { 
-  agent: AgentType; 
-  message: string; 
-  confidence?: number; 
+interface TextSegment {
+  text: string;
+  confidence: "high" | "low";
+  keyword?: string | undefined;
+}
+
+interface RestoredData {
+  segments: TextSegment[];
+  overallConfidence: number;
+}
+
+interface AgentLog {
+  agent: AgentType;
+  message: string;
+  confidence?: number;
   isDebate?: boolean;
   highlightKeywords?: string[];
-}[] = [
+}
+
+interface ResurrectionResult {
+  segments: TextSegment[];
+  overallConfidence: number;
+  agentLogs: AgentLog[];
+  processingTimeMs: number;
+}
+
+// Enhanced forensic mock agent messages for Shona document resurrection (fallback)
+const mockAgentMessages: AgentLog[] = [
   { 
     agent: "scanner", 
     message: "Initializing PaddleOCR-VL... Detecting Historical Shona characters and iron-gall ink corrosion patterns.", 
@@ -72,7 +92,7 @@ const mockAgentMessages: {
   },
 ];
 
-// Mock restored text with confidence highlighting and keyword markers
+// Mock restored text with confidence highlighting and keyword markers (fallback)
 const mockRestoredText = {
   segments: [
     { text: "The undersigned Chiefs", confidence: "high" as const, keyword: undefined },
@@ -94,12 +114,18 @@ const mockRestoredText = {
   overallConfidence: 94,
 };
 
+// Supabase Edge Function URL
+const RESURRECT_FUNCTION_URL = "https://qjqjanbfwxvjsfhseevc.supabase.co/functions/v1/resurrect-document";
+
 export const ProcessingSection = ({ autoStart = false }: ProcessingSectionProps) => {
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
   const [isComplete, setIsComplete] = useState(false);
-  const [restoredData, setRestoredData] = useState<typeof mockRestoredText | null>(null);
+  const [restoredData, setRestoredData] = useState<RestoredData | null>(null);
   const [highlightedKeywords, setHighlightedKeywords] = useState<string[]>([]);
+  const [agentMessages, setAgentMessages] = useState<AgentLog[]>(mockAgentMessages);
+  const [useRealAPI, setUseRealAPI] = useState(false);
+  const [apiResult, setApiResult] = useState<ResurrectionResult | null>(null);
   const sectionRef = useRef<HTMLElement>(null);
 
   const handleFileSelect = (file: File) => {
@@ -107,6 +133,8 @@ export const ProcessingSection = ({ autoStart = false }: ProcessingSectionProps)
     setIsComplete(false);
     setRestoredData(null);
     setHighlightedKeywords([]);
+    setApiResult(null);
+    setUseRealAPI(false);
     toast.success("Document uploaded!", {
       description: "Click 'Start Resurrection' to begin processing.",
     });
@@ -118,6 +146,8 @@ export const ProcessingSection = ({ autoStart = false }: ProcessingSectionProps)
     setIsComplete(false);
     setRestoredData(null);
     setHighlightedKeywords([]);
+    setApiResult(null);
+    setUseRealAPI(false);
     toast.success("Sample document loaded!", {
       description: "Click 'Start Resurrection' to see the agents in action.",
     });
@@ -126,6 +156,21 @@ export const ProcessingSection = ({ autoStart = false }: ProcessingSectionProps)
   const handleHighlightChange = useCallback((keywords: string[]) => {
     setHighlightedKeywords(keywords);
   }, []);
+
+  // Convert file to base64
+  const fileToBase64 = (file: File): Promise<string> => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.readAsDataURL(file);
+      reader.onload = () => {
+        const result = reader.result as string;
+        // Remove the data:image/xxx;base64, prefix
+        const base64 = result.split(",")[1];
+        resolve(base64);
+      };
+      reader.onerror = reject;
+    });
+  };
 
   const handleStartProcessing = async () => {
     if (!selectedFile && !autoStart) {
@@ -137,30 +182,58 @@ export const ProcessingSection = ({ autoStart = false }: ProcessingSectionProps)
     setIsComplete(false);
     setRestoredData(null);
     setHighlightedKeywords([]);
+    setApiResult(null);
+    setUseRealAPI(false);
+    setAgentMessages(mockAgentMessages); // Reset to mock messages initially
 
-    // Try to call FastAPI backend, fall back to mock if unavailable
-    try {
-      const formData = new FormData();
-      if (selectedFile) {
-        formData.append("file", selectedFile);
+    // Try to call Supabase Edge Function with real file
+    if (selectedFile && !selectedFile.name.startsWith("sample-")) {
+      try {
+        toast.info("Connecting to AI agents...", {
+          description: "Processing with PaddleOCR-VL and ERNIE 4.0",
+        });
+
+        const imageBase64 = await fileToBase64(selectedFile);
+        
+        const response = await fetch(RESURRECT_FUNCTION_URL, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ imageBase64 }),
+        });
+
+        if (response.ok) {
+          const data: ResurrectionResult = await response.json();
+          console.log("AI resurrection result:", data);
+          
+          // Use real API response
+          setApiResult(data);
+          setAgentMessages(data.agentLogs as AgentLog[]);
+          setUseRealAPI(true);
+          
+          toast.success("AI agents connected!", {
+            description: "Processing with real PaddleOCR-VL and ERNIE 4.0",
+          });
+        } else {
+          const errorData = await response.json();
+          console.error("Edge function error:", errorData);
+          throw new Error(errorData.error || "Edge function failed");
+        }
+      } catch (error) {
+        console.log("Edge function not available, using mock response:", error);
+        toast.warning("Using demo mode", {
+          description: "AI backend unavailable. Showing simulated response.",
+        });
+        // Fall back to mock data
+        setUseRealAPI(false);
+        setAgentMessages(mockAgentMessages);
       }
-
-      // Attempt to call local FastAPI endpoint
-      const response = await fetch("http://localhost:8000/resurrect", {
-        method: "POST",
-        body: formData,
-      });
-
-      if (response.ok) {
-        const data = await response.json();
-        // Use real response if available
-        setRestoredData(data);
-      } else {
-        throw new Error("FastAPI not available");
-      }
-    } catch (error) {
-      // FastAPI not running - use mock data (AgentTheater handles timing)
-      console.log("FastAPI not available, using mock response...");
+    } else {
+      // Sample files always use mock data
+      console.log("Using mock response for sample document...");
+      setUseRealAPI(false);
+      setAgentMessages(mockAgentMessages);
     }
   };
 
@@ -168,28 +241,35 @@ export const ProcessingSection = ({ autoStart = false }: ProcessingSectionProps)
     setIsProcessing(false);
     setIsComplete(true);
     
-    // Set mock restored data
-    setRestoredData(mockRestoredText);
+    // Use real API result if available, otherwise mock data
+    const finalData = useRealAPI && apiResult 
+      ? { segments: apiResult.segments, overallConfidence: apiResult.overallConfidence }
+      : mockRestoredText;
+    
+    setRestoredData(finalData);
     setHighlightedKeywords([]); // Clear highlights on completion
 
     toast.success("Document resurrected!", {
-      description: `Your archive has been restored with ${mockRestoredText.overallConfidence}% confidence.`,
+      description: `Your archive has been restored with ${finalData.overallConfidence}% confidence.`,
     });
 
     // Save to Supabase archives table
     try {
-      const { error } = await supabase.from("archives").insert({
+      const finalAgentLogs = useRealAPI && apiResult ? apiResult.agentLogs : mockAgentMessages;
+      const processingTime = useRealAPI && apiResult ? apiResult.processingTimeMs : mockAgentMessages.length * 800 * 2;
+      
+      const { error } = await supabase.from("archives").insert([{
         document_name: selectedFile?.name || "sample-document.jpg",
         original_text: null,
-        restored_text: mockRestoredText.segments.map(s => s.text).join(""),
-        agent_logs: mockAgentMessages,
-        confidence_data: {
-          segments: mockRestoredText.segments,
-          overall: mockRestoredText.overallConfidence,
-        },
-        overall_confidence: mockRestoredText.overallConfidence,
-        processing_time_ms: mockAgentMessages.length * 800 * 2, // Approximate based on delays
-      });
+        restored_text: finalData.segments.map(s => s.text).join(""),
+        agent_logs: JSON.parse(JSON.stringify(finalAgentLogs)),
+        confidence_data: JSON.parse(JSON.stringify({
+          segments: finalData.segments,
+          overall: finalData.overallConfidence,
+        })),
+        overall_confidence: finalData.overallConfidence,
+        processing_time_ms: processingTime,
+      }]);
 
       if (error) {
         console.error("Failed to save to archives:", error);
@@ -208,18 +288,38 @@ export const ProcessingSection = ({ autoStart = false }: ProcessingSectionProps)
     setIsComplete(false);
     setRestoredData(null);
     setHighlightedKeywords([]);
+    setApiResult(null);
+    setUseRealAPI(false);
+    setAgentMessages(mockAgentMessages);
   };
 
   const handleDownload = () => {
-    toast.success("Download started", {
-      description: "Your restored document is being prepared.",
-    });
+    if (restoredData) {
+      const text = restoredData.segments.map(s => s.text).join("");
+      const blob = new Blob([text], { type: "text/plain" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `restored-${selectedFile?.name || "document"}.txt`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+      
+      toast.success("Download complete", {
+        description: "Your restored document has been saved.",
+      });
+    }
   };
 
   const handleShare = () => {
-    toast.success("Link copied!", {
-      description: "Share this restoration with others.",
-    });
+    if (restoredData) {
+      const text = restoredData.segments.map(s => s.text).join("");
+      navigator.clipboard.writeText(text);
+      toast.success("Copied to clipboard!", {
+        description: "Share this restoration with others.",
+      });
+    }
   };
 
   return (
@@ -232,6 +332,11 @@ export const ProcessingSection = ({ autoStart = false }: ProcessingSectionProps)
           <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
             Upload any faded document and watch our AI agents collaborate to restore it.
           </p>
+          {useRealAPI && (
+            <p className="text-sm text-confidence-high mt-2 font-medium">
+              🔗 Connected to PaddleOCR-VL + ERNIE 4.0
+            </p>
+          )}
         </div>
 
         {/* Upload Area */}
@@ -322,12 +427,15 @@ export const ProcessingSection = ({ autoStart = false }: ProcessingSectionProps)
               <h3 className="font-serif text-xl font-semibold mb-4 flex items-center gap-2">
                 <span className="w-2 h-2 rounded-full bg-agent-scanner animate-pulse" />
                 Agent Collaboration
+                {useRealAPI && (
+                  <span className="text-xs text-confidence-high ml-2 font-normal">LIVE</span>
+                )}
               </h3>
               <AgentTheater
                 isProcessing={isProcessing}
                 onComplete={handleProcessingComplete}
                 documentName={selectedFile?.name}
-                customMessages={mockAgentMessages}
+                customMessages={agentMessages}
                 onHighlightChange={handleHighlightChange}
               />
             </div>
