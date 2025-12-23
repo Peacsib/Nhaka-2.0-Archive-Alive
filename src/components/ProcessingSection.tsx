@@ -168,7 +168,8 @@ export const ProcessingSection = ({ autoStart = false }: ProcessingSectionProps)
       const formData = new FormData();
       formData.append("file", file);
 
-      const response = await fetch("http://localhost:8000/resurrect/stream", {
+      const apiUrl = import.meta.env.VITE_API_URL || "http://localhost:8000";
+      const response = await fetch(`${apiUrl}/resurrect/stream`, {
         method: "POST",
         body: formData,
       });
