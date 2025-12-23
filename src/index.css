@@ -40,17 +40,17 @@
 
     --radius: 0.75rem;
 
-    /* Agent Colors - More Vibrant */
-    --agent-scanner: 195 85% 42%;
-    --agent-scanner-bg: 195 75% 93%;
-    --agent-linguist: 280 70% 55%;
-    --agent-linguist-bg: 280 60% 93%;
-    --agent-historian: 35 95% 48%;
-    --agent-historian-bg: 35 85% 92%;
-    --agent-validator: 145 75% 38%;
-    --agent-validator-bg: 145 65% 92%;
-    --agent-reconstructor: 155 65% 38%;
-    --agent-reconstructor-bg: 155 55% 92%;
+    /* Agent Colors - Nhaka 2.0 Color Coding */
+    --agent-scanner: 210 90% 50%;       /* Blue - Vision */
+    --agent-scanner-bg: 210 80% 94%;
+    --agent-linguist: 145 70% 42%;      /* Green - Culture */
+    --agent-linguist-bg: 145 60% 92%;
+    --agent-historian: 270 65% 55%;     /* Purple - Time */
+    --agent-historian-bg: 270 55% 93%;
+    --agent-validator: 0 75% 55%;       /* Red/Gold - Security */
+    --agent-validator-bg: 0 65% 94%;
+    --agent-repair: 35 95% 50%;         /* Orange/Yellow - Warning */
+    --agent-repair-bg: 35 85% 92%;
 
     /* Confidence colors */
     --confidence-high: 145 75% 38%;
@@ -58,11 +58,11 @@
 
     /* Special Effects */
     --glow-amber: 0 0 60px hsl(32 90% 50% / 0.35);
-    --glow-scanner: 0 0 40px hsl(195 85% 42% / 0.35);
-    --glow-linguist: 0 0 40px hsl(280 70% 55% / 0.35);
-    --glow-historian: 0 0 40px hsl(35 95% 48% / 0.35);
-    --glow-validator: 0 0 40px hsl(145 75% 38% / 0.35);
-    --glow-reconstructor: 0 0 40px hsl(155 65% 38% / 0.35);
+    --glow-scanner: 0 0 40px hsl(210 90% 50% / 0.35);
+    --glow-linguist: 0 0 40px hsl(145 70% 42% / 0.35);
+    --glow-historian: 0 0 40px hsl(270 65% 55% / 0.35);
+    --glow-validator: 0 0 40px hsl(0 75% 55% / 0.35);
+    --glow-repair: 0 0 40px hsl(35 95% 50% / 0.35);
 
     /* Gradients - Enhanced & Richer */
     --gradient-hero: linear-gradient(180deg, hsl(38 28% 94%) 0%, hsl(35 35% 88%) 40%, hsl(32 40% 85%) 70%, hsl(38 30% 92%) 100%);
@@ -113,11 +113,11 @@
     --input: 30 10% 20%;
     --ring: 35 85% 55%;
 
-    --agent-scanner-bg: 190 60% 15%;
-    --agent-linguist-bg: 280 50% 20%;
-    --agent-historian-bg: 38 60% 15%;
-    --agent-validator-bg: 145 50% 15%;
-    --agent-reconstructor-bg: 152 40% 15%;
+    --agent-scanner-bg: 210 70% 18%;
+    --agent-linguist-bg: 145 50% 18%;
+    --agent-historian-bg: 270 45% 20%;
+    --agent-validator-bg: 0 55% 18%;
+    --agent-repair-bg: 35 60% 18%;
 
     --sidebar-background: 30 12% 10%;
     --sidebar-foreground: 40 20% 85%;
@@ -201,8 +201,8 @@
     box-shadow: var(--glow-validator);
   }
 
-  .glow-reconstructor {
-    box-shadow: var(--glow-reconstructor);
+  .glow-repair {
+    box-shadow: var(--glow-repair);
   }
 }
 

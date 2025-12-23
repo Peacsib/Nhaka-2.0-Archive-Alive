@@ -1,7 +1,8 @@
 import { cn } from "@/lib/utils";
-import { Scan, BookOpen, Wand2, Languages, ShieldCheck } from "lucide-react";
+import { Scan, BookOpen, Languages, ShieldCheck, Wrench } from "lucide-react";
+import baiduLogo from "@/assets/baidu.jpg";
 
-export type AgentType = "scanner" | "linguist" | "historian" | "validator" | "reconstructor";
+export type AgentType = "scanner" | "linguist" | "historian" | "validator" | "repair_advisor";
 
 interface AgentAvatarProps {
   agent: AgentType;
@@ -11,27 +12,29 @@ interface AgentAvatarProps {
 }
 
 const agentConfig: Record<AgentType, {
-  icon: typeof Scan;
+  icon: typeof Scan | null;
   name: string;
   role: string;
   color: string;
   bgColor: string;
   borderColor: string;
   glowClass: string;
+  useBaiduLogo?: boolean;
 }> = {
   scanner: {
     icon: Scan,
     name: "Scanner",
-    role: "OCR Specialist",
+    role: "PaddleOCR-VL",
     color: "bg-agent-scanner",
     bgColor: "bg-agent-scanner-bg",
     borderColor: "border-agent-scanner",
     glowClass: "glow-scanner",
+    useBaiduLogo: false,
   },
   linguist: {
     icon: Languages,
     name: "Linguist",
-    role: "Language Expert",
+    role: "Doke Shona",
     color: "bg-agent-linguist",
     bgColor: "bg-agent-linguist-bg",
     borderColor: "border-agent-linguist",
@@ -40,7 +43,7 @@ const agentConfig: Record<AgentType, {
   historian: {
     icon: BookOpen,
     name: "Historian",
-    role: "Historical Context",
+    role: "1888-1923",
     color: "bg-agent-historian",
     bgColor: "bg-agent-historian-bg",
     borderColor: "border-agent-historian",
@@ -49,20 +52,20 @@ const agentConfig: Record<AgentType, {
   validator: {
     icon: ShieldCheck,
     name: "Validator",
-    role: "Fact Checker",
+    role: "Anti-Hallucination",
     color: "bg-agent-validator",
     bgColor: "bg-agent-validator-bg",
     borderColor: "border-agent-validator",
     glowClass: "glow-validator",
   },
-  reconstructor: {
-    icon: Wand2,
-    name: "Reconstructor",
-    role: "Document Artist",
-    color: "bg-agent-reconstructor",
-    bgColor: "bg-agent-reconstructor-bg",
-    borderColor: "border-agent-reconstructor",
-    glowClass: "glow-reconstructor",
+  repair_advisor: {
+    icon: Wrench,
+    name: "Repair",
+    role: "Conservation",
+    color: "bg-agent-repair",
+    bgColor: "bg-agent-repair-bg",
+    borderColor: "border-agent-repair",
+    glowClass: "glow-repair",
   },
 };
 
@@ -85,21 +88,46 @@ export const AgentAvatar = ({
   isTyping = false 
 }: AgentAvatarProps) => {
   const config = agentConfig[agent];
+  
+  // Guard against undefined agent
+  if (!config) {
+    return (
+      <div className={cn(
+        "rounded-full flex items-center justify-center bg-muted",
+        sizeClasses[size]
+      )}>
+        <Scan className={cn(iconSizes[size], "text-muted-foreground")} />
+      </div>
+    );
+  }
+  
   const Icon = config.icon;
 
   return (
     <div className="relative">
       <div
         className={cn(
-          "rounded-full flex items-center justify-center transition-all duration-300",
+          "rounded-full flex items-center justify-center transition-all duration-300 overflow-hidden",
           sizeClasses[size],
-          config.color,
+          !config.useBaiduLogo && config.color,
           isActive && config.glowClass,
           isActive && "ring-2 ring-offset-2 ring-offset-background",
           isActive && config.borderColor.replace("border-", "ring-")
         )}
       >
-        <Icon className={cn(iconSizes[size], "text-primary-foreground")} />
+        {config.useBaiduLogo ? (
+          <img 
+            src={baiduLogo} 
+            alt="ERNIE" 
+            className={cn(
+              "object-cover rounded-full",
+              sizeClasses[size],
+              isActive && "animate-pulse"
+            )} 
+          />
+        ) : (
+          Icon && <Icon className={cn(iconSizes[size], "text-primary-foreground")} />
+        )}
       </div>
       
       {/* Typing/Active Indicator */}
@@ -107,7 +135,7 @@ export const AgentAvatar = ({
         <span 
           className={cn(
             "absolute -bottom-0.5 -right-0.5 w-3 h-3 rounded-full border-2 border-background",
-            isTyping ? "bg-accent animate-pulse" : "bg-agent-reconstructor"
+            isTyping ? "bg-accent animate-pulse" : "bg-agent-validator"
           )} 
         />
       )}
@@ -118,12 +146,25 @@ export const AgentAvatar = ({
 export const AgentInfo = ({ agent }: { agent: AgentType }) => {
   const config = agentConfig[agent];
   
+  // Guard against undefined agent
+  if (!config) {
+    return (
+      <div className="flex items-center gap-2 min-w-0">
+        <AgentAvatar agent={agent} size="sm" isActive />
+        <div className="min-w-0 flex-1">
+          <h4 className="font-semibold text-foreground text-xs truncate">Unknown</h4>
+          <p className="text-xs text-muted-foreground truncate">Agent</p>
+        </div>
+      </div>
+    );
+  }
+  
   return (
-    <div className="flex items-center gap-3">
-      <AgentAvatar agent={agent} size="md" isActive />
-      <div>
-        <h4 className="font-semibold text-foreground">{config.name}</h4>
-        <p className="text-sm text-muted-foreground italic">{config.role}</p>
+    <div className="flex items-center gap-2 min-w-0">
+      <AgentAvatar agent={agent} size="sm" isActive />
+      <div className="min-w-0 flex-1">
+        <h4 className="font-semibold text-foreground text-xs truncate">{config.name}</h4>
+        <p className="text-xs text-muted-foreground truncate">{config.role}</p>
       </div>
     </div>
   );

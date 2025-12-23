@@ -70,8 +70,8 @@ export default {
           "historian-bg": "hsl(var(--agent-historian-bg))",
           validator: "hsl(var(--agent-validator))",
           "validator-bg": "hsl(var(--agent-validator-bg))",
-          reconstructor: "hsl(var(--agent-reconstructor))",
-          "reconstructor-bg": "hsl(var(--agent-reconstructor-bg))",
+          repair: "hsl(var(--agent-repair))",
+          "repair-bg": "hsl(var(--agent-repair-bg))",
         },
         confidence: {
           high: "hsl(var(--confidence-high))",

@@ -76,12 +76,12 @@ export const HeroSection = ({ onStartDemo, onUpload }: HeroSectionProps) => {
 
           {/* Subheadline */}
           <p className="text-xl md:text-2xl text-muted-foreground mb-4 max-w-2xl mx-auto animate-fade-in delay-200 font-light">
-            Watch three AI agents collaborate in real-time to bring faded documents back to life.
+            Watch five AI agents collaborate in real-time to bring faded documents back to life.
           </p>
 
           {/* Emotional Hook */}
           <p className="text-lg text-foreground/80 mb-10 max-w-xl mx-auto animate-fade-in delay-300 italic font-serif">
-            "Your grandmother's wartime letters are fading. But her story doesn't have to."
+            "Every faded letter holds a story. Let AI help you read it again."
           </p>
 
           {/* CTA Buttons */}

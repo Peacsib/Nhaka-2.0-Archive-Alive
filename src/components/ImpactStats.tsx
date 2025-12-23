@@ -5,48 +5,48 @@ import { cn } from "@/lib/utils";
 const stats = [
   {
     icon: Users,
-    value: "2B+",
-    label: "People Affected",
-    description: "Family histories at risk of being lost",
+    value: "5",
+    label: "AI Agents",
+    description: "Collaborating in real-time via SSE streaming",
     color: "text-agent-scanner",
     bgColor: "bg-agent-scanner/10",
   },
   {
     icon: Library,
-    value: "50M+",
-    label: "Documents Fading",
-    description: "Archives worldwide need preservation",
+    value: "2",
+    label: "ERNIE Models",
+    description: "PaddleOCR-VL + ERNIE 4.5 via Novita AI",
     color: "text-agent-historian",
     bgColor: "bg-agent-historian/10",
   },
   {
     icon: DollarSign,
-    value: "$50B",
-    label: "Heritage at Risk",
-    description: "Economic value of cultural artifacts",
+    value: "<5s",
+    label: "Per Analysis",
+    description: "Fast multimodal document processing",
     color: "text-accent",
     bgColor: "bg-accent/10",
   },
   {
     icon: Globe,
-    value: "7000+",
+    value: "100+",
     label: "Languages",
-    description: "Scripts and dialects need preservation",
-    color: "text-agent-reconstructor",
-    bgColor: "bg-agent-reconstructor/10",
+    description: "Multi-script OCR with context awareness",
+    color: "text-agent-linguist",
+    bgColor: "bg-agent-linguist/10",
   },
 ];
 
 export const ImpactStats = () => {
   return (
-    <section className="py-16 bg-gradient-to-b from-background to-secondary/20">
+    <section id="stats" className="py-16 bg-gradient-to-b from-background to-secondary/20">
       <div className="container px-4 md:px-6">
         <div className="text-center mb-12">
           <h2 className="font-serif text-3xl md:text-4xl font-bold mb-4">
-            The Preservation Crisis
+            Powered by ERNIE Multimodal AI
           </h2>
           <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-            Every day, irreplaceable documents fade into illegibility. We're racing against time.
+            A multi-agent system combining PaddleOCR-VL vision and ERNIE 4.5 language models.
           </p>
         </div>
 

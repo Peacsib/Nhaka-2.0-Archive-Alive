@@ -7,8 +7,8 @@ import { cn } from "@/lib/utils";
 
 interface DocumentUploadProps {
   onFileSelect: (file: File) => void;
-  selectedFile: File | null;
-  onClear: () => void;
+  selectedFile?: File | null;
+  onClear?: () => void;
 }
 
 export const DocumentUpload = ({ onFileSelect, selectedFile, onClear }: DocumentUploadProps) => {
@@ -56,14 +56,16 @@ export const DocumentUpload = ({ onFileSelect, selectedFile, onClear }: Document
             <p className="font-medium text-foreground truncate">{selectedFile.name}</p>
             <p className="text-sm text-muted-foreground">{formatFileSize(selectedFile.size)}</p>
           </div>
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={onClear}
-            className="text-muted-foreground hover:text-destructive"
-          >
-            <X className="w-5 h-5" />
-          </Button>
+          {onClear && (
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={onClear}
+              className="text-muted-foreground hover:text-destructive"
+            >
+              <X className="w-5 h-5" />
+            </Button>
+          )}
         </div>
       </Card>
     );

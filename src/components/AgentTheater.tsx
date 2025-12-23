@@ -5,7 +5,6 @@ import { Card } from "./ui/card";
 import { Badge } from "./ui/badge";
 import { Progress } from "./ui/progress";
 import { ScrollArea } from "./ui/scroll-area";
-import { InlineConfidence } from "./ConfidenceIndicator";
 import { cn } from "@/lib/utils";
 import { ChevronDown, ChevronUp } from "lucide-react";
 
@@ -19,67 +18,118 @@ interface Message {
   isDebate?: boolean;
 }
 
+interface AgentMessageData {
+  agent: AgentType;
+  message: string;
+  confidence?: number;
+  document_section?: string;
+  is_debate?: boolean;
+  timestamp?: string;
+  metadata?: Record<string, unknown>;
+}
+
 export interface AgentTheaterProps {
   isProcessing: boolean;
+  isComplete?: boolean;
   onComplete?: () => void;
   documentName?: string;
   onMessagesUpdate?: (messages: Message[]) => void;
-  customMessages?: Omit<Message, "id" | "timestamp">[];
+  messages?: AgentMessageData[];
 }
 
 const defaultDemoMessages: Omit<Message, "id" | "timestamp">[] = [
-  { agent: "scanner", message: "Initializing document analysis... Detecting image format and quality metrics.", confidence: 0 },
-  { agent: "scanner", message: "Handwritten script detected. Estimating era: 1940s based on ink patterns and paper degradation.", documentSection: "Header region" },
-  { agent: "scanner", message: "OCR confidence: 73% overall. Flagging 12 unclear sections for collaborative review.", confidence: 73 },
-  { agent: "scanner", message: "Marginal annotations detected in left margin. May contain significant context.", documentSection: "Left margin" },
-  { agent: "historian", message: "Analyzing extracted text fragments... Cross-referencing with historical databases." },
-  { agent: "historian", message: "Date markers suggest wartime correspondence, likely 1943-1944 European theater.", documentSection: "Date line" },
-  { agent: "historian", message: "The unclear word in line 7 appears to be 'rations' based on contextual analysis of wartime vocabulary.", documentSection: "Line 7", confidence: 82 },
-  { agent: "historian", message: "Found reference to 'Camp Edwards' - this was a major US Army training facility during WWII." },
-  { agent: "scanner", message: "⚡ CROSS-VERIFICATION: Re-analyzing flagged section with Historian's context. New OCR confidence: 84%.", confidence: 84, isDebate: true },
-  { agent: "reconstructor", message: "Beginning synthesis of Scanner and Historian findings..." },
-  { agent: "reconstructor", message: "Reconstructing damaged sections using period-appropriate language patterns.", documentSection: "Damaged sections" },
-  { agent: "historian", message: "⚠️ DEBATE: I suggest 'rationing' instead of 'rations' given the sentence structure.", isDebate: true },
-  { agent: "reconstructor", message: "✓ RESOLUTION: Accepting 'rationing' - grammatical context supports Historian's interpretation.", isDebate: true, confidence: 91 },
-  { agent: "reconstructor", message: "Applying confidence markers: ██ = high confidence, ░░ = reconstructed from context." },
-  { agent: "reconstructor", message: "Final document ready. Overall confidence: 89%. 3 sections marked as interpretive.", confidence: 89 },
+  { agent: "scanner", message: "🔬 Initializing PaddleOCR-VL forensic scan...", confidence: 0 },
+  { agent: "scanner", message: "📄 Document loaded. Analyzing ink degradation patterns.", documentSection: "Image Analysis" },
+  { agent: "scanner", message: "📝 OCR extraction complete: 450 characters extracted.", confidence: 82 },
+  { agent: "linguist", message: "📚 Initializing Doke Orthography analysis (1931-1955 reference)..." },
+  { agent: "linguist", message: "🔤 Scanning for Pre-1955 Shona phonetic markers...", documentSection: "Orthography Scan", confidence: 75 },
+  { agent: "linguist", message: "📜 HISTORICAL TERMS: 3 colonial-era terms identified.", confidence: 82 },
+  { agent: "historian", message: "📜 Initializing historical analysis engine (1888-1923 database)..." },
+  { agent: "historian", message: "👤 KEY FIGURES: Lobengula, Rudd, Jameson detected.", confidence: 88 },
+  { agent: "historian", message: "⚡ CROSS-VERIFIED: Document aligns with Rudd Concession (Oct 30, 1888).", confidence: 92, isDebate: true },
+  { agent: "validator", message: "🔍 Initializing hallucination detection protocols..." },
+  { agent: "validator", message: "🔄 Cross-referencing Scanner↔Linguist↔Historian outputs...", documentSection: "Cross-Validation" },
+  { agent: "validator", message: "✓ No cross-agent inconsistencies detected.", confidence: 85 },
+  { agent: "validator", message: "📈 FINAL CONFIDENCE SCORE: 78.5%", confidence: 78.5 },
+  { agent: "repair_advisor", message: "🔧 Initializing physical condition assessment..." },
+  { agent: "repair_advisor", message: "🔍 DAMAGE DETECTED: 2 conservation issues identified.", confidence: 80, isDebate: true },
+  { agent: "repair_advisor", message: "   🔴 Iron-gall ink corrosion: Calcium phytate treatment recommended", documentSection: "Repair Recommendation" },
+  { agent: "repair_advisor", message: "📸 DIGITIZATION PRIORITY: HIGH (85%) - Immediate scanning recommended", confidence: 85 },
 ];
 
-export const AgentTheater = ({ isProcessing, onComplete, documentName, onMessagesUpdate, customMessages }: AgentTheaterProps) => {
+export const AgentTheater = ({ isProcessing, isComplete, onComplete, documentName, onMessagesUpdate, messages: externalMessages }: AgentTheaterProps) => {
   const [messages, setMessages] = useState<Message[]>([]);
   const [currentTyping, setCurrentTyping] = useState<AgentType | null>(null);
   const [progress, setProgress] = useState(0);
   const [activeAgent, setActiveAgent] = useState<AgentType>("scanner");
   const [mobileTimelineOpen, setMobileTimelineOpen] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
-  const messageIndex = useRef(0);
+  const processedCount = useRef(0);
 
+  // Handle external messages from SSE stream
   useEffect(() => {
-    if (!isProcessing) {
-      setMessages([]);
-      setProgress(0);
-      messageIndex.current = 0;
+    if (externalMessages && externalMessages.length > 0) {
+      const newMessages: Message[] = externalMessages.map((msg, idx) => ({
+        id: `msg-${idx}-${msg.agent}-${msg.message.slice(0, 20).replace(/\s/g, '_')}`,
+        agent: msg.agent,
+        message: msg.message,
+        timestamp: msg.timestamp ? new Date(msg.timestamp).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }) : new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
+        confidence: msg.confidence,
+        documentSection: msg.document_section,
+        isDebate: msg.is_debate,
+      }));
+      setMessages(newMessages);
+      
+      // Update active agent based on last message
+      if (newMessages.length > 0) {
+        setActiveAgent(newMessages[newMessages.length - 1].agent);
+      }
+      
+      // Update progress
+      const estimatedTotal = 17; // Approximate number of messages
+      setProgress(Math.min((newMessages.length / estimatedTotal) * 100, isComplete ? 100 : 95));
+    }
+  }, [externalMessages, isComplete]);
+
+  // Set progress to 100 when complete
+  useEffect(() => {
+    if (isComplete) {
+      setProgress(100);
+      setCurrentTyping(null);
+    }
+  }, [isComplete]);
+
+  // Demo mode - only runs if no external messages
+  useEffect(() => {
+    if (!isProcessing || (externalMessages && externalMessages.length > 0)) {
+      // Only reset if not complete and no messages
+      if (!isProcessing && !isComplete && !externalMessages?.length && messages.length === 0) {
+        setMessages([]);
+        setProgress(0);
+        processedCount.current = 0;
+      }
       return;
     }
 
-    const messagesToUse = customMessages || defaultDemoMessages;
+    const messagesToUse = defaultDemoMessages;
+    let messageIndex = 0;
     
     const addNextMessage = () => {
-      if (messageIndex.current >= messagesToUse.length) {
+      if (messageIndex >= messagesToUse.length) {
         setCurrentTyping(null);
         setProgress(100);
         onComplete?.();
         return;
       }
 
-      const msg = messagesToUse[messageIndex.current];
+      const msg = messagesToUse[messageIndex];
       setActiveAgent(msg.agent);
       setCurrentTyping(msg.agent);
 
       // Show typing for a moment
       setTimeout(() => {
         const newMessage: Message = {
-          id: `msg-${messageIndex.current}`,
+          id: `msg-${messageIndex}`,
           agent: msg.agent,
           message: msg.message,
           timestamp: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
@@ -94,8 +144,8 @@ export const AgentTheater = ({ isProcessing, onComplete, documentName, onMessage
           return updated;
         });
         setCurrentTyping(null);
-        setProgress(((messageIndex.current + 1) / messagesToUse.length) * 100);
-        messageIndex.current++;
+        setProgress(((messageIndex + 1) / messagesToUse.length) * 100);
+        messageIndex++;
 
         // Schedule next message
         setTimeout(addNextMessage, 1200 + Math.random() * 800);
@@ -105,14 +155,20 @@ export const AgentTheater = ({ isProcessing, onComplete, documentName, onMessage
     // Start the sequence
     const timer = setTimeout(addNextMessage, 500);
     return () => clearTimeout(timer);
-  }, [isProcessing, onComplete]);
+  }, [isProcessing, isComplete, onComplete, externalMessages, messages.length]);
 
-  // Auto-scroll to bottom
+  // Auto-scroll to bottom when new messages arrive
   useEffect(() => {
     if (scrollRef.current) {
-      scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
+      // Scroll the parent ScrollArea viewport to show latest messages
+      const viewport = scrollRef.current.closest('[data-radix-scroll-area-viewport]');
+      if (viewport) {
+        requestAnimationFrame(() => {
+          viewport.scrollTop = viewport.scrollHeight;
+        });
+      }
     }
-  }, [messages, currentTyping]);
+  }, [messages, currentTyping, activeAgent]);
 
   return (
     <Card className="overflow-hidden border-2 border-border bg-gradient-to-b from-card to-card/80 backdrop-blur-sm">
@@ -142,7 +198,7 @@ export const AgentTheater = ({ isProcessing, onComplete, documentName, onMessage
 
       {/* Desktop Agent Status Bar */}
       <div className="hidden md:flex gap-2 p-3 border-b border-border bg-muted/30 overflow-x-auto">
-        {(["scanner", "linguist", "historian", "validator"] as AgentType[]).map((agent) => (
+        {(["scanner", "linguist", "historian", "validator", "repair_advisor"] as AgentType[]).map((agent) => (
           <div
             key={agent}
             className={cn(
@@ -164,9 +220,11 @@ export const AgentTheater = ({ isProcessing, onComplete, documentName, onMessage
           <div className="flex items-center gap-2">
             <div className={cn("w-2.5 h-2.5 rounded-full animate-pulse", `bg-agent-${activeAgent}`)} />
             <span className="text-sm font-medium capitalize">{activeAgent}</span>
-            <span className="text-xs text-muted-foreground">
-              {agentConfig[activeAgent].role}
-            </span>
+            {activeAgent && agentConfig[activeAgent] && (
+              <span className="text-xs text-muted-foreground">
+                {agentConfig[activeAgent].role}
+              </span>
+            )}
           </div>
           {mobileTimelineOpen ? (
             <ChevronUp className="w-4 h-4 text-muted-foreground" />
@@ -178,10 +236,10 @@ export const AgentTheater = ({ isProcessing, onComplete, documentName, onMessage
         {/* Mobile Timeline Expanded */}
         <div className={cn(
           "overflow-hidden transition-all duration-300",
-          mobileTimelineOpen ? "max-h-40" : "max-h-0"
+          mobileTimelineOpen ? "max-h-48" : "max-h-0"
         )}>
           <div className="p-3 space-y-2 bg-muted/20">
-            {(["scanner", "linguist", "historian", "validator"] as AgentType[]).map((agent, idx) => (
+            {(["scanner", "linguist", "historian", "validator", "repair_advisor"] as AgentType[]).map((agent, idx) => (
               <div
                 key={agent}
                 className={cn(
@@ -191,13 +249,15 @@ export const AgentTheater = ({ isProcessing, onComplete, documentName, onMessage
               >
                 <div className="relative">
                   <AgentAvatar agent={agent} size="sm" isActive={activeAgent === agent} />
-                  {idx < 3 && (
+                  {idx < 4 && (
                     <div className="absolute top-full left-1/2 w-0.5 h-3 bg-border -translate-x-1/2" />
                   )}
                 </div>
                 <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium capitalize">{agent}</p>
-                  <p className="text-xs text-muted-foreground truncate">{agentConfig[agent].role}</p>
+                  <p className="text-sm font-medium capitalize">{agent.replace('_', ' ')}</p>
+                  {agentConfig[agent] && (
+                    <p className="text-xs text-muted-foreground truncate">{agentConfig[agent].role}</p>
+                  )}
                 </div>
                 {activeAgent === agent && isProcessing && (
                   <div className="typing-indicator flex gap-1">
@@ -213,8 +273,8 @@ export const AgentTheater = ({ isProcessing, onComplete, documentName, onMessage
       </div>
 
       {/* Messages Area */}
-      <ScrollArea className="h-[300px] md:h-[400px]" ref={scrollRef}>
-        <div className="p-4 space-y-3">
+      <ScrollArea className="h-[300px] md:h-[400px]">
+        <div className="p-4 space-y-3" ref={scrollRef}>
           {messages.map((msg) => (
             <div key={msg.id} className={cn(msg.isDebate && "relative")}>
               {msg.isDebate && (

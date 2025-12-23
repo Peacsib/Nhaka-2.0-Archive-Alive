@@ -1,73 +1,146 @@
-# Welcome to your Lovable project
+# Nhaka
 
-## Project info
+**Five AI agents. One mission. Resurrect the unreadable.**
 
-**URL**: https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID
+---
 
-## How can I edit this code?
+My grandmother kept letters from 1923. By the time I found them, the ink had faded to ghosts. Traditional OCR returned gibberish. AI chatbots hallucinated names that never existed.
 
-There are several ways of editing your application.
+So I built Nhaka.
 
-**Use Lovable**
+*Nhaka* means "heritage" in Shona. It's a multi-agent system where five specialized AIs argue, verify, and collaborate to bring damaged documents back to life—and you can watch them do it.
 
-Simply visit the [Lovable Project](https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID) and start prompting.
+---
 
-Changes made via Lovable will be committed automatically to this repo.
+## What Makes This Different
 
-**Use your preferred IDE**
+Most document restoration tools are black boxes. Upload → wait → hope for the best.
 
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
+Nhaka shows you everything. Five agents with distinct personalities debate in real-time:
 
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
+| Agent | Job | What You'll See |
+|-------|-----|-----------------|
+| **Scanner** | Reads the image | "I'm 73% confident this word is 'Lobengula'" |
+| **Linguist** | Handles old scripts | "That's Doke Shona orthography—let me transliterate" |
+| **Historian** | Fact-checks | "Wait, Lobengula died in 1894. This date doesn't match." |
+| **Validator** | Catches hallucinations | "Scanner and Historian disagree. Flagging for review." |
+| **Repair Advisor** | Assesses damage | "Water damage in top-left. Recommend deacidification." |
 
-Follow these steps:
+You watch them think. You see when they disagree. You know exactly what's original text versus AI reconstruction.
 
-```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
+---
 
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
+## The Tech
 
-# Step 3: Install the necessary dependencies.
-npm i
+**Vision:** PaddleOCR-VL via Novita AI  
+**Language:** ERNIE 4.5 via Novita AI  
+**Frontend:** React + TypeScript + Vite  
+**Backend:** FastAPI with SSE streaming  
+**Testing:** Property-based tests with Hypothesis
 
-# Step 4: Start the development server with auto-reloading and an instant preview.
-npm run dev
+The agents stream their responses in real-time. No loading spinners. No waiting. Character by character, you watch the document come back to life.
+
+---
+
+## Try It
+
+```bash
+# Clone
+git clone https://github.com/Peacsib/nhaka-archive-resurrection.git
+cd nhaka-archive-resurrection
+
+# Install
+npm install
+pip install -r requirements.txt
+
+# Configure (get a free key at novita.ai)
+cp .env.example .env
+# Add your NOVITA_AI_API_KEY
+
+# Run
+uvicorn main:app --reload --port 8000  # Terminal 1
+npm run dev                             # Terminal 2
 ```
 
-**Edit a file directly in GitHub**
+Open http://localhost:8089. Upload a document. Watch the agents work.
 
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
+---
 
-**Use GitHub Codespaces**
+## Why ERNIE?
 
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
+I needed two things: vision that could read faded handwriting, and language models smart enough to fact-check historical claims.
 
-## What technologies are used for this project?
+PaddleOCR-VL handles the vision—it's trained on degraded documents and handles the mess of water stains, foxing, and ink bleed better than alternatives I tested.
 
-This project is built with:
+ERNIE 4.5 powers the four language agents. Each has a different system prompt, different expertise, different personality. They argue. They verify each other. They catch mistakes.
 
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
+The combination—multimodal vision feeding into specialized language agents—is what makes this work.
 
-## How can I deploy this project?
+---
 
-Simply open [Lovable](https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID) and click on Share -> Publish.
+## The Architecture
 
-## Can I connect a custom domain to my Lovable project?
+```
+Document Image
+      ↓
+┌─────────────────────────────────────────────┐
+│           PaddleOCR-VL (Scanner)            │
+│     Extracts text + detects damage          │
+└─────────────────────────────────────────────┘
+      ↓ SSE Stream
+┌─────────────────────────────────────────────┐
+│              ERNIE 4.5 Agents               │
+│  Linguist → Historian → Validator → Repair  │
+│     Each agent sees previous outputs        │
+└─────────────────────────────────────────────┘
+      ↓ SSE Stream
+┌─────────────────────────────────────────────┐
+│              React Frontend                 │
+│   Agent Theater • AR Damage View • Export   │
+└─────────────────────────────────────────────┘
+```
 
-Yes, you can!
+Every agent streams to the frontend. You see Scanner's OCR results appear, then Linguist's transliteration, then Historian's fact-check, then Validator's confidence assessment, then Repair Advisor's conservation notes.
 
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
+It takes about 5 seconds total. But you're watching the whole time.
 
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/features/custom-domain#custom-domain)
+---
+
+## What I Learned
+
+Building this taught me that transparency matters more than accuracy. Users trust AI more when they can see it thinking—even when it makes mistakes.
+
+The multi-agent approach also catches errors that single-model systems miss. When Historian says "this date is wrong" and Validator flags the disagreement, users know to double-check. That's better than confidently wrong.
+
+---
+
+## For the Judges
+
+**Category:** Best ERNIE Multimodal Application (Sponsored by Novita)
+
+This project demonstrates:
+- **Multimodal integration:** PaddleOCR-VL vision + ERNIE 4.5 language working together
+- **Novel architecture:** Multi-agent swarm with real-time streaming collaboration
+- **Real-world impact:** Document preservation is a genuine problem affecting archives worldwide
+- **Technical depth:** Property-based testing, SSE streaming, caching, confidence scoring
+- **Polish:** Working frontend, working backend, working demo
+
+---
+
+## Links
+
+- **Live Demo:** [Coming Soon]
+- **Demo Video:** [Coming Soon]
+- **GitHub:** https://github.com/Peacsib
+
+---
+
+## Contact
+
+Peace Sibanda  
+peacesibx@gmail.com  
+[LinkedIn](https://www.linkedin.com/in/peace-sibanda) • [GitHub](https://github.com/Peacsib)
+
+---
+
+*Built for the ERNIE AI Developer Challenge 2025*

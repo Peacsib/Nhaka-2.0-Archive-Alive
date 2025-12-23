@@ -1,0 +1,2 @@
+# Property-based tests directory
+# Tests for universal correctness properties using Hypothesis (Python) and fast-check (TypeScript)

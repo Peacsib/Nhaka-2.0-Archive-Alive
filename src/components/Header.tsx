@@ -16,33 +16,35 @@ export const Header = () => {
               <Archive className="w-5 h-5 text-accent" />
             </div>
             <span className="font-serif text-lg font-bold text-foreground">
-              Archive Resurrection
+              Nhaka 2.0
             </span>
           </a>
 
           {/* Desktop Navigation */}
           <nav className="hidden md:flex items-center gap-6">
             <a 
-              href="#upload" 
+              href="/resurrect" 
               className="text-sm text-muted-foreground hover:text-foreground transition-colors"
             >
               Upload
             </a>
             <a 
-              href="#" 
+              href="/#features" 
               className="text-sm text-muted-foreground hover:text-foreground transition-colors"
             >
               How It Works
             </a>
             <a 
-              href="#" 
+              href="/#stats" 
               className="text-sm text-muted-foreground hover:text-foreground transition-colors"
             >
-              About
+              Impact
             </a>
-            <Button variant="hero" size="sm">
-              Try Demo
-            </Button>
+            <a href="/resurrect">
+              <Button variant="hero" size="sm">
+                Try Demo
+              </Button>
+            </a>
           </nav>
 
           {/* Mobile Menu Button */}
@@ -65,26 +67,28 @@ export const Header = () => {
         >
           <nav className="flex flex-col gap-2">
             <a 
-              href="#upload" 
+              href="/resurrect" 
               className="px-4 py-2 text-sm text-muted-foreground hover:text-foreground hover:bg-secondary/50 rounded-lg transition-colors"
             >
               Upload
             </a>
             <a 
-              href="#" 
+              href="/#features" 
               className="px-4 py-2 text-sm text-muted-foreground hover:text-foreground hover:bg-secondary/50 rounded-lg transition-colors"
             >
               How It Works
             </a>
             <a 
-              href="#" 
+              href="/#stats" 
               className="px-4 py-2 text-sm text-muted-foreground hover:text-foreground hover:bg-secondary/50 rounded-lg transition-colors"
             >
-              About
+              Impact
             </a>
-            <Button variant="hero" size="sm" className="mx-4 mt-2">
-              Try Demo
-            </Button>
+            <a href="/resurrect" className="mx-4 mt-2">
+              <Button variant="hero" size="sm" className="w-full">
+                Try Demo
+              </Button>
+            </a>
           </nav>
         </div>
       </div>

@@ -1,20 +1,15 @@
 import { Header } from "@/components/Header";
 import { HeroSection } from "@/components/HeroSection";
-import { ProcessingSection } from "@/components/ProcessingSection";
 import { FeaturesSection } from "@/components/FeaturesSection";
 import { ImpactStats } from "@/components/ImpactStats";
 import { Footer } from "@/components/Footer";
-import { useRef } from "react";
+import { useNavigate } from "react-router-dom";
 
 const Index = () => {
-  const uploadRef = useRef<HTMLElement>(null);
+  const navigate = useNavigate();
 
-  const scrollToUpload = () => {
-    document.getElementById("upload")?.scrollIntoView({ behavior: "smooth" });
-  };
-
-  const startDemo = () => {
-    scrollToUpload();
+  const goToResurrect = () => {
+    navigate("/resurrect");
   };
 
   return (
@@ -23,11 +18,9 @@ const Index = () => {
       
       <main className="pt-16">
         <HeroSection 
-          onStartDemo={startDemo}
-          onUpload={scrollToUpload}
+          onStartDemo={goToResurrect}
+          onUpload={goToResurrect}
         />
-        
-        <ProcessingSection />
         
         <ImpactStats />
         

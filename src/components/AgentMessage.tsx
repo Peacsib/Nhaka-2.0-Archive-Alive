@@ -30,6 +30,11 @@ export const AgentMessage = ({
   const [visible, setVisible] = useState(!animateIn);
   const [displayedText, setDisplayedText] = useState("");
 
+  // Guard against undefined agent config
+  if (!config) {
+    return null;
+  }
+
   useEffect(() => {
     if (animateIn) {
       const timer = setTimeout(() => setVisible(true), delay);
@@ -110,6 +115,11 @@ export const AgentMessage = ({
 
 export const TypingIndicator = ({ agent }: { agent: AgentType }) => {
   const config = agentConfig[agent];
+  
+  // Guard against undefined agent config
+  if (!config) {
+    return null;
+  }
   
   return (
     <div

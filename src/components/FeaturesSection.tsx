@@ -11,7 +11,7 @@ const features = [
   {
     icon: Zap,
     title: "Multi-Agent Collaboration",
-    description: "Three specialized agents work together, each bringing unique expertise to the restoration process.",
+    description: "Five specialized agents work together, each bringing unique expertise to the restoration process.",
   },
   {
     icon: Shield,
@@ -28,21 +28,29 @@ const features = [
 const agents: { type: AgentType; description: string }[] = [
   {
     type: "scanner",
-    description: "Extracts text with precision, identifies unclear sections, and assesses document quality.",
+    description: "Extracts text with precision using ERNIE 4.0 OCR, identifies unclear sections, and assesses document quality.",
+  },
+  {
+    type: "linguist",
+    description: "Expert in Doke Orthography (1931 Shona). Identifies archaic characters like ɓ, ɗ, ȿ, ɀ and maps to modern equivalents.",
   },
   {
     type: "historian",
-    description: "Provides historical context, cross-references dates, and interprets period-specific language.",
+    description: "Zimbabwean history specialist. Verifies names, dates, and cross-references against 1890s colonial records.",
   },
   {
-    type: "reconstructor",
-    description: "Synthesizes findings, fills gaps with period-appropriate language, and produces the final restoration.",
+    type: "validator",
+    description: "Cross-checks all findings for accuracy and consistency, ensuring restoration integrity.",
+  },
+  {
+    type: "repair",
+    description: "Archival conservator. Analyzes document condition and recommends chemical treatments for preservation.",
   },
 ];
 
 export const FeaturesSection = () => {
   return (
-    <section className="py-20 bg-background">
+    <section id="features" className="py-20 bg-background">
       <div className="container px-4 md:px-6">
         {/* Features Grid */}
         <div className="text-center mb-16">
@@ -76,29 +84,31 @@ export const FeaturesSection = () => {
             Meet Your AI Restoration Team
           </h2>
           <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-            Three specialized agents with distinct personalities, working together to bring your archives back to life.
+            Five specialized agents with distinct personalities, working together to bring your archives back to life.
           </p>
         </div>
 
-        <div className="grid md:grid-cols-3 gap-8 max-w-5xl mx-auto">
+        <div className="grid md:grid-cols-3 lg:grid-cols-5 gap-6 max-w-6xl mx-auto">
           {agents.map((agent, index) => (
             <Card
               key={agent.type}
-              className="p-8 text-center hover:shadow-xl transition-all duration-300 group"
+              className="p-6 text-center hover:shadow-xl transition-all duration-300 group"
               style={{ animationDelay: `${index * 150}ms` }}
             >
-              <div className="mb-6 flex justify-center">
-                <AgentAvatar agent={agent.type} size="lg" isActive />
+              <div className="mb-4 flex justify-center">
+                <AgentAvatar agent={agent.type} size="md" isActive />
               </div>
-              <h3 className="font-serif text-2xl font-bold mb-1 capitalize">
-                {agent.type}
+              <h3 className="font-serif text-xl font-bold mb-1 capitalize">
+                {agent.type === "repair" ? "Repair Advisor" : agent.type}
               </h3>
               <p className="text-sm text-accent italic mb-4">
                 {agent.type === "scanner" && "The Detective"}
-                {agent.type === "historian" && "The Scholar"}
-                {agent.type === "reconstructor" && "The Artist"}
+                {agent.type === "linguist" && "The Scholar"}
+                {agent.type === "historian" && "The Archivist"}
+                {agent.type === "validator" && "The Judge"}
+                {agent.type === "repair" && "The Healer"}
               </p>
-              <p className="text-muted-foreground">{agent.description}</p>
+              <p className="text-muted-foreground text-sm">{agent.description}</p>
             </Card>
           ))}
         </div>
