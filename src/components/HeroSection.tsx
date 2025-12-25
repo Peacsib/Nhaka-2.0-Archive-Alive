@@ -66,19 +66,22 @@ export const HeroSection = ({ onStartDemo, onUpload }: HeroSectionProps) => {
         style={{ transform: `translateY(${scrollY * 0.15}px)` }}
       >
         <div className="max-w-4xl mx-auto text-center">
-          {/* ERNIE Challenge Badge */}
-          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-gradient-to-r from-blue-500/10 to-purple-500/10 border border-blue-500/20 mb-3 animate-fade-in shadow-sm">
-            <span className="text-xs font-semibold text-blue-600 dark:text-blue-400">
-              🏆 ERNIE AI Developer Challenge 2025
-            </span>
-          </div>
+          {/* Badges Container - Aligned */}
+          <div className="flex flex-col items-center gap-3 mb-8">
+            {/* ERNIE Challenge Badge */}
+            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-gradient-to-r from-blue-500/10 to-purple-500/10 border border-blue-500/20 animate-fade-in shadow-sm min-w-[280px] justify-center">
+              <span className="text-xs font-semibold text-blue-600 dark:text-blue-400">
+                🏆 ERNIE AI Developer Challenge 2025
+              </span>
+            </div>
 
-          {/* Badge */}
-          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-gradient-to-r from-secondary/80 to-secondary/60 border border-accent/20 mb-8 animate-fade-in shadow-sm">
-            <Archive className="w-4 h-4 text-accent" />
-            <span className="text-sm font-medium text-secondary-foreground">
-              AI-Powered Archive Restoration
-            </span>
+            {/* AI-Powered Badge */}
+            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-gradient-to-r from-secondary/80 to-secondary/60 border border-accent/20 animate-fade-in shadow-sm min-w-[280px] justify-center">
+              <Archive className="w-4 h-4 text-accent" />
+              <span className="text-sm font-medium text-secondary-foreground">
+                AI-Powered Archive Restoration
+              </span>
+            </div>
           </div>
 
           {/* Main Headline */}
@@ -105,24 +108,39 @@ export const HeroSection = ({ onStartDemo, onUpload }: HeroSectionProps) => {
 
           {/* CTA Buttons */}
           <div className="flex flex-col sm:flex-row gap-4 justify-center items-center animate-fade-in delay-400">
-            <Button 
-              variant="hero" 
-              size="xl" 
-              onClick={onUpload}
-              className="group"
-            >
-              <Upload className="w-5 h-5 mr-2 group-hover:animate-bounce" />
-              Upload Your Document
-            </Button>
-            <Button 
-              variant="outline" 
-              size="xl" 
-              onClick={onStartDemo}
-              className="group"
-            >
-              <Clock className="w-5 h-5 mr-2" />
-              Watch Demo
-            </Button>
+            {/* Upload Button with Animated Corner Gradient */}
+            <div className="relative group">
+              {/* Animated gradient border */}
+              <div className="absolute -inset-[2px] gradient-border-animated rounded-xl opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+              <div className="relative">
+                <Button 
+                  variant="hero" 
+                  size="xl" 
+                  onClick={onUpload}
+                  className="group/btn relative z-10"
+                >
+                  <Upload className="w-5 h-5 mr-2 group-hover/btn:animate-bounce" />
+                  Upload Your Document
+                </Button>
+              </div>
+            </div>
+
+            {/* Watch Demo Button with Animated Corner Gradient */}
+            <div className="relative group">
+              {/* Animated gradient border */}
+              <div className="absolute -inset-[2px] gradient-border-animated rounded-xl opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+              <div className="relative">
+                <Button 
+                  variant="outline" 
+                  size="xl" 
+                  onClick={onStartDemo}
+                  className="group/btn relative z-10"
+                >
+                  <Clock className="w-5 h-5 mr-2" />
+                  Watch Demo
+                </Button>
+              </div>
+            </div>
           </div>
 
           {/* Trust Indicators */}

@@ -214,6 +214,17 @@
       hsl(32 90% 50%)
     );
   }
+
+  .gradient-border-animated {
+    background: linear-gradient(90deg, 
+      hsl(180 100% 50%), 
+      hsl(280 100% 50%), 
+      hsl(0 100% 50%), 
+      hsl(180 100% 50%)
+    );
+    background-size: 300% 300%;
+    animation: gradient-border 3s ease infinite;
+  }
 }
 
 /* Keyframe Animations */
@@ -256,6 +267,15 @@
 @keyframes spin-slow {
   from { transform: rotate(0deg); }
   to { transform: rotate(360deg); }
+}
+
+@keyframes gradient-border {
+  0%, 100% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
 }
 
 @keyframes revealDocument {

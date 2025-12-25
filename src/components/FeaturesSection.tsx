@@ -88,8 +88,8 @@ export const FeaturesSection = () => {
           </p>
           <a href="/resurrect" className="inline-block">
             <div className="relative group">
-              {/* Animated rotating gradient border */}
-              <div className="absolute -inset-0.5 bg-gradient-conic from-accent via-blue-500 to-purple-500 rounded-lg opacity-0 group-hover:opacity-100 blur-sm transition-opacity duration-500 animate-spin-slow" />
+              {/* Animated gradient border (not rotating, but flowing) */}
+              <div className="absolute -inset-[2px] gradient-border-animated rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
               
               {/* Button */}
               <button className="relative inline-flex items-center gap-2 px-6 py-3 rounded-lg bg-background border border-accent/30 group-hover:border-transparent transition-all duration-300 text-accent font-medium overflow-hidden">

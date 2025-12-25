@@ -24,30 +24,34 @@ export const Header = () => {
           <nav className="hidden md:flex items-center gap-6">
             <a 
               href="/resurrect" 
-              className="text-sm text-muted-foreground hover:text-foreground transition-colors"
+              className="relative text-sm text-muted-foreground hover:text-foreground transition-colors group"
             >
               Upload
+              <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-accent transition-all duration-300 group-hover:w-full" />
             </a>
             <a 
               href="/#features" 
-              className="text-sm text-muted-foreground hover:text-foreground transition-colors"
+              className="relative text-sm text-muted-foreground hover:text-foreground transition-colors group"
             >
               How It Works
+              <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-accent transition-all duration-300 group-hover:w-full" />
             </a>
             <a 
               href="/#stats" 
-              className="text-sm text-muted-foreground hover:text-foreground transition-colors"
+              className="relative text-sm text-muted-foreground hover:text-foreground transition-colors group"
             >
               Impact
+              <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-accent transition-all duration-300 group-hover:w-full" />
             </a>
             <a 
               href="https://github.com/Peacsib/Nhaka-2.0-Archive-Alive" 
               target="_blank"
               rel="noopener noreferrer"
-              className="text-sm text-muted-foreground hover:text-foreground transition-colors flex items-center gap-1"
+              className="relative text-sm text-muted-foreground hover:text-foreground transition-colors flex items-center gap-1 group"
             >
               <Github className="w-4 h-4" />
               GitHub
+              <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-accent transition-all duration-300 group-hover:w-full" />
             </a>
             <a href="/resurrect">
               <Button variant="hero" size="sm">
