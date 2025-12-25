@@ -29,6 +29,18 @@ export const HeroSection = ({ onStartDemo, onUpload }: HeroSectionProps) => {
     <section ref={sectionRef} className="relative min-h-[90vh] flex items-center justify-center overflow-hidden">
       {/* Background Effects with Parallax */}
       <div className="absolute inset-0 bg-hero-gradient" />
+      
+      {/* Subtle faded document background */}
+      <div 
+        className="absolute inset-0 opacity-[0.03]"
+        style={{ 
+          backgroundImage: 'url("data:image/svg+xml,%3Csvg width=\'800\' height=\'600\' xmlns=\'http://www.w3.org/2000/svg\'%3E%3Ctext x=\'50\' y=\'100\' font-family=\'serif\' font-size=\'24\' fill=\'%23000\' opacity=\'0.3\'%3EDear Sir,%3C/text%3E%3Ctext x=\'50\' y=\'150\' font-family=\'serif\' font-size=\'18\' fill=\'%23000\' opacity=\'0.2\'%3EI write to inform you of the recent developments...%3C/text%3E%3Ctext x=\'50\' y=\'200\' font-family=\'serif\' font-size=\'18\' fill=\'%23000\' opacity=\'0.15\'%3ERegarding the matter of the land concession...%3C/text%3E%3Ctext x=\'50\' y=\'250\' font-family=\'serif\' font-size=\'18\' fill=\'%23000\' opacity=\'0.1\'%3ESigned this day, 1896%3C/text%3E%3C/svg%3E")',
+          backgroundSize: 'cover',
+          backgroundPosition: 'center',
+          filter: 'blur(2px)'
+        }}
+      />
+      
       <div 
         className="absolute inset-0"
         style={{ background: 'radial-gradient(ellipse at center, hsl(32 90% 50% / 0.12) 0%, hsl(32 90% 50% / 0.04) 40%, transparent 70%)' }}
@@ -54,6 +66,13 @@ export const HeroSection = ({ onStartDemo, onUpload }: HeroSectionProps) => {
         style={{ transform: `translateY(${scrollY * 0.15}px)` }}
       >
         <div className="max-w-4xl mx-auto text-center">
+          {/* ERNIE Challenge Badge */}
+          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-gradient-to-r from-blue-500/10 to-purple-500/10 border border-blue-500/20 mb-3 animate-fade-in shadow-sm">
+            <span className="text-xs font-semibold text-blue-600 dark:text-blue-400">
+              🏆 ERNIE AI Developer Challenge 2025
+            </span>
+          </div>
+
           {/* Badge */}
           <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-gradient-to-r from-secondary/80 to-secondary/60 border border-accent/20 mb-8 animate-fade-in shadow-sm">
             <Archive className="w-4 h-4 text-accent" />

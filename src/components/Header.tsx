@@ -1,4 +1,4 @@
-import { Archive, Menu, X } from "lucide-react";
+import { Archive, Menu, X, Github } from "lucide-react";
 import { Button } from "./ui/button";
 import { useState } from "react";
 import { cn } from "@/lib/utils";
@@ -40,6 +40,15 @@ export const Header = () => {
             >
               Impact
             </a>
+            <a 
+              href="https://github.com/Peacsib/Nhaka-2.0-Archive-Alive" 
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-sm text-muted-foreground hover:text-foreground transition-colors flex items-center gap-1"
+            >
+              <Github className="w-4 h-4" />
+              GitHub
+            </a>
             <a href="/resurrect">
               <Button variant="hero" size="sm">
                 Try Demo
@@ -62,7 +71,7 @@ export const Header = () => {
         <div
           className={cn(
             "md:hidden overflow-hidden transition-all duration-300",
-            mobileMenuOpen ? "max-h-64 pb-4" : "max-h-0"
+            mobileMenuOpen ? "max-h-80 pb-4" : "max-h-0"
           )}
         >
           <nav className="flex flex-col gap-2">
@@ -83,6 +92,15 @@ export const Header = () => {
               className="px-4 py-2 text-sm text-muted-foreground hover:text-foreground hover:bg-secondary/50 rounded-lg transition-colors"
             >
               Impact
+            </a>
+            <a 
+              href="https://github.com/Peacsib/Nhaka-2.0-Archive-Alive" 
+              target="_blank"
+              rel="noopener noreferrer"
+              className="px-4 py-2 text-sm text-muted-foreground hover:text-foreground hover:bg-secondary/50 rounded-lg transition-colors flex items-center gap-2"
+            >
+              <Github className="w-4 h-4" />
+              GitHub
             </a>
             <a href="/resurrect" className="mx-4 mt-2">
               <Button variant="hero" size="sm" className="w-full">

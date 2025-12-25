@@ -83,9 +83,15 @@ export const FeaturesSection = () => {
           <h2 className="font-serif text-3xl md:text-4xl font-bold mb-4">
             Meet Your AI Restoration Team
           </h2>
-          <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
+          <p className="text-lg text-muted-foreground max-w-2xl mx-auto mb-6">
             Five specialized agents with distinct personalities, working together to bring your archives back to life.
           </p>
+          <a href="/resurrect">
+            <button className="inline-flex items-center gap-2 px-6 py-3 rounded-lg bg-accent/10 hover:bg-accent/20 border border-accent/30 hover:border-accent/50 transition-all duration-300 text-accent font-medium group">
+              <Eye className="w-5 h-5 group-hover:scale-110 transition-transform" />
+              See Them Collaborate in Real-Time
+            </button>
+          </a>
         </div>
 
         <div className="grid md:grid-cols-3 lg:grid-cols-5 gap-6 max-w-6xl mx-auto">
