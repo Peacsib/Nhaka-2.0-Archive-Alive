@@ -1,0 +1,18 @@
+# Render Blueprint - Backend Deployment
+# https://render.com/docs/blueprint-spec
+
+services:
+  - type: web
+    name: nhaka-api
+    runtime: python
+    buildCommand: pip install -r requirements.txt
+    startCommand: uvicorn main:app --host 0.0.0.0 --port $PORT
+    envVars:
+      - key: NOVITA_AI_API_KEY
+        sync: false  # Set manually in Render dashboard
+      - key: DAILY_API_BUDGET
+        value: "5.0"
+      - key: PYTHON_VERSION
+        value: "3.10.0"
+    healthCheckPath: /
+    autoDeploy: true
