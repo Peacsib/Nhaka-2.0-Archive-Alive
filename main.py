@@ -143,10 +143,60 @@ class ResurrectionRequest(BaseModel):
 # NOVITA LLM HELPER - Real AI for Agents
 # =============================================================================
 
+# =============================================================================
+# COST OPTIMIZATION: Token tracking and budget management
+# =============================================================================
+
+class APIUsageTracker:
+    """Track API usage for cost monitoring"""
+    def __init__(self):
+        self.calls = []
+        self.daily_budget_usd = float(os.getenv("DAILY_API_BUDGET", "5.0"))
+        self.today_spend = 0.0
+        self.last_reset = datetime.utcnow().date()
+    
+    def _reset_if_new_day(self):
+        today = datetime.utcnow().date()
+        if today > self.last_reset:
+            self.today_spend = 0.0
+            self.last_reset = today
+    
+    def can_spend(self, estimated_cost: float) -> bool:
+        self._reset_if_new_day()
+        return self.today_spend + estimated_cost <= self.daily_budget_usd
+    
+    def record(self, model: str, input_tokens: int, output_tokens: int, cost: float):
+        self._reset_if_new_day()
+        self.today_spend += cost
+        self.calls.append({
+            "time": datetime.utcnow().isoformat(),
+            "model": model,
+            "tokens": input_tokens + output_tokens,
+            "cost": cost
+        })
+    
+    def get_stats(self) -> Dict:
+        self._reset_if_new_day()
+        return {
+            "today_spend": round(self.today_spend, 4),
+            "budget_remaining": round(self.daily_budget_usd - self.today_spend, 4),
+            "total_calls_today": len([c for c in self.calls if c["time"].startswith(str(self.last_reset))]),
+            "budget_percent_used": round(self.today_spend / self.daily_budget_usd * 100, 1)
+        }
+
+# Global tracker
+api_tracker = APIUsageTracker()
+
+
 async def call_novita_llm(system_prompt: str, user_input: str, timeout: float = 20.0) -> Optional[str]:
     """
-    Call Novita AI LLM (ERNIE 4.0 / Llama 3) for real AI agent responses.
-    Falls back to None if API fails, allowing agents to use hardcoded fallback.
+    Call Novita AI LLM with cost optimization.
+    
+    COST OPTIMIZATIONS APPLIED:
+    1. Input truncation (max 1500 chars) - saves ~40% on long docs
+    2. Lower max_tokens (300 vs 500) - saves ~20% 
+    3. Budget checking - prevents runaway costs
+    4. Usage tracking - visibility into spend
     
     Args:
         system_prompt: The agent's persona and instructions
@@ -161,6 +211,19 @@ async def call_novita_llm(system_prompt: str, user_input: str, timeout: float = 
         print("⚠️ NOVITA_AI_API_KEY not set, using fallback")
         return None
     
+    # COST OPTIMIZATION 1: Check budget before calling
+    estimated_cost = 0.002  # ~$0.002 per call for qwen-2.5-72b
+    if not api_tracker.can_spend(estimated_cost):
+        print(f"⚠️ Daily budget exceeded (${api_tracker.today_spend:.2f}/${api_tracker.daily_budget_usd})")
+        return None
+    
+    # COST OPTIMIZATION 2: Truncate long inputs (saves tokens)
+    MAX_INPUT_CHARS = 1500  # ~375 tokens
+    if len(user_input) > MAX_INPUT_CHARS:
+        # Keep start and end (most important parts)
+        half = MAX_INPUT_CHARS // 2
+        user_input = user_input[:half] + "\n...[truncated]...\n" + user_input[-half:]
+    
     try:
         async with httpx.AsyncClient(timeout=timeout) as client:
             response = await client.post(
@@ -170,19 +233,31 @@ async def call_novita_llm(system_prompt: str, user_input: str, timeout: float = 
                     "Content-Type": "application/json"
                 },
                 json={
-                    "model": "qwen/qwen-2.5-72b-instruct",  # Updated to available model
+                    "model": "qwen/qwen-2.5-72b-instruct",
                     "messages": [
                         {"role": "system", "content": system_prompt},
                         {"role": "user", "content": user_input}
                     ],
-                    "max_tokens": 500,
+                    # COST OPTIMIZATION 3: Lower max_tokens
+                    "max_tokens": 300,  # Reduced from 500
                     "temperature": 0.7
                 }
             )
             
             if response.status_code == 200:
                 data = response.json()
-                return data["choices"][0]["message"]["content"].strip()
+                result = data["choices"][0]["message"]["content"].strip()
+                
+                # Track usage
+                usage = data.get("usage", {})
+                api_tracker.record(
+                    model="qwen-2.5-72b",
+                    input_tokens=usage.get("prompt_tokens", 400),
+                    output_tokens=usage.get("completion_tokens", 200),
+                    cost=estimated_cost
+                )
+                
+                return result
             else:
                 print(f"⚠️ Novita LLM error: {response.status_code} - {response.text[:200]}")
                 return None
@@ -2269,8 +2344,167 @@ async def root():
         "agents": ["Scanner", "Linguist", "Historian", "Validator", "Physical Repair Advisor"],
         "endpoints": {
             "resurrect": "/resurrect (POST) - Full document resurrection",
-            "resurrect_stream": "/resurrect/stream (POST) - SSE streaming resurrection"
+            "resurrect_stream": "/resurrect/stream (POST) - SSE streaming resurrection",
+            "resurrect_lite": "/resurrect/lite (POST) - Cost-optimized (OCR only)",
+            "api_stats": "/api/stats (GET) - API usage and cost stats",
+            "api_budget": "/api/budget (POST) - Set daily budget"
+        },
+        "cost_optimization": {
+            "cache_enabled": True,
+            "daily_budget_usd": api_tracker.daily_budget_usd,
+            "budget_remaining": round(api_tracker.daily_budget_usd - api_tracker.today_spend, 4)
         }
+    }
+
+
+# =============================================================================
+# COST-OPTIMIZED ENDPOINTS
+# =============================================================================
+
+@app.get("/api/stats")
+async def get_api_stats():
+    """
+    Get API usage statistics and cost tracking.
+    Use this to monitor your spending and optimize usage.
+    """
+    cache_stats = dedup_cache.get_stats()
+    api_stats = api_tracker.get_stats()
+    
+    return {
+        "api_usage": api_stats,
+        "cache_performance": cache_stats,
+        "cost_savings": {
+            "from_cache": f"${cache_stats['hits'] * 0.03:.2f}",
+            "cache_hit_rate": f"{cache_stats['hit_rate_percent']}%",
+            "recommendation": "Enable caching for repeated documents to save ~$0.03/doc"
+        },
+        "tips": [
+            "Use /resurrect/lite for quick OCR-only processing (~$0.01)",
+            "Use /resurrect/cached for full processing with caching",
+            "Set DAILY_API_BUDGET env var to control spending"
+        ]
+    }
+
+
+@app.post("/api/budget")
+async def set_api_budget(budget_usd: float = 5.0):
+    """Set daily API budget (default $5.00)"""
+    if budget_usd < 0.1 or budget_usd > 100:
+        raise HTTPException(status_code=400, detail="Budget must be between $0.10 and $100")
+    
+    api_tracker.daily_budget_usd = budget_usd
+    return {
+        "message": f"Daily budget set to ${budget_usd:.2f}",
+        "current_spend": api_tracker.today_spend,
+        "remaining": budget_usd - api_tracker.today_spend
+    }
+
+
+@app.post("/resurrect/lite")
+async def resurrect_lite(file: UploadFile = File(...)):
+    """
+    COST-OPTIMIZED: OCR-only resurrection (~$0.01 per document).
+    
+    Skips Linguist, Historian, Validator, and Repair Advisor.
+    Use for:
+    - Quick document previews
+    - Batch processing
+    - When you just need the text extracted
+    """
+    if not file.content_type or not file.content_type.startswith("image/"):
+        raise HTTPException(status_code=400, detail="File must be an image")
+    
+    image_data = await file.read()
+    
+    # Check cache first
+    image_hash = dedup_cache.compute_hash(image_data)
+    cached = dedup_cache.get(image_hash)
+    if cached:
+        return {
+            "cached": True,
+            "cost": "$0.00",
+            "raw_ocr_text": cached.get("raw_ocr_text", ""),
+            "ocr_confidence": cached.get("overall_confidence", 0),
+            "message": "Retrieved from cache - no API cost!"
+        }
+    
+    # Run only Scanner agent
+    scanner = ScannerAgent()
+    context = {"image_data": image_data}
+    
+    messages = []
+    async for msg in scanner.process(context):
+        messages.append(msg.message)
+    
+    result = {
+        "cached": False,
+        "cost": "~$0.01",
+        "raw_ocr_text": context.get("raw_text", ""),
+        "ocr_confidence": context.get("ocr_confidence", 0),
+        "enhanced_image_base64": context.get("enhanced_image_base64"),
+        "document_analysis": context.get("document_analysis", {}),
+        "processing_messages": messages[-3:]  # Last 3 messages
+    }
+    
+    # Cache for future use
+    dedup_cache.set(image_hash, {
+        "raw_ocr_text": result["raw_ocr_text"],
+        "overall_confidence": result["ocr_confidence"]
+    })
+    
+    return result
+
+
+@app.post("/resurrect/cached")
+async def resurrect_cached(file: UploadFile = File(...)):
+    """
+    COST-OPTIMIZED: Full resurrection WITH caching enabled.
+    
+    - First request: Full processing (~$0.03-0.04)
+    - Subsequent requests for same image: FREE (from cache)
+    
+    Use for production to minimize costs on repeated documents.
+    """
+    if not file.content_type or not file.content_type.startswith("image/"):
+        raise HTTPException(status_code=400, detail="File must be an image")
+    
+    image_data = await file.read()
+    
+    # Check cache first
+    image_hash = dedup_cache.compute_hash(image_data)
+    cached = dedup_cache.get(image_hash)
+    
+    if cached:
+        return {
+            "cached": True,
+            "cache_hash": image_hash,
+            "cost": "$0.00 (cached)",
+            "result": cached
+        }
+    
+    # Full processing
+    orchestrator = SwarmOrchestrator()
+    async for _ in orchestrator.resurrect(image_data):
+        pass
+    
+    result = orchestrator.get_result()
+    
+    # Cache the result
+    result_dict = {
+        "overall_confidence": result.overall_confidence,
+        "raw_ocr_text": result.raw_ocr_text,
+        "transliterated_text": result.transliterated_text,
+        "repair_recommendations": [r.model_dump() for r in (result.repair_recommendations or [])],
+        "damage_hotspots": [h.model_dump() for h in (result.damage_hotspots or [])],
+    }
+    dedup_cache.set(image_hash, result_dict)
+    
+    return {
+        "cached": False,
+        "cache_hash": image_hash,
+        "cost": "~$0.03-0.04",
+        "result": result_dict,
+        "message": "Result cached - next request for this image will be FREE"
     }
 
 
