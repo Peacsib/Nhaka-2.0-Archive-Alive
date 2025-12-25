@@ -42,7 +42,7 @@ __pycache__/
 *.egg-info/
 .eggs/
 
-# Test files (keep in repo but exclude from production)
+# Test files (not needed in repo)
 test_*.py
 run_tests.py
 
@@ -51,3 +51,6 @@ CONTEST_STRATEGY.md
 TEST_CHECKLIST.md
 DEPLOYMENT_READY.md
 DEMO_SCRIPT.md
+
+# Supabase temp
+supabase/.temp/
