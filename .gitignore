@@ -1,3 +1,11 @@
+# Environment files
+.env
+.env.local
+.env.*.local
+
+# Kiro
+.kiro/
+
 # Logs
 logs
 *.log
