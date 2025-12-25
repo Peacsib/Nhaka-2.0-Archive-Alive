@@ -672,6 +672,72 @@ class ScannerAgent(BaseAgent):
         result = self._cv2_to_pil(cv2_img)
         return result, enhancements
     
+    def _enhance_image_regions(self, cv2_img: np.ndarray, image_regions: List[Dict]) -> np.ndarray:
+        """
+        Enhance embedded image regions (stamps, logos, photos) to match document quality.
+        Applies targeted enhancement to each detected image region.
+        """
+        if not image_regions:
+            return cv2_img
+        
+        h, w = cv2_img.shape[:2]
+        result = cv2_img.copy()
+        
+        for region in image_regions:
+            # Convert percentage coordinates to pixels
+            x = int(region['x'] * w / 100)
+            y = int(region['y'] * h / 100)
+            rw = int(region['width'] * w / 100)
+            rh = int(region['height'] * h / 100)
+            
+            # Add padding to capture full region
+            padding = 10
+            x1 = max(0, x - padding)
+            y1 = max(0, y - padding)
+            x2 = min(w, x + rw + padding)
+            y2 = min(h, y + rh + padding)
+            
+            # Extract the image region
+            roi = result[y1:y2, x1:x2].copy()
+            
+            if roi.size == 0:
+                continue
+            
+            # Apply targeted enhancements to the image region
+            try:
+                # 1. Contrast enhancement (CLAHE)
+                lab = cv2.cvtColor(roi, cv2.COLOR_BGR2LAB)
+                l, a, b = cv2.split(lab)
+                clahe = cv2.createCLAHE(clipLimit=2.0, tileGridSize=(4, 4))
+                l = clahe.apply(l)
+                enhanced_lab = cv2.merge([l, a, b])
+                roi = cv2.cvtColor(enhanced_lab, cv2.COLOR_LAB2BGR)
+                
+                # 2. Slight sharpening
+                gaussian = cv2.GaussianBlur(roi, (0, 0), 1)
+                roi = cv2.addWeighted(roi, 1.3, gaussian, -0.3, 0)
+                
+                # 3. Color saturation boost (makes stamps/logos more vibrant)
+                hsv = cv2.cvtColor(roi, cv2.COLOR_BGR2HSV)
+                h_channel, s, v = cv2.split(hsv)
+                s = cv2.multiply(s, 1.2)  # Boost saturation by 20%
+                s = np.clip(s, 0, 255).astype(np.uint8)
+                enhanced_hsv = cv2.merge([h_channel, s, v])
+                roi = cv2.cvtColor(enhanced_hsv, cv2.COLOR_HSV2BGR)
+                
+                # 4. Denoise (light)
+                roi = cv2.fastNlMeansDenoisingColored(roi, None, 3, 3, 7, 15)
+                
+                # Put the enhanced region back
+                result[y1:y2, x1:x2] = roi
+                
+            except Exception as e:
+                # If enhancement fails, keep original
+                print(f"Image region enhancement failed: {e}")
+                continue
+        
+        return result
+    
     def _detect_layout(self, image: Image.Image) -> Dict:
         """OpenCV-based layout detection"""
         cv2_img = self._pil_to_cv2(image)
@@ -866,6 +932,25 @@ class ScannerAgent(BaseAgent):
                         section="Image Detection",
                         confidence=75
                     )
+                    
+                    # Enhance embedded image regions to match document quality
+                    yield await self.emit(
+                        "✨ Enhancing embedded images (stamps, logos, signatures)...",
+                        section="Image Enhancement"
+                    )
+                    await asyncio.sleep(0.2)
+                    
+                    # Apply targeted enhancement to image regions
+                    cv2_enhanced = self._pil_to_cv2(enhanced_image)
+                    cv2_enhanced = self._enhance_image_regions(cv2_enhanced, layout["image_regions"])
+                    enhanced_image = self._cv2_to_pil(cv2_enhanced)
+                    self.enhancements_applied.append(f"Enhanced {image_count} embedded image(s)")
+                    
+                    yield await self.emit(
+                        f"   ✓ {image_count} image region(s) enhanced (contrast, sharpness, color)",
+                        section="Image Enhancement Applied"
+                    )
+                    
                     # Store image region info for display
                     context["detected_images"] = [
                         {
