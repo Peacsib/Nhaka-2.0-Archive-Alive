@@ -21,9 +21,9 @@ const stats = [
   },
   {
     icon: DollarSign,
-    value: "<5s",
-    label: "Per Analysis",
-    description: "Fast multimodal document processing",
+    value: "Fast",
+    label: "Processing",
+    description: "Efficient multimodal document analysis",
     color: "text-accent",
     bgColor: "bg-accent/10",
   },

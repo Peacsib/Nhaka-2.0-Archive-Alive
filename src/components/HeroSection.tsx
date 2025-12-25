@@ -108,10 +108,12 @@ export const HeroSection = ({ onStartDemo, onUpload }: HeroSectionProps) => {
 
           {/* CTA Buttons */}
           <div className="flex flex-col sm:flex-row gap-4 justify-center items-center animate-fade-in delay-400">
-            {/* Upload Button with Animated Corner Gradient */}
+            {/* Upload Button with Animated Gradient Border */}
             <div className="relative group">
-              {/* Animated gradient border */}
-              <div className="absolute -inset-[2px] gradient-border-animated rounded-xl opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+              {/* Animated gradient border - hidden by default, visible on hover */}
+              <div className="absolute -inset-[3px] gradient-border-animated rounded-xl opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+              {/* Inner background to create visible gap for gradient */}
+              <div className="absolute -inset-[1px] bg-background rounded-xl opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
               <div className="relative">
                 <Button 
                   variant="hero" 
@@ -125,16 +127,16 @@ export const HeroSection = ({ onStartDemo, onUpload }: HeroSectionProps) => {
               </div>
             </div>
 
-            {/* Watch Demo Button with Animated Corner Gradient */}
+            {/* Watch Demo Button with Animated Gradient Border */}
             <div className="relative group">
-              {/* Animated gradient border */}
-              <div className="absolute -inset-[2px] gradient-border-animated rounded-xl opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+              {/* Animated gradient border - hidden by default, visible on hover */}
+              <div className="absolute -inset-[3px] gradient-border-animated rounded-xl opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
               <div className="relative">
                 <Button 
                   variant="outline" 
                   size="xl" 
                   onClick={onStartDemo}
-                  className="group/btn relative z-10"
+                  className="group/btn relative z-10 bg-background"
                 >
                   <Clock className="w-5 h-5 mr-2" />
                   Watch Demo

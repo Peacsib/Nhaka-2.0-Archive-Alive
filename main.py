@@ -188,9 +188,14 @@ class APIUsageTracker:
 api_tracker = APIUsageTracker()
 
 
-async def call_novita_llm(system_prompt: str, user_input: str, timeout: float = 20.0) -> Optional[str]:
+async def call_ernie_llm(system_prompt: str, user_input: str, timeout: float = 20.0) -> Optional[str]:
     """
-    Call Novita AI LLM with cost optimization.
+    Call ERNIE AI model via Novita API with cost optimization.
+    
+    ERNIE INTEGRATION FOR CONTEST:
+    - Uses ERNIE-4.5 for better multilingual understanding
+    - Optimized for African heritage document analysis
+    - Enhanced cultural context processing
     
     COST OPTIMIZATIONS APPLIED:
     1. Input truncation (max 1500 chars) - saves ~40% on long docs
@@ -212,7 +217,7 @@ async def call_novita_llm(system_prompt: str, user_input: str, timeout: float = 
         return None
     
     # COST OPTIMIZATION 1: Check budget before calling
-    estimated_cost = 0.002  # ~$0.002 per call for qwen-2.5-72b
+    estimated_cost = 0.003  # ~$0.003 per call for ERNIE-4.5
     if not api_tracker.can_spend(estimated_cost):
         print(f"⚠️ Daily budget exceeded (${api_tracker.today_spend:.2f}/${api_tracker.daily_budget_usd})")
         return None
@@ -233,7 +238,7 @@ async def call_novita_llm(system_prompt: str, user_input: str, timeout: float = 
                     "Content-Type": "application/json"
                 },
                 json={
-                    "model": "qwen/qwen-2.5-72b-instruct",
+                    "model": "baidu/ernie-4.5-8b-chat",  # ERNIE model for contest
                     "messages": [
                         {"role": "system", "content": system_prompt},
                         {"role": "user", "content": user_input}
@@ -248,10 +253,10 @@ async def call_novita_llm(system_prompt: str, user_input: str, timeout: float = 
                 data = response.json()
                 result = data["choices"][0]["message"]["content"].strip()
                 
-                # Track usage
+                # Track usage - updated for ERNIE model
                 usage = data.get("usage", {})
                 api_tracker.record(
-                    model="qwen-2.5-72b",
+                    model="ernie-4.5-8b",
                     input_tokens=usage.get("prompt_tokens", 400),
                     output_tokens=usage.get("completion_tokens", 200),
                     cost=estimated_cost
@@ -1165,16 +1170,20 @@ Lobengula"""
 
 class LinguistAgent(BaseAgent):
     """
-    The Linguist - Doke Shona Orthography Expert
-    Specializes in Pre-1955 Shona transliteration:
+    The Linguist - ERNIE-Powered Doke Shona & Cultural Context Expert
+    
+    ENHANCED FOR ERNIE CONTEST: Combines linguistic and cultural analysis:
     - Doke Orthography (1931-1955) character mappings
     - Historical terminology translation
     - Colonial-era linguistic patterns
+    - African cultural context interpretation (NEW)
+    - Colonial power dynamics analysis (NEW)
+    - Shona/English cross-cultural understanding (NEW)
     """
     
     agent_type = AgentType.LINGUIST
     name = "Linguist"
-    description = "Doke Shona orthography and transliteration expert"
+    description = "ERNIE-powered Doke Shona orthography and African cultural context expert"
     
     # Doke to Modern Shona mappings
     TRANSLITERATION_MAP = {
@@ -1201,18 +1210,42 @@ class LinguistAgent(BaseAgent):
         'VaRungu': ('VaRungu', 'White people/Europeans'),
     }
     
+    # NEW: Cultural markers for African heritage analysis
+    CULTURAL_MARKERS = {
+        "traditional_names": {
+            "Lobengula": "Last Ndebele king, son of Mzilikazi",
+            "Nehanda": "Shona spirit medium, resistance leader",
+            "Kaguvi": "Shona spirit medium, First Chimurenga",
+            "Chaminuka": "Legendary Shona spirit medium"
+        },
+        "colonial_terms": {
+            "Native Commissioner": "Colonial administrative position",
+            "Compound": "Segregated worker housing",
+            "Pass Laws": "Movement restriction system",
+            "Hut Tax": "Colonial taxation system"
+        },
+        "cultural_concepts": {
+            "Kuraguza": "Traditional Shona greeting/respect",
+            "Dare": "Traditional court/meeting place",
+            "Musha": "Homestead/village",
+            "Totems": "Clan identity system (Soko, Moyo, etc.)"
+        }
+    }
+    
     def __init__(self):
         super().__init__()
         self.transliterated_text = ""
         self.changes = []
         self.terms_found = []
+        self.cultural_insights = []
+        self.cultural_significance = 0
     
     async def process(self, context: Dict) -> AsyncGenerator[AgentMessage, None]:
-        """Process text for Doke Shona transliteration"""
+        """Process text for Doke Shona transliteration and cultural context analysis"""
         raw_text = context.get("raw_text", "")
         
         yield await self.emit(
-            "📚 Initializing Doke Orthography analysis (1931-1955 reference)..."
+            "📚 Initializing ERNIE-powered linguistic & cultural analysis..."
         )
         await asyncio.sleep(0.4)
         
@@ -1223,15 +1256,15 @@ class LinguistAgent(BaseAgent):
         )
         await asyncio.sleep(0.3)
         
-        # Try REAL AI analysis first
+        # Try REAL AI analysis first - enhanced with cultural context
         ai_analysis = await self._get_ai_linguistic_analysis(raw_text)
         
         if ai_analysis:
             yield await self.emit(
-                f"🤖 AI LINGUISTIC ANALYSIS:\n{ai_analysis}",
+                f"🤖 ERNIE LINGUISTIC ANALYSIS:\n{ai_analysis}",
                 confidence=88,
                 section="AI Transliteration",
-                metadata={"ai_powered": True}
+                metadata={"ai_powered": True, "model": "ERNIE-4.5"}
             )
         
         # Perform rule-based transliteration (always run for actual conversion)
@@ -1275,17 +1308,62 @@ class LinguistAgent(BaseAgent):
                 )
                 await asyncio.sleep(0.15)
         
+        # === NEW: CULTURAL CONTEXT ANALYSIS (ERNIE-powered) ===
         yield await self.emit(
-            "✅ LINGUIST COMPLETE: Text normalized to Modern Standard Shona.",
-            confidence=83
+            "🌍 Analyzing African cultural context and colonial dynamics...",
+            section="Cultural Analysis"
+        )
+        await asyncio.sleep(0.3)
+        
+        # ERNIE cultural analysis
+        cultural_analysis = await self._get_ernie_cultural_analysis(raw_text)
+        if cultural_analysis:
+            yield await self.emit(
+                f"🏛️ ERNIE CULTURAL INSIGHTS:\n{cultural_analysis}",
+                confidence=90,
+                section="AI Cultural Analysis",
+                metadata={"ai_powered": True, "model": "ERNIE-4.5"}
+            )
+            self.cultural_insights.append(cultural_analysis)
+        
+        # Detect cultural markers
+        markers_found = self._detect_cultural_markers(raw_text)
+        if markers_found:
+            yield await self.emit(
+                f"🎭 CULTURAL MARKERS: {len(markers_found)} traditional/colonial elements found.",
+                confidence=85,
+                section="Cultural Detection"
+            )
+            for marker, significance in list(markers_found.items())[:3]:
+                yield await self.emit(
+                    f"   → {marker}: {significance}",
+                    section="Cultural Significance"
+                )
+                await asyncio.sleep(0.15)
+        
+        # Calculate cultural significance
+        self.cultural_significance = self._calculate_cultural_significance(markers_found)
+        if self.cultural_significance > 50:
+            significance_level = "HIGH" if self.cultural_significance > 70 else "MEDIUM"
+            yield await self.emit(
+                f"📊 HERITAGE SIGNIFICANCE: {significance_level} ({self.cultural_significance}%)",
+                confidence=self.cultural_significance,
+                section="Heritage Assessment"
+            )
+        
+        yield await self.emit(
+            "✅ LINGUIST COMPLETE: Text normalized + cultural context analyzed.",
+            confidence=85
         )
         
         context["transliterated_text"] = self.transliterated_text
         context["linguistic_changes"] = self.changes
         context["historical_terms"] = self.terms_found
+        context["cultural_insights"] = self.cultural_insights
+        context["cultural_significance"] = self.cultural_significance
     
     async def _get_ai_linguistic_analysis(self, text: str) -> Optional[str]:
-        """Call Novita LLM for real AI linguistic analysis and text cleanup"""
+        """Call ERNIE LLM for real AI linguistic analysis and text cleanup"""
         system_prompt = """You are a document text cleaner. Your job is to:
 1. Clean up any OCR errors or garbled text
 2. Make the text more readable
@@ -1300,7 +1378,7 @@ Do NOT refuse to help - always provide what you can."""
         
         user_input = f"Clean up this OCR output:\n\n{text[:1500]}"
         
-        return await call_novita_llm(system_prompt, user_input)
+        return await call_ernie_llm(system_prompt, user_input)
     
     def _transliterate(self, text: str) -> tuple:
         changes = []
@@ -1332,6 +1410,50 @@ Do NOT refuse to help - always provide what you can."""
             if term.lower() in text.lower():
                 found.append((term, mapping))
         return found
+    
+    # === NEW: Cultural Context Methods (ERNIE-powered) ===
+    
+    async def _get_ernie_cultural_analysis(self, text: str) -> Optional[str]:
+        """Use ERNIE's multilingual capabilities for cultural context analysis"""
+        system_prompt = """You are an African Heritage and Cultural Context Specialist. Analyze this historical document for:
+
+1. CULTURAL ELEMENTS: Traditional names, customs, social structures
+2. COLONIAL DYNAMICS: Power relationships, administrative language
+3. LINGUISTIC PATTERNS: Shona/English mixing, formal vs informal language
+4. AFRICAN AGENCY: Signs of resistance, autonomy, or negotiation
+
+Focus on African perspectives. Be concise but insightful.
+Format: "Cultural: [key elements]. Dynamics: [power structures]. Significance: [heritage importance]."
+
+Be respectful and historically accurate."""
+        
+        user_input = f"Analyze cultural context:\n\n{text[:1200]}"
+        
+        return await call_ernie_llm(system_prompt, user_input)
+    
+    def _detect_cultural_markers(self, text: str) -> Dict[str, str]:
+        """Detect cultural and colonial markers in text"""
+        found = {}
+        text_lower = text.lower()
+        
+        for category, markers in self.CULTURAL_MARKERS.items():
+            for marker, significance in markers.items():
+                if marker.lower() in text_lower:
+                    found[marker] = significance
+        
+        return found
+    
+    def _calculate_cultural_significance(self, markers: Dict) -> int:
+        """Calculate cultural significance score for African heritage"""
+        score = 30  # Base score
+        score += len(markers) * 12
+        
+        # Bonus for traditional African names
+        traditional_bonus = sum(15 for marker in markers.keys() 
+                              if marker in self.CULTURAL_MARKERS.get("traditional_names", {}))
+        score += traditional_bonus
+        
+        return min(score, 100)
 
 
 # =============================================================================
@@ -1486,7 +1608,7 @@ class HistorianAgent(BaseAgent):
         context["historical_anomalies"] = self.anomalies
     
     async def _get_ai_historical_analysis(self, text: str) -> Optional[str]:
-        """Call Novita LLM for real AI historical verification"""
+        """Call ERNIE LLM for real AI historical verification"""
         system_prompt = """You are a document analyst. Analyze this text and identify:
 1. Any names of people mentioned
 2. Any dates or years mentioned  
@@ -1500,7 +1622,7 @@ Do NOT say you cannot analyze - always provide what observations you can make.""
         
         user_input = f"Analyze this document text:\n\n{text[:1500]}"
         
-        return await call_novita_llm(system_prompt, user_input)
+        return await call_ernie_llm(system_prompt, user_input)
     
     def _detect_figures(self, text: str) -> Dict[str, str]:
         found = {}
@@ -1727,7 +1849,7 @@ class ValidatorAgent(BaseAgent):
                 )
     
     async def _get_ai_validation(self, raw_text: str, transliterated: str, verified_facts: List) -> Optional[str]:
-        """Call Novita LLM for real AI validation and hallucination detection"""
+        """Call ERNIE LLM for real AI validation and hallucination detection"""
         system_prompt = """You are a document quality checker. Review the text and provide:
 1. Overall quality assessment (Good/Fair/Poor)
 2. Any obvious errors or issues you notice
@@ -1744,7 +1866,7 @@ Always provide a helpful assessment - do NOT refuse."""
 
 Provide a quality assessment."""
         
-        return await call_novita_llm(system_prompt, user_input)
+        return await call_ernie_llm(system_prompt, user_input)
     
     def _detect_inconsistencies(self, context: Dict) -> List[str]:
         inconsistencies = []
@@ -1817,7 +1939,7 @@ The document is from Zimbabwe/Rhodesia (1888-1960), likely in English with possi
 
 Output the restored, formatted document:"""
 
-        result = await call_novita_llm(system_prompt, user_input, timeout=25.0)
+        result = await call_ernie_llm(system_prompt, user_input, timeout=25.0)
         return result if result else None
 
 
@@ -2030,7 +2152,7 @@ TEXT SAMPLE: {text[:800]}
 
 Identify damage types and their approximate regions on the document."""
         
-        response = await call_novita_llm(system_prompt, user_input)
+        response = await call_ernie_llm(system_prompt, user_input)
         
         if response:
             try:
@@ -2172,19 +2294,23 @@ Identify damage types and their approximate regions on the document."""
 class SwarmOrchestrator:
     """
     Orchestrates the multi-agent swarm for document resurrection.
-    Manages agent execution order and context passing.
+    
+    ENHANCED FOR ERNIE CONTEST:
+    - All agents powered by ERNIE-4.5 via Novita API
+    - Linguist now includes cultural context analysis
+    - 5-agent swarm for comprehensive analysis
     """
     
     def __init__(self):
         self.scanner = ScannerAgent()
-        self.linguist = LinguistAgent()
+        self.linguist = LinguistAgent()  # Now includes cultural context
         self.historian = HistorianAgent()
         self.validator = ValidatorAgent()
         self.repair_advisor = PhysicalRepairAdvisorAgent()
         
         self.agents = [
             self.scanner,
-            self.linguist,
+            self.linguist,      # Enhanced with cultural context
             self.historian,
             self.validator,
             self.repair_advisor
@@ -2436,10 +2562,22 @@ dedup_cache = DeduplicationCache()
 async def root():
     """Health check and API info"""
     return {
-        "name": "Nhaka 2.0 - Augmented Heritage API",
-        "version": "2.0.0",
+        "name": "Nhaka 2.0 - Augmented Heritage API (ERNIE-Powered)",
+        "version": "2.0.0-ERNIE",
         "status": "operational",
-        "agents": ["Scanner", "Linguist", "Historian", "Validator", "Physical Repair Advisor"],
+        "contest": "ERNIE AI Developer Challenge 2025",
+        "ai_models": {
+            "primary": "ERNIE-4.5-8B via Novita API",
+            "ocr": "PaddleOCR-VL via Novita API",
+            "enhancement": "OpenCV + PIL image processing"
+        },
+        "agents": [
+            "Scanner (PaddleOCR-VL + OpenCV)", 
+            "Linguist (ERNIE + Doke Shona + Cultural Context)",  # Enhanced with cultural analysis
+            "Historian (ERNIE + 1888-1923 Database)", 
+            "Validator (ERNIE + Cross-verification)", 
+            "Physical Repair Advisor (ERNIE + Conservation)"
+        ],
         "endpoints": {
             "resurrect": "/resurrect (POST) - Full document resurrection",
             "resurrect_stream": "/resurrect/stream (POST) - SSE streaming resurrection",
@@ -2447,10 +2585,17 @@ async def root():
             "api_stats": "/api/stats (GET) - API usage and cost stats",
             "api_budget": "/api/budget (POST) - Set daily budget"
         },
+        "ernie_features": {
+            "multilingual_processing": "Enhanced Shona/English understanding",
+            "cultural_context": "African heritage significance analysis", 
+            "colonial_dynamics": "Power structure and resistance detection",
+            "cross_modal_reasoning": "Image + text + cultural context"
+        },
         "cost_optimization": {
             "cache_enabled": True,
             "daily_budget_usd": api_tracker.daily_budget_usd,
-            "budget_remaining": round(api_tracker.daily_budget_usd - api_tracker.today_spend, 4)
+            "budget_remaining": round(api_tracker.daily_budget_usd - api_tracker.today_spend, 4),
+            "ernie_model": "baidu/ernie-4.5-8b-chat"
         }
     }
 
@@ -2717,37 +2862,57 @@ async def get_archived_resurrection(archive_id: str):
 async def list_agents():
     """List all available agents and their capabilities"""
     return {
+        "contest": "ERNIE AI Developer Challenge 2025",
+        "ai_framework": "ERNIE-4.5 + PaddleOCR-VL via Novita API",
         "agents": [
             {
                 "type": "scanner",
                 "name": "Scanner Agent",
-                "description": "PaddleOCR-VL multimodal document analyzer via Novita API",
-                "capabilities": ["OCR extraction", "Ink degradation detection", "Doke character recognition"]
+                "description": "PaddleOCR-VL multimodal document analyzer via Novita API + OpenCV enhancement",
+                "capabilities": ["OCR extraction", "Image enhancement", "Layout detection", "Doke character recognition"],
+                "ai_model": "PaddleOCR-VL"
             },
             {
                 "type": "linguist", 
                 "name": "Linguist Agent",
-                "description": "Doke Shona orthography expert (1931-1955)",
-                "capabilities": ["Pre-1955 Shona transliteration", "Historical terminology mapping"]
+                "description": "ERNIE-powered Doke Shona orthography + African cultural context expert",
+                "capabilities": [
+                    "Pre-1955 Shona transliteration", 
+                    "Historical terminology mapping", 
+                    "Text cleanup",
+                    "Cultural marker detection",
+                    "African heritage significance scoring"
+                ],
+                "ai_model": "ERNIE-4.5-8B",
+                "contest_feature": "Enhanced with cultural context analysis for ERNIE Contest"
             },
             {
                 "type": "historian",
                 "name": "Historian Agent", 
-                "description": "Zimbabwean colonial history specialist (1888-1923)",
-                "capabilities": ["Historical figure identification", "Date verification", "Treaty cross-referencing"]
+                "description": "ERNIE-powered Zimbabwean colonial history specialist (1888-1923)",
+                "capabilities": ["Historical figure identification", "Date verification", "Treaty cross-referencing"],
+                "ai_model": "ERNIE-4.5-8B"
             },
             {
                 "type": "validator",
                 "name": "Validator Agent",
-                "description": "Hallucination detection and cross-verification",
-                "capabilities": ["Confidence scoring", "Inconsistency detection", "Fact validation"]
+                "description": "ERNIE-powered hallucination detection and cross-verification",
+                "capabilities": ["Confidence scoring", "Inconsistency detection", "Fact validation", "Document reconstruction"],
+                "ai_model": "ERNIE-4.5-8B"
             },
             {
                 "type": "repair_advisor",
                 "name": "Physical Repair Advisor",
-                "description": "Document conservation specialist",
-                "capabilities": ["Damage assessment", "Treatment recommendations", "Digitization prioritization"]
+                "description": "ERNIE-powered document conservation specialist with AR damage mapping",
+                "capabilities": ["Damage assessment", "Treatment recommendations", "AR hotspot generation", "Digitization prioritization"],
+                "ai_model": "ERNIE-4.5-8B"
             }
+        ],
+        "ernie_advantages": [
+            "Enhanced multilingual understanding (Shona/English)",
+            "Better cultural context comprehension",
+            "Improved historical reasoning",
+            "Cross-modal document analysis"
         ]
     }
 

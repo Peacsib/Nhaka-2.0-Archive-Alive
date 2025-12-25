@@ -34,38 +34,42 @@ const agentConfig: Record<AgentType, {
   linguist: {
     icon: Languages,
     name: "Linguist",
-    role: "Doke Shona",
+    role: "ERNIE + Doke + Culture",
     color: "bg-agent-linguist",
     bgColor: "bg-agent-linguist-bg",
     borderColor: "border-agent-linguist",
     glowClass: "glow-linguist",
+    useBaiduLogo: true, // Use ERNIE logo
   },
   historian: {
     icon: BookOpen,
     name: "Historian",
-    role: "1888-1923",
+    role: "ERNIE + 1888-1923",
     color: "bg-agent-historian",
     bgColor: "bg-agent-historian-bg",
     borderColor: "border-agent-historian",
     glowClass: "glow-historian",
+    useBaiduLogo: true, // Use ERNIE logo
   },
   validator: {
     icon: ShieldCheck,
     name: "Validator",
-    role: "Anti-Hallucination",
+    role: "ERNIE + Anti-Hallucination",
     color: "bg-agent-validator",
     bgColor: "bg-agent-validator-bg",
     borderColor: "border-agent-validator",
     glowClass: "glow-validator",
+    useBaiduLogo: true, // Use ERNIE logo
   },
   repair_advisor: {
     icon: Wrench,
     name: "Repair",
-    role: "Conservation",
+    role: "ERNIE + Conservation",
     color: "bg-agent-repair",
     bgColor: "bg-agent-repair-bg",
     borderColor: "border-agent-repair",
     glowClass: "glow-repair",
+    useBaiduLogo: true, // Use ERNIE logo
   },
 };
 
