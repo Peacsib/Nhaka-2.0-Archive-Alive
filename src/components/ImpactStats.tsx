@@ -1,5 +1,5 @@
 import { Card } from "./ui/card";
-import { Library, Users, Globe, DollarSign } from "lucide-react";
+import { Library, Users, Globe, Zap } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const stats = [
@@ -20,7 +20,7 @@ const stats = [
     bgColor: "bg-agent-historian/10",
   },
   {
-    icon: DollarSign,
+    icon: Zap,
     value: "Fast",
     label: "Processing",
     description: "Efficient multimodal document analysis",

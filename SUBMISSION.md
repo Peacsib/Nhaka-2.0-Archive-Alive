@@ -58,8 +58,8 @@ Nhaka 2.0 uses a **multi-agent swarm architecture** where 5 specialized AI agent
 - Deduplication cache for low-bandwidth optimization
 
 **AI/ML:**
-- **PaddleOCR-VL** via Novita AI API for multimodal document OCR
-- **ERNIE LLM** (meta-llama/llama-3.1-70b-instruct) via Novita AI API for agent intelligence
+- **PaddleOCR-VL** (`paddlepaddle/paddleocr-vl`) via Novita AI API for multimodal document OCR
+- **ERNIE-4.5** (`baidu/ernie-4.5-8b-chat`) via Novita AI API for agent intelligence
 - Custom Doke Shona transliteration mappings
 - Historical figure database (Lobengula, Rhodes, Rudd, Jameson, etc.)
 
