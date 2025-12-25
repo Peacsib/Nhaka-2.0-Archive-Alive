@@ -858,6 +858,24 @@ class ScannerAgent(BaseAgent):
                     confidence=80
                 )
                 
+                # Describe embedded images if found
+                if layout["has_images"] and layout.get("image_regions"):
+                    image_count = len(layout["image_regions"])
+                    yield await self.emit(
+                        f"🖼️ Found {image_count} embedded image(s) - likely stamps, logos, or signatures",
+                        section="Image Detection",
+                        confidence=75
+                    )
+                    # Store image region info for display
+                    context["detected_images"] = [
+                        {
+                            "type": "stamp/logo/signature",
+                            "position": f"({r['x']:.0f}%, {r['y']:.0f}%)",
+                            "size": f"{r['width']:.0f}% x {r['height']:.0f}%"
+                        }
+                        for r in layout["image_regions"][:5]  # Max 5
+                    ]
+                
                 # Convert enhanced image back to bytes for OCR
                 buffer = io.BytesIO()
                 enhanced_image.save(buffer, format='PNG')
