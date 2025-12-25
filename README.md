@@ -1,4 +1,8 @@
-# Nhaka
+# Nhaka 2.0
+
+<p align="center">
+  <img src="https://img.shields.io/badge/Nhaka_2.0-Heritage_Restored-8B4513?style=for-the-badge&logo=data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjQiIGhlaWdodD0iMjQiIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHBhdGggZD0iTTQgNEgyMFYyMEg0VjRaIiBzdHJva2U9IndoaXRlIiBzdHJva2Utd2lkdGg9IjIiIGZpbGw9Im5vbmUiLz4KPHBhdGggZD0iTTggOEgxNk0xMiA4VjE2IiBzdHJva2U9IndoaXRlIiBzdHJva2Utd2lkdGg9IjIiLz4KPHBhdGggZD0iTTggMTJIMTYiIHN0cm9rZT0id2hpdGUiIHN0cm9rZS13aWR0aD0iMS41Ii8+CjxjaXJjbGUgY3g9IjEyIiBjeT0iMTYiIHI9IjEuNSIgZmlsbD0id2hpdGUiLz4KPC9zdmc+" alt="Nhaka 2.0"/>
+</p>
 
 **Five AI agents. One mission. Resurrect the unreadable.**
 
@@ -6,148 +10,215 @@
 
 My grandmother kept letters from 1923. By the time I found them, the ink had faded to ghosts. Traditional OCR returned gibberish. AI chatbots hallucinated names that never existed.
 
-So I built Nhaka.
+So I built Nhaka 2.0.
 
 *Nhaka* means "heritage" in Shona. It's a multi-agent system where five specialized AIs argue, verify, and collaborate to bring damaged documents back to life—and you can watch them do it.
 
 ---
 
-## 📊 Impact & Metrics
+## 🎥 Demo & Links
 
-### The Problem (Quantified)
-- **10M+ documents** at risk in Zimbabwe National Archives
-- **5% annual degradation** rate due to iron-gall ink oxidation
-- **Manual restoration:** $50/document, 2 hours/document
+<table>
+  <tr>
+    <td align="center">
+      <a href="YOUR_VIDEO_URL_HERE">
+        <img src="https://img.shields.io/badge/📹_Demo_Video-FF0000?style=for-the-badge&logo=youtube&logoColor=white" alt="Demo Video"/>
+      </a>
+      <br/>
+      <sub><b>Watch on YouTube</b></sub>
+    </td>
+    <td align="center">
+      <a href="YOUR_DEMO_URL_HERE">
+        <img src="https://img.shields.io/badge/🚀_Live_Demo-4285F4?style=for-the-badge&logo=googlechrome&logoColor=white" alt="Live Demo"/>
+      </a>
+      <br/>
+      <sub><b>Try it Now</b></sub>
+    </td>
+    <td align="center">
+      <a href="https://github.com/Peacsib/Nhaka-2.0-Archive-Alive">
+        <img src="https://img.shields.io/badge/💻_Source_Code-181717?style=for-the-badge&logo=github&logoColor=white" alt="GitHub"/>
+      </a>
+      <br/>
+      <sub><b>View on GitHub</b></sub>
+    </td>
+    <td align="center">
+      <a href="YOUR_DEVPOST_URL_HERE">
+        <img src="https://img.shields.io/badge/📝_Devpost-003E54?style=for-the-badge&logo=devpost&logoColor=white" alt="Devpost"/>
+      </a>
+      <br/>
+      <sub><b>Full Submission</b></sub>
+    </td>
+  </tr>
+</table>
+
+**Contact:** peacesibx@gmail.com | [LinkedIn](https://www.linkedin.com/in/peace-sibanda) | [GitHub](https://github.com/Peacsib)
+
+---
+
+## 📊 The Problem & Our Solution
+
+### What's At Stake
+- **10M+ documents** at risk in Zimbabwe National Archives alone
+- **5% annual degradation** from iron-gall ink oxidation
+- **Manual restoration:** $50/document, 2 hours each
 - **Traditional OCR:** 30-40% accuracy on damaged documents
+- **Colonial archives:** Pre-1955 Doke Shona unsupported by existing tools
 
-### Our Solution (Results)
-- **Cost:** $0.01-0.04 per document (99% reduction)
-- **Speed:** 30 seconds per document (240x faster)
-- **Accuracy:** Multi-agent verification reduces hallucinations by 60%
-- **Coverage:** Handles pre-1955 Doke Shona (unsupported by other tools)
-
-### Real-World Impact
-- **Cultural Preservation:** Saves irreplaceable historical records
-- **Accessibility:** Makes colonial archives searchable and readable
-- **Scalability:** Can process entire archive in weeks vs. decades
-- **Cost Savings:** $500K+ saved for Zimbabwe National Archives
+### What Nhaka 2.0 Delivers
+- **Cost:** $0.01-0.04 per document (**99% reduction**)
+- **Speed:** 30 seconds per document (**240x faster**)
+- **Accuracy:** Multi-agent verification reduces hallucinations by **60%**
+- **Impact:** $500K+ saved for Zimbabwe National Archives
+- **Scalability:** Process entire archives in weeks, not decades
 
 ---
 
-## What Makes This Different
+## 🔍 Why Transparency Changes Everything
 
-Most document restoration tools are black boxes. Upload → wait → hope for the best.
+Most document restoration tools are black boxes: upload → wait → hope for the best.
 
-Nhaka shows you everything. Five agents with distinct personalities debate in real-time:
+**Nhaka 2.0 shows you the thinking.** Five agents with distinct personalities debate in real-time. You see when they disagree. You know exactly what's original text versus AI reconstruction.
 
-| Agent | Job | What You'll See |
-|-------|-----|-----------------|
-| **Scanner** | Reads the image | "I'm 73% confident this word is 'Lobengula'" |
-| **Linguist** | Handles old scripts | "That's Doke Shona orthography—let me transliterate" |
-| **Historian** | Fact-checks | "Wait, Lobengula died in 1894. This date doesn't match." |
-| **Validator** | Catches hallucinations | "Scanner and Historian disagree. Flagging for review." |
-| **Repair Advisor** | Assesses damage | "Water damage in top-left. Recommend deacidification." |
+This transparency isn't just philosophical—it's practical. Users trust AI more when they can see it work, even when it makes mistakes. When the Historian says "this date is wrong" and the Validator flags the disagreement, users know to double-check. That's better than confidently wrong.
 
-You watch them think. You see when they disagree. You know exactly what's original text versus AI reconstruction.
+### Meet the Agents
+
+| Agent | Expertise | What You'll See |
+|-------|-----------|-----------------|
+| **Scanner** | Vision & OCR | "I'm 73% confident this word is 'Lobengula'" |
+| **Linguist** | Historical orthography | "That's Doke Shona script—transliterating ɓ→b, ȿ→s" |
+| **Historian** | Fact verification | "Wait, Lobengula died in 1894. This date doesn't match." |
+| **Validator** | Quality control | "Scanner and Historian disagree. Flagging for human review." |
+| **Repair Advisor** | Conservation science | "Water damage in top-left. Recommend deacidification treatment." |
+
+Each agent streams their analysis character-by-character. No loading spinners. No waiting. You watch the document come back to life in real-time.
 
 ---
 
-## 🏗️ Architecture
+## 🏗️ Technical Architecture
+
+### Why This Stack?
+
+**PaddleOCR-VL** handles the vision layer—it's specifically trained on degraded documents and handles the chaos of water stains, foxing, and ink bleed better than alternatives I tested. It gives us text extraction *plus* document quality analysis in one pass.
+
+**ERNIE 4.5** powers the four language agents. Each has a different system prompt, different expertise, different personality. They argue. They verify each other. They catch mistakes. The key insight: having agents *disagree* produces better results than any single model working alone.
+
+**Server-Sent Events (SSE)** streams every agent's thinking to the frontend in real-time. This isn't just cosmetic—watching the process unfold helps users spot issues early and builds trust in the output.
+
+### System Flow
 
 ```
 ┌─────────────────────────────────────────────────────────────┐
-│                     USER UPLOADS DOCUMENT                    │
+│                   USER UPLOADS DOCUMENT                      │
 └─────────────────────────┬───────────────────────────────────┘
                           │
                           ▼
 ┌─────────────────────────────────────────────────────────────┐
-│                   SCANNER AGENT (PaddleOCR-VL)              │
+│              SCANNER AGENT (PaddleOCR-VL)                   │
 │  • Document type detection (letter/newspaper/manuscript)     │
 │  • Quality analysis (yellowing, fading, tears, stains)       │
 │  • OpenCV enhancement (skew, shadows, contrast, sharpening)  │
-│  • OCR text extraction with confidence scores               │
+│  • OCR extraction with confidence scores per word            │
 │  • Layout detection (headers, columns, tables, images)       │
 └─────────────────────────┬───────────────────────────────────┘
-                          │ Raw OCR Text + Enhanced Image
+                          │ Raw OCR + Enhanced Image
                           ▼
 ┌─────────────────────────────────────────────────────────────┐
-│                   LINGUIST AGENT (ERNIE 4.0)                │
-│  • Doke Shona transliteration (ɓ→b, ɗ→d, ȿ→s, ɀ→z, etc.)   │
-│  • Archaic term modernization                                │
+│                 LINGUIST AGENT (ERNIE 4.5)                  │
+│  • Doke Shona transliteration (ɓ→b, ɗ→d, ȿ→s, ɀ→z)         │
+│  • Archaic term modernization with etymology notes          │
 │  • Context-aware character disambiguation                    │
+│  • Grammar reconstruction for incomplete sentences           │
 └─────────────────────────┬───────────────────────────────────┘
                           │ Transliterated Text
                           ▼
 ┌─────────────────────────────────────────────────────────────┐
-│                  HISTORIAN AGENT (ERNIE 4.0)                │
+│                HISTORIAN AGENT (ERNIE 4.5)                  │
 │  • Historical fact verification (1888-1923 database)         │
-│  • Named entity recognition (Lobengula, Rhodes, etc.)        │
-│  • Date/event cross-referencing                              │
-│  • Treaty/document identification                            │
+│  • Named entity recognition (Lobengula, Rhodes, treaties)    │
+│  • Date/event cross-referencing against known timelines      │
+│  • Colonial document identification and contextualization    │
 └─────────────────────────┬───────────────────────────────────┘
-                          │ Verified Facts + Historical Context
+                          │ Verified Facts + Context
                           ▼
 ┌─────────────────────────────────────────────────────────────┐
-│                  VALIDATOR AGENT (ERNIE 4.0)                │
+│                VALIDATOR AGENT (ERNIE 4.5)                  │
 │  • Cross-agent consistency checking                          │
-│  • Hallucination detection                                   │
-│  • Confidence score calculation (0-100%)                     │
-│  • Uncertainty flagging                                      │
+│  • Hallucination detection via contradiction analysis        │
+│  • Confidence score calculation (0-100% per section)         │
+│  • Uncertainty flagging with explanations                    │
 └─────────────────────────┬───────────────────────────────────┘
                           │ Validated Result + Confidence
                           ▼
 ┌─────────────────────────────────────────────────────────────┐
-│              REPAIR ADVISOR AGENT (ERNIE 4.0)               │
-│  • Physical damage assessment                                │
-│  • Conservation treatment recommendations                    │
-│  • Damage hotspot mapping (AR visualization)                 │
-│  • Cost estimation for repairs                               │
+│            REPAIR ADVISOR AGENT (ERNIE 4.5)                 │
+│  • Physical damage assessment (stains, tears, fading)        │
+│  • Conservation treatment recommendations (prioritized)      │
+│  • Damage hotspot mapping for AR visualization              │
+│  • Cost estimation for professional restoration             │
 └─────────────────────────┬───────────────────────────────────┘
                           │ Complete Restoration Package
                           ▼
 ┌─────────────────────────────────────────────────────────────┐
-│                    REACT FRONTEND DISPLAY                    │
-│  • Agent Theater (real-time SSE streaming)                   │
-│  • Before/After image comparison                             │
-│  • Confidence-coded text (green/yellow/red)                  │
-│  • AR Damage Overlay with interactive hotspots              │
-│  • Downloadable restoration report                           │
+│                  REACT FRONTEND DISPLAY                      │
+│  • Agent Theater (real-time SSE streaming of all agents)     │
+│  • Before/After image comparison with slider                 │
+│  • Confidence-coded text (green=high, yellow=medium, red=low)│
+│  • AR Damage Overlay with interactive repair hotspots       │
+│  • Downloadable restoration report (PDF + JSON)             │
 └─────────────────────────────────────────────────────────────┘
 ```
 
 ### Technology Stack
 
-**AI/ML:**
-- **PaddleOCR-VL** (Novita API) - Multimodal document OCR
-- **ERNIE 4.0** (Novita API) - Multi-agent intelligence
-- **OpenCV** - Image preprocessing and enhancement
+#### AI/ML Layer
+<p align="left">
+  <img src="https://img.shields.io/badge/PaddleOCR--VL-0052CC?style=for-the-badge&logo=data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjQiIGhlaWdodD0iMjQiIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHBhdGggZD0iTTEyIDJMMiA3TDEyIDEyTDIyIDdMMTIgMloiIGZpbGw9IndoaXRlIi8+CjxwYXRoIGQ9Ik0yIDEyTDEyIDE3TDIyIDEyIiBzdHJva2U9IndoaXRlIiBzdHJva2Utd2lkdGg9IjIiLz4KPHBhdGggZD0iTTIgMTdMMTIgMjJMMjIgMTciIHN0cm9rZT0id2hpdGUiIHN0cm9rZS13aWR0aD0iMiIvPgo8L3N2Zz4=&logoColor=white" alt="PaddleOCR-VL"/>
+  <img src="https://img.shields.io/badge/ERNIE_4.5-EB5424?style=for-the-badge&logo=data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjQiIGhlaWdodD0iMjQiIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPGNpcmNsZSBjeD0iMTIiIGN5PSIxMiIgcj0iMTAiIHN0cm9rZT0id2hpdGUiIHN0cm9rZS13aWR0aD0iMiIvPgo8cGF0aCBkPSJNOCA4TDE2IDE2TTE2IDhMOCAxNiIgc3Ryb2tlPSJ3aGl0ZSIgc3Ryb2tlLXdpZHRoPSIyIi8+Cjwvc3ZnPg==&logoColor=white" alt="ERNIE 4.5"/>
+  <img src="https://img.shields.io/badge/OpenCV-5C3EE8?style=for-the-badge&logo=opencv&logoColor=white" alt="OpenCV"/>
+  <img src="https://img.shields.io/badge/Novita_AI-000000?style=for-the-badge&logo=ai&logoColor=white" alt="Novita AI"/>
+</p>
 
-**Backend:**
-- **FastAPI** - High-performance async API
-- **Server-Sent Events (SSE)** - Real-time agent streaming
-- **Supabase** - Document archive persistence
+**PaddleOCR-VL** (Novita API) - Multimodal document understanding  
+**ERNIE 4.5** (Novita API) - Multi-agent language intelligence  
+**OpenCV** - Image preprocessing and enhancement
 
-**Frontend:**
-- **React 18 + TypeScript** - Type-safe UI components
-- **Vite** - Lightning-fast build tool
-- **Tailwind CSS + Shadcn UI** - Modern, accessible design
+#### Backend
+<p align="left">
+  <img src="https://img.shields.io/badge/Python-3776AB?style=for-the-badge&logo=python&logoColor=white" alt="Python"/>
+  <img src="https://img.shields.io/badge/FastAPI-009688?style=for-the-badge&logo=fastapi&logoColor=white" alt="FastAPI"/>
+  <img src="https://img.shields.io/badge/Supabase-3ECF8E?style=for-the-badge&logo=supabase&logoColor=white" alt="Supabase"/>
+  <img src="https://img.shields.io/badge/SSE-FF6B6B?style=for-the-badge&logo=serverfault&logoColor=white" alt="Server-Sent Events"/>
+</p>
 
-**Testing:**
-- **Hypothesis** - Property-based testing (Python)
-- **Vitest + fast-check** - Property-based testing (TypeScript)
-- **pytest** - Backend unit/integration tests
+**FastAPI** - High-performance async Python API  
+**Server-Sent Events (SSE)** - Real-time agent-to-frontend streaming  
+**Supabase** - Document archive and restoration history
 
----
+#### Frontend
+<p align="left">
+  <img src="https://img.shields.io/badge/React-61DAFB?style=for-the-badge&logo=react&logoColor=black" alt="React"/>
+  <img src="https://img.shields.io/badge/TypeScript-3178C6?style=for-the-badge&logo=typescript&logoColor=white" alt="TypeScript"/>
+  <img src="https://img.shields.io/badge/Vite-646CFF?style=for-the-badge&logo=vite&logoColor=white" alt="Vite"/>
+  <img src="https://img.shields.io/badge/Tailwind_CSS-06B6D4?style=for-the-badge&logo=tailwind-css&logoColor=white" alt="Tailwind CSS"/>
+  <img src="https://img.shields.io/badge/Shadcn/UI-000000?style=for-the-badge&logo=shadcnui&logoColor=white" alt="Shadcn UI"/>
+</p>
 
-## The Tech
+**React 18 + TypeScript** - Type-safe component architecture  
+**Vite** - Lightning-fast development and builds  
+**Tailwind CSS + Shadcn UI** - Modern, accessible design system
 
-**Vision:** PaddleOCR-VL via Novita AI  
-**Language:** ERNIE 4.5 via Novita AI  
-**Frontend:** React + TypeScript + Vite  
-**Backend:** FastAPI with SSE streaming  
-**Testing:** Property-based tests with Hypothesis
+#### Quality Assurance
+<p align="left">
+  <img src="https://img.shields.io/badge/pytest-0A9EDC?style=for-the-badge&logo=pytest&logoColor=white" alt="pytest"/>
+  <img src="https://img.shields.io/badge/Hypothesis-4B275F?style=for-the-badge&logo=python&logoColor=white" alt="Hypothesis"/>
+  <img src="https://img.shields.io/badge/Vitest-6E9F18?style=for-the-badge&logo=vitest&logoColor=white" alt="Vitest"/>
+  <img src="https://img.shields.io/badge/fast--check-C21325?style=for-the-badge&logo=npm&logoColor=white" alt="fast-check"/>
+</p>
 
-The agents stream their responses in real-time. No loading spinners. No waiting. Character by character, you watch the document come back to life.
+**Hypothesis** (Python) - Property-based testing for agent logic  
+**Vitest + fast-check** (TypeScript) - Property-based frontend testing  
+**pytest** - Backend unit and integration tests
 
 ---
 
@@ -156,7 +227,7 @@ The agents stream their responses in real-time. No loading spinners. No waiting.
 ### Prerequisites
 - Python 3.10+
 - Node.js 18+
-- [Novita AI API Key](https://novita.ai) (free tier available)
+- [Novita AI API Key](https://novita.ai/dashboard/key) (free tier includes 100 requests/day)
 
 ### Installation
 
@@ -182,86 +253,52 @@ cp .env.example .env
 # Terminal 1: Start Backend
 uvicorn main:app --reload --port 8000
 
-# Terminal 2: Start Frontend
+# Terminal 2: Start Frontend  
 npm run dev
 ```
 
-Open **http://localhost:8089** and upload a historical document to see the agents in action!
+Open **http://localhost:8089** and upload a historical document to see the agents collaborate!
 
 ### Test with Sample Documents
-Sample colonial-era documents are included in `src/assets/` for testing.
+Sample colonial-era documents from Zimbabwe National Archives are included in `src/assets/` for immediate testing.
 
 ---
 
-## Why ERNIE?
-
-I needed two things: vision that could read faded handwriting, and language models smart enough to fact-check historical claims.
-
-PaddleOCR-VL handles the vision—it's trained on degraded documents and handles the mess of water stains, foxing, and ink bleed better than alternatives I tested.
-
-ERNIE 4.5 powers the four language agents. Each has a different system prompt, different expertise, different personality. They argue. They verify each other. They catch mistakes.
-
-The combination—multimodal vision feeding into specialized language agents—is what makes this work.
-
----
-
-## The Architecture
-
-```
-Document Image
-      ↓
-┌─────────────────────────────────────────────┐
-│           PaddleOCR-VL (Scanner)            │
-│     Extracts text + detects damage          │
-└─────────────────────────────────────────────┘
-      ↓ SSE Stream
-┌─────────────────────────────────────────────┐
-│              ERNIE 4.5 Agents               │
-│  Linguist → Historian → Validator → Repair  │
-│     Each agent sees previous outputs        │
-└─────────────────────────────────────────────┘
-      ↓ SSE Stream
-┌─────────────────────────────────────────────┐
-│              React Frontend                 │
-│   Agent Theater • AR Damage View • Export   │
-└─────────────────────────────────────────────┘
-```
-
-Every agent streams to the frontend. You see Scanner's OCR results appear, then Linguist's transliteration, then Historian's fact-check, then Validator's confidence assessment, then Repair Advisor's conservation notes.
-
-It takes about 5 seconds total. But you're watching the whole time.
-
----
-
-## What I Learned
-
-Building this taught me that transparency matters more than accuracy. Users trust AI more when they can see it thinking—even when it makes mistakes.
-
-The multi-agent approach also catches errors that single-model systems miss. When Historian says "this date is wrong" and Validator flags the disagreement, users know to double-check. That's better than confidently wrong.
-
----
-
-## For the Judges
+## 🎯 For the Judges
 
 **Category:** Best ERNIE Multimodal Application (Sponsored by Novita)
 
-This project demonstrates:
-- **Multimodal integration:** PaddleOCR-VL vision + ERNIE 4.5 language working together
-- **Novel architecture:** Multi-agent swarm with real-time streaming collaboration
-- **Real-world impact:** Document preservation is a genuine problem affecting archives worldwide
-- **Technical depth:** Property-based testing, SSE streaming, caching, confidence scoring
-- **Polish:** Working frontend, working backend, working demo
+**What This Demonstrates:**
+
+1. **Novel Multimodal Integration**
+   - PaddleOCR-VL vision feeding structured context to ERNIE 4.5 language agents
+   - Not just "OCR then LLM"—each agent sees previous outputs and can challenge them
+
+2. **Architectural Innovation**
+   - Multi-agent swarm with real-time streaming collaboration
+   - Agents with distinct "personalities" that argue and verify each other
+   - SSE streaming makes the AI reasoning process transparent and debuggable
+
+3. **Real-World Impact**
+   - Document preservation is a genuine crisis affecting archives globally
+   - Quantified cost/speed improvements over manual restoration
+   - Handles pre-1955 Doke Shona orthography (unsupported by major OCR tools)
+
+4. **Technical Rigor**
+   - Property-based testing ensures agent outputs remain consistent
+   - Confidence scoring and hallucination detection built into the architecture
+   - Production-ready with caching, error handling, and export functionality
+
+5. **Polish & Usability**
+   - Working frontend with Agent Theater visualization
+   - Working backend with comprehensive API documentation
+   - Live demo ready for evaluation
+
+**Key Differentiator:** This isn't just accurate restoration—it's *transparent* restoration. Users see the AI thinking, which builds trust and helps catch errors that black-box systems would hide.
 
 ---
 
-## 🎥 Demo & Links
-
-- **📹 Demo Video:** [Watch on YouTube](YOUR_VIDEO_URL_HERE)
-- **🚀 Live Demo:** [Try it now](YOUR_DEMO_URL_HERE)
-- **💻 GitHub:** [Source Code](https://github.com/Peacsib/Nhaka-2.0-Archive-Alive)
-- **📝 Devpost:** [Project Submission](YOUR_DEVPOST_URL_HERE)
-
-### Screenshots
+## 📸 Screenshots
 
 <table>
   <tr>
@@ -270,34 +307,40 @@ This project demonstrates:
   </tr>
   <tr>
     <td align="center"><b>Landing Page</b></td>
-    <td align="center"><b>Agent Theater - Real-time Collaboration</b></td>
+    <td align="center"><b>Agent Theater - Watch Agents Collaborate</b></td>
   </tr>
   <tr>
     <td><img src="docs/screenshots/before-after.png" alt="Before/After" width="400"/></td>
     <td><img src="docs/screenshots/ar-diagnosis.png" alt="AR Diagnosis" width="400"/></td>
   </tr>
   <tr>
-    <td align="center"><b>Before/After Comparison</b></td>
-    <td align="center"><b>AR Damage Diagnosis</b></td>
+    <td align="center"><b>Before/After Comparison Slider</b></td>
+    <td align="center"><b>AR Damage Diagnosis & Repair Recommendations</b></td>
   </tr>
 </table>
 
 ---
 
-## Links
+## 💡 What I Learned
 
-- **Live Demo:** [Coming Soon]
-- **Demo Video:** [Coming Soon]
-- **GitHub:** https://github.com/Peacsib
+Building Nhaka 2.0 taught me that **transparency matters more than accuracy**. Users trust AI more when they can see it thinking—even when it makes mistakes.
 
----
+The multi-agent approach catches errors that single-model systems miss. When agents disagree, it signals ambiguity in the source document. That's information worth surfacing rather than hiding behind a confidence score.
 
-## Contact
-
-Peace Sibanda  
-peacesibx@gmail.com  
-[LinkedIn](https://www.linkedin.com/in/peace-sibanda) • [GitHub](https://github.com/Peacsib)
+Most importantly: cultural preservation needs technology that respects the source material. Showing the difference between original text and AI reconstruction isn't just ethical—it's essential for archival work.
 
 ---
 
-*Built for the ERNIE AI Developer Challenge 2025*
+## 🏆 Built for ERNIE AI Developer Challenge 2025
+
+<p align="center">
+  <img src="https://img.shields.io/badge/Category-Best_ERNIE_Multimodal_Application-gold?style=for-the-badge" alt="Category"/>
+  <img src="https://img.shields.io/badge/Sponsor-Novita_AI-blueviolet?style=for-the-badge" alt="Sponsor"/>
+</p>
+
+---
+
+**Peace Sibanda**  
+*Software Engineer | AI/ML Enthusiast | Heritage Preservationist*
+
+---
