@@ -86,11 +86,21 @@ export const FeaturesSection = () => {
           <p className="text-lg text-muted-foreground max-w-2xl mx-auto mb-6">
             Five specialized agents with distinct personalities, working together to bring your archives back to life.
           </p>
-          <a href="/resurrect">
-            <button className="inline-flex items-center gap-2 px-6 py-3 rounded-lg bg-accent/10 hover:bg-accent/20 border border-accent/30 hover:border-accent/50 transition-all duration-300 text-accent font-medium group">
-              <Eye className="w-5 h-5 group-hover:scale-110 transition-transform" />
-              See Them Collaborate in Real-Time
-            </button>
+          <a href="/resurrect" className="inline-block">
+            <div className="relative group">
+              {/* Animated rotating gradient border */}
+              <div className="absolute -inset-0.5 bg-gradient-conic from-accent via-blue-500 to-purple-500 rounded-lg opacity-0 group-hover:opacity-100 blur-sm transition-opacity duration-500 animate-spin-slow" />
+              
+              {/* Button */}
+              <button className="relative inline-flex items-center gap-2 px-6 py-3 rounded-lg bg-background border border-accent/30 group-hover:border-transparent transition-all duration-300 text-accent font-medium overflow-hidden">
+                {/* Gradient background on hover */}
+                <div className="absolute inset-0 bg-gradient-to-r from-accent/10 via-blue-500/10 to-purple-500/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                
+                {/* Content */}
+                <Eye className="w-5 h-5 group-hover:scale-110 transition-transform relative z-10" />
+                <span className="relative z-10">See Them Collaborate in Real-Time</span>
+              </button>
+            </div>
           </a>
         </div>
 

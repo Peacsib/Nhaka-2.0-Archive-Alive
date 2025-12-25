@@ -204,6 +204,16 @@
   .glow-repair {
     box-shadow: var(--glow-repair);
   }
+
+  .bg-gradient-conic {
+    background: conic-gradient(
+      from 0deg,
+      hsl(32 90% 50%),
+      hsl(210 90% 50%),
+      hsl(270 65% 55%),
+      hsl(32 90% 50%)
+    );
+  }
 }
 
 /* Keyframe Animations */
@@ -243,6 +253,11 @@
   50% { transform: translateY(-10px); }
 }
 
+@keyframes spin-slow {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
 @keyframes revealDocument {
   0% {
     opacity: 0;
@@ -269,6 +284,10 @@
 
 .animate-float {
   animation: float 6s ease-in-out infinite;
+}
+
+.animate-spin-slow {
+  animation: spin-slow 3s linear infinite;
 }
 
 .animate-reveal-document {
