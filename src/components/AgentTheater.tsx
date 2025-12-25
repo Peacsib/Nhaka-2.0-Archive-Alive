@@ -85,9 +85,21 @@ export const AgentTheater = ({ isProcessing, isComplete, onComplete, documentNam
         setActiveAgent(newMessages[newMessages.length - 1].agent);
       }
       
-      // Update progress
-      const estimatedTotal = 17; // Approximate number of messages
-      setProgress(Math.min((newMessages.length / estimatedTotal) * 100, isComplete ? 100 : 95));
+      // Calculate progress based on agent stages (not message count)
+      // Each agent represents ~20% of progress
+      const agentOrder: AgentType[] = ["scanner", "linguist", "historian", "validator", "repair_advisor"];
+      const lastAgent = newMessages[newMessages.length - 1]?.agent;
+      const agentIndex = agentOrder.indexOf(lastAgent);
+      
+      // Base progress on which agent is active + some progress within that agent
+      const baseProgress = agentIndex >= 0 ? (agentIndex / agentOrder.length) * 100 : 0;
+      const withinAgentProgress = Math.min(10, newMessages.filter(m => m.agent === lastAgent).length * 2);
+      
+      // Progress only goes forward, never backward
+      setProgress(prev => {
+        const newProgress = Math.min(baseProgress + withinAgentProgress, isComplete ? 100 : 95);
+        return Math.max(prev, newProgress); // Never decrease
+      });
     }
   }, [externalMessages, isComplete]);
 
