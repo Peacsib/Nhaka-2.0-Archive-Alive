@@ -1,6 +1,8 @@
+import { useState } from "react";
 import { Card } from "./ui/card";
 import { Button } from "./ui/button";
-import { FileText, Clock, Star, Wrench, Languages, BookOpen, Globe } from "lucide-react";
+import { FileText, Clock, Star, Wrench, Languages, BookOpen, Globe, Check, Plus } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 // Hero Asset imports
 import bsacDecay from "@/assets/BSAC_Archive_Record_1896.png";
@@ -83,24 +85,100 @@ const agentIcons: Record<string, React.ReactNode> = {
 
 interface SampleDocumentsProps {
   onSelect: (id: string) => void;
+  onSelectMultiple?: (ids: string[]) => void;
+  batchMode?: boolean;
 }
 
-export const SampleDocuments = ({ onSelect }: SampleDocumentsProps) => {
+export const SampleDocuments = ({ onSelect, onSelectMultiple, batchMode = false }: SampleDocumentsProps) => {
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+
+  const handleCardClick = (docId: string) => {
+    if (batchMode) {
+      setSelectedIds(prev => {
+        const newSet = new Set(prev);
+        if (newSet.has(docId)) {
+          newSet.delete(docId);
+        } else {
+          newSet.add(docId);
+        }
+        return newSet;
+      });
+    } else {
+      onSelect(docId);
+    }
+  };
+
+  const handleAddSelected = () => {
+    if (onSelectMultiple && selectedIds.size > 0) {
+      onSelectMultiple(Array.from(selectedIds));
+      setSelectedIds(new Set());
+    }
+  };
+
+  const handleSelectAll = () => {
+    if (selectedIds.size === sampleDocs.length) {
+      setSelectedIds(new Set());
+    } else {
+      setSelectedIds(new Set(sampleDocs.map(d => d.id)));
+    }
+  };
+
   return (
     <div className="space-y-4">
-      <div className="flex items-center gap-2 mb-4">
-        <Star className="w-5 h-5 text-accent" />
-        <h3 className="font-serif text-xl font-semibold">Hero Documents - Demo Flow</h3>
-        <span className="text-xs text-muted-foreground ml-2">Paper → Language → Context → Connection</span>
+      <div className="flex items-center justify-between mb-4">
+        <div className="flex items-center gap-2">
+          <Star className="w-5 h-5 text-accent" />
+          <h3 className="font-serif text-xl font-semibold">Hero Documents - Demo Flow</h3>
+          <span className="text-xs text-muted-foreground ml-2">Paper → Language → Context → Connection</span>
+        </div>
+        
+        {batchMode && (
+          <div className="flex items-center gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleSelectAll}
+            >
+              {selectedIds.size === sampleDocs.length ? "Deselect All" : "Select All"}
+            </Button>
+            <Button
+              size="sm"
+              onClick={handleAddSelected}
+              disabled={selectedIds.size === 0}
+              className="gap-1"
+            >
+              <Plus className="w-4 h-4" />
+              Add {selectedIds.size > 0 ? `(${selectedIds.size})` : ""} to Queue
+            </Button>
+          </div>
+        )}
       </div>
       
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-        {sampleDocs.map((doc, index) => (
+        {sampleDocs.map((doc, index) => {
+          const isSelected = selectedIds.has(doc.id);
+          return (
           <Card
             key={doc.id}
-            className="p-4 hover:shadow-lg transition-all duration-300 hover:border-accent/50 cursor-pointer group overflow-hidden"
-            onClick={() => onSelect(doc.id)}
+            className={cn(
+              "p-4 hover:shadow-lg transition-all duration-300 cursor-pointer group overflow-hidden relative",
+              batchMode && isSelected 
+                ? "border-accent ring-2 ring-accent/50" 
+                : "hover:border-accent/50"
+            )}
+            onClick={() => handleCardClick(doc.id)}
           >
+            {/* Selection indicator for batch mode */}
+            {batchMode && (
+              <div className={cn(
+                "absolute top-2 right-2 z-10 w-6 h-6 rounded-full flex items-center justify-center transition-all",
+                isSelected 
+                  ? "bg-accent text-accent-foreground" 
+                  : "bg-black/50 text-white/70 group-hover:bg-black/70"
+              )}>
+                {isSelected ? <Check className="w-4 h-4" /> : <Plus className="w-4 h-4" />}
+              </div>
+            )}
             {/* Document Preview Image */}
             <div className="relative h-32 mb-3 rounded-lg overflow-hidden bg-secondary">
               <img 
@@ -137,7 +215,8 @@ export const SampleDocuments = ({ onSelect }: SampleDocumentsProps) => {
               </div>
             </div>
           </Card>
-        ))}
+          );
+        })}
       </div>
     </div>
   );

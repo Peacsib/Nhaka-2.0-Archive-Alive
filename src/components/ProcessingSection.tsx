@@ -335,6 +335,39 @@ export const ProcessingSection = ({ autoStart = false }: ProcessingSectionProps)
     }
   };
 
+  const handleSampleSelectMultiple = async (sampleIds: string[]) => {
+    const files: File[] = [];
+    
+    for (const sampleId of sampleIds) {
+      const imageUrl = sampleImages[sampleId];
+      if (!imageUrl) continue;
+      
+      const response = await fetch(imageUrl);
+      const blob = await response.blob();
+      
+      const extensions: Record<string, string> = {
+        decay: "png",
+        linguist: "png", 
+        history: "jpg",
+        connection: "webp",
+      };
+      const ext = extensions[sampleId] || "jpg";
+      const mimeTypes: Record<string, string> = {
+        png: "image/png",
+        jpg: "image/jpeg",
+        webp: "image/webp",
+      };
+      
+      const file = new File([blob], `sample-${sampleId}.${ext}`, { type: mimeTypes[ext] });
+      files.push(file);
+    }
+    
+    if (files.length > 0) {
+      handleBatchFilesSelect(files);
+      toast.success(`Added ${files.length} sample documents to queue`);
+    }
+  };
+
   const startProcessing = async (fileToProcess?: File) => {
     const file = fileToProcess || selectedFile;
     if (!file) {
@@ -483,7 +516,11 @@ export const ProcessingSection = ({ autoStart = false }: ProcessingSectionProps)
 
         {/* Sample Documents */}
         {!selectedFile && queuedFiles.length === 0 && (
-          <SampleDocuments onSelect={handleSampleSelect} />
+          <SampleDocuments 
+            onSelect={handleSampleSelect} 
+            onSelectMultiple={handleSampleSelectMultiple}
+            batchMode={uploadMode === "batch"}
+          />
         )}
 
         <div className="grid lg:grid-cols-2 gap-8 mt-8">
