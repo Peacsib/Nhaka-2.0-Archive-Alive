@@ -9,7 +9,7 @@ import { Button } from "./ui/button";
 import { Card } from "./ui/card";
 import { Switch } from "./ui/switch";
 import { Tabs, TabsList, TabsTrigger } from "./ui/tabs";
-import { Play, RotateCcw, Download, Share2, AlertTriangle, Scan, Zap, X, FileText, CheckCircle2, Settings2, Layers, File } from "lucide-react";
+import { Play, RotateCcw, Download, Share2, AlertTriangle, Scan, Zap, X, FileText, CheckCircle2, Settings2, Layers, File as FileIcon } from "lucide-react";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import bsacDecay from "@/assets/BSAC_Archive_Record_1896.png";
@@ -522,7 +522,7 @@ export const ProcessingSection = ({ autoStart = false }: ProcessingSectionProps)
           <Tabs value={uploadMode} onValueChange={(v) => setUploadMode(v as "single" | "batch")} className="w-full max-w-md">
             <TabsList className="grid w-full grid-cols-2">
               <TabsTrigger value="single" className="gap-2">
-                <File className="w-4 h-4" />
+                <FileIcon className="w-4 h-4" />
                 Single Document
               </TabsTrigger>
               <TabsTrigger value="batch" className="gap-2">
