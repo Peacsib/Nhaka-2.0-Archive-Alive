@@ -1,6 +1,5 @@
 import { cn } from "@/lib/utils";
 import { Scan, BookOpen, Languages, ShieldCheck, Wrench } from "lucide-react";
-import baiduLogo from "@/assets/baidu.jpg";
 
 export type AgentType = "scanner" | "linguist" | "historian" | "validator" | "repair_advisor";
 
@@ -12,14 +11,13 @@ interface AgentAvatarProps {
 }
 
 const agentConfig: Record<AgentType, {
-  icon: typeof Scan | null;
+  icon: typeof Scan;
   name: string;
   role: string;
   color: string;
   bgColor: string;
   borderColor: string;
   glowClass: string;
-  useBaiduLogo?: boolean;
 }> = {
   scanner: {
     icon: Scan,
@@ -29,7 +27,6 @@ const agentConfig: Record<AgentType, {
     bgColor: "bg-agent-scanner-bg",
     borderColor: "border-agent-scanner",
     glowClass: "glow-scanner",
-    useBaiduLogo: false,
   },
   linguist: {
     icon: Languages,
@@ -39,7 +36,6 @@ const agentConfig: Record<AgentType, {
     bgColor: "bg-agent-linguist-bg",
     borderColor: "border-agent-linguist",
     glowClass: "glow-linguist",
-    useBaiduLogo: true, // Use ERNIE logo
   },
   historian: {
     icon: BookOpen,
@@ -49,7 +45,6 @@ const agentConfig: Record<AgentType, {
     bgColor: "bg-agent-historian-bg",
     borderColor: "border-agent-historian",
     glowClass: "glow-historian",
-    useBaiduLogo: true, // Use ERNIE logo
   },
   validator: {
     icon: ShieldCheck,
@@ -59,7 +54,6 @@ const agentConfig: Record<AgentType, {
     bgColor: "bg-agent-validator-bg",
     borderColor: "border-agent-validator",
     glowClass: "glow-validator",
-    useBaiduLogo: true, // Use ERNIE logo
   },
   repair_advisor: {
     icon: Wrench,
@@ -69,7 +63,6 @@ const agentConfig: Record<AgentType, {
     bgColor: "bg-agent-repair-bg",
     borderColor: "border-agent-repair",
     glowClass: "glow-repair",
-    useBaiduLogo: true, // Use ERNIE logo
   },
 };
 
@@ -113,25 +106,13 @@ export const AgentAvatar = ({
         className={cn(
           "rounded-full flex items-center justify-center transition-all duration-300 overflow-hidden",
           sizeClasses[size],
-          !config.useBaiduLogo && config.color,
+          config.color,
           isActive && config.glowClass,
           isActive && "ring-2 ring-offset-2 ring-offset-background",
           isActive && config.borderColor.replace("border-", "ring-")
         )}
       >
-        {config.useBaiduLogo ? (
-          <img 
-            src={baiduLogo} 
-            alt="ERNIE" 
-            className={cn(
-              "object-cover rounded-full",
-              sizeClasses[size],
-              isActive && "animate-pulse"
-            )} 
-          />
-        ) : (
-          Icon && <Icon className={cn(iconSizes[size], "text-primary-foreground")} />
-        )}
+        <Icon className={cn(iconSizes[size], "text-primary-foreground")} />
       </div>
       
       {/* Typing/Active Indicator */}

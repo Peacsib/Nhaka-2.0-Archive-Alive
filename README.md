@@ -28,7 +28,7 @@ So I built Nhaka 2.0.
       <sub><b>Watch on YouTube</b></sub>
     </td>
     <td align="center">
-      <a href="YOUR_DEMO_URL_HERE">
+      <a href="https://nhaka-20-archive-alive.vercel.app">
         <img src="https://img.shields.io/badge/🚀_Live_Demo-4285F4?style=for-the-badge&logo=googlechrome&logoColor=white" alt="Live Demo"/>
       </a>
       <br/>
@@ -257,7 +257,9 @@ uvicorn main:app --reload --port 8000
 npm run dev
 ```
 
-Open **http://localhost:8089** and upload a historical document to see the agents collaborate!
+**Local Development:** Open http://localhost:5173
+
+**Live Demo:** https://nhaka-20-archive-alive.vercel.app
 
 ### Test with Sample Documents
 Sample colonial-era documents from Zimbabwe National Archives are included in `src/assets/` for immediate testing.

@@ -31,16 +31,20 @@
 
 ### Base URL
 ```
+# Production
+https://nhaka-api.onrender.com
+
+# Local Development
 http://localhost:8000
 ```
 
 ### Quick Test
 ```bash
-# Check API status
-curl http://localhost:8000/
+# Check API status (Production)
+curl https://nhaka-api.onrender.com/
 
-# Upload a document
-curl -X POST http://localhost:8000/resurrect/stream \
+# Upload a document (Production)
+curl -X POST https://nhaka-api.onrender.com/resurrect/stream \
   -F "file=@your-document.jpg" \
   --no-buffer
 ```
@@ -94,7 +98,7 @@ DAILY_API_BUDGET=5.00  # Optional: default is $5.00 USD
 
 **Example:**
 ```bash
-curl http://localhost:8000/
+curl https://nhaka-api.onrender.com/
 ```
 </details>
 
@@ -161,7 +165,7 @@ curl http://localhost:8000/
 <td>
 
 ```bash
-curl -X POST http://localhost:8000/resurrect/stream \
+curl -X POST https://nhaka-api.onrender.com/resurrect/stream \
   -F "file=@document.jpg" \
   --no-buffer
 ```
@@ -216,7 +220,7 @@ import json
 
 with open('document.jpg', 'rb') as f:
     response = requests.post(
-        'http://localhost:8000/resurrect/stream',
+        'https://nhaka-api.onrender.com/resurrect/stream',
         files={'file': f},
         stream=True
     )
@@ -270,7 +274,7 @@ with open('document.jpg', 'rb') as f:
 
 **Example:**
 ```bash
-curl -X POST http://localhost:8000/resurrect/lite \
+curl -X POST https://nhaka-api.onrender.com/resurrect/lite \
   -F "file=@document.jpg"
 ```
 
@@ -315,11 +319,11 @@ curl -X POST http://localhost:8000/resurrect/lite \
 **Example:**
 ```bash
 # First upload - full processing
-curl -X POST http://localhost:8000/resurrect/cached \
+curl -X POST https://nhaka-api.onrender.com/resurrect/cached \
   -F "file=@document.jpg"
 
 # Second upload (same file) - instant, FREE
-curl -X POST http://localhost:8000/resurrect/cached \
+curl -X POST https://nhaka-api.onrender.com/resurrect/cached \
   -F "file=@document.jpg"
 ```
 
@@ -364,7 +368,7 @@ curl -X POST http://localhost:8000/resurrect/cached \
 
 **Example:**
 ```bash
-curl http://localhost:8000/api/stats
+curl https://nhaka-api.onrender.com/api/stats
 ```
 
 </details>
@@ -393,7 +397,7 @@ curl http://localhost:8000/api/stats
 
 **Example:**
 ```bash
-curl -X POST http://localhost:8000/api/budget \
+curl -X POST https://nhaka-api.onrender.com/api/budget \
   -H "Content-Type: application/json" \
   -d '{"budget_usd": 10.0}'
 ```
@@ -423,7 +427,7 @@ curl -X POST http://localhost:8000/api/budget \
 
 **Example:**
 ```bash
-curl http://localhost:8000/archives/123e4567-e89b-12d3-a456-426614174000
+curl https://nhaka-api.onrender.com/archives/123e4567-e89b-12d3-a456-426614174000
 ```
 
 </details>
@@ -466,7 +470,7 @@ curl http://localhost:8000/archives/123e4567-e89b-12d3-a456-426614174000
 
 **Example:**
 ```bash
-curl http://localhost:8000/agents
+curl https://nhaka-api.onrender.com/agents
 ```
 
 </details>
@@ -646,29 +650,31 @@ interface RestorationSummary {
 ### Interactive API Docs
 FastAPI provides auto-generated interactive documentation:
 
-- **Swagger UI:** http://localhost:8000/docs
-- **ReDoc:** http://localhost:8000/redoc
+- **Swagger UI (Production):** https://nhaka-api.onrender.com/docs
+- **ReDoc (Production):** https://nhaka-api.onrender.com/redoc
+- **Swagger UI (Local):** http://localhost:8000/docs
+- **ReDoc (Local):** http://localhost:8000/redoc
 
 ### Command Line Testing
 
 ```bash
 # Health check
-curl http://localhost:8000/
+curl https://nhaka-api.onrender.com/
 
 # Upload document (lite mode)
-curl -X POST http://localhost:8000/resurrect/lite \
+curl -X POST https://nhaka-api.onrender.com/resurrect/lite \
   -F "file=@test-document.jpg"
 
 # Upload document (streaming)
-curl -X POST http://localhost:8000/resurrect/stream \
+curl -X POST https://nhaka-api.onrender.com/resurrect/stream \
   -F "file=@test-document.jpg" \
   --no-buffer
 
 # Check API stats
-curl http://localhost:8000/api/stats
+curl https://nhaka-api.onrender.com/api/stats
 
 # Set budget
-curl -X POST http://localhost:8000/api/budget \
+curl -X POST https://nhaka-api.onrender.com/api/budget \
   -H "Content-Type: application/json" \
   -d '{"budget_usd": 10.0}'
 ```
@@ -681,13 +687,13 @@ import requests
 # Upload document
 with open('document.jpg', 'rb') as f:
     response = requests.post(
-        'http://localhost:8000/resurrect/lite',
+        'https://nhaka-api.onrender.com/resurrect/lite',
         files={'file': f}
     )
     print(response.json())
 
 # Get API stats
-stats = requests.get('http://localhost:8000/api/stats').json()
+stats = requests.get('https://nhaka-api.onrender.com/api/stats').json()
 print(f"Budget used: {stats['api_usage']['budget_percent_used']}%")
 ```
 
@@ -710,7 +716,7 @@ print(f"Budget used: {stats['api_usage']['budget_percent_used']}%")
 - **Email:** peacesibx@gmail.com
 
 ### API Status
-Check real-time API status: `GET http://localhost:8000/`
+Check real-time API status: `GET https://nhaka-api.onrender.com/`
 
 ---
 

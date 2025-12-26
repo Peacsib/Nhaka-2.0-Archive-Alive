@@ -168,7 +168,7 @@ export const ProcessingSection = ({ autoStart = false }: ProcessingSectionProps)
       const formData = new FormData();
       formData.append("file", file);
 
-      const apiUrl = import.meta.env.VITE_API_URL || "http://localhost:8000";
+      const apiUrl = import.meta.env.VITE_API_URL || "https://nhaka-api.onrender.com";
       const response = await fetch(`${apiUrl}/resurrect/stream`, {
         method: "POST",
         body: formData,

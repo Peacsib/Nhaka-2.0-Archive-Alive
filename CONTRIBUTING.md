@@ -56,7 +56,9 @@ uvicorn main:app --reload --port 8000  # Terminal 1
 npm run dev                             # Terminal 2
 ```
 
-Open **http://localhost:8089** - you should see the Nhaka 2.0 landing page! 🎉
+Open **http://localhost:5173** - you should see the Nhaka 2.0 landing page! 🎉
+
+**Live Demo:** https://nhaka-20-archive-alive.vercel.app
 
 ---
 
