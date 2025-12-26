@@ -40,29 +40,29 @@
 
     --radius: 0.75rem;
 
-    /* Agent Colors - Nhaka 2.0 Color Coding */
-    --agent-scanner: 210 90% 50%;       /* Blue - Vision */
+    /* Agent Colors - Nhaka 2.0 Color Coding - Vibrant */
+    --agent-scanner: 210 100% 50%;       /* Bright Blue - Vision */
     --agent-scanner-bg: 210 80% 94%;
-    --agent-linguist: 145 70% 42%;      /* Green - Culture */
+    --agent-linguist: 145 85% 40%;       /* Vibrant Green - Culture */
     --agent-linguist-bg: 145 60% 92%;
-    --agent-historian: 270 65% 55%;     /* Purple - Time */
+    --agent-historian: 270 80% 55%;      /* Rich Purple - Time */
     --agent-historian-bg: 270 55% 93%;
-    --agent-validator: 0 75% 55%;       /* Red/Gold - Security */
+    --agent-validator: 0 85% 50%;        /* Bold Red - Security */
     --agent-validator-bg: 0 65% 94%;
-    --agent-repair: 35 95% 50%;         /* Orange/Yellow - Warning */
+    --agent-repair: 35 100% 50%;         /* Bright Orange - Warning */
     --agent-repair-bg: 35 85% 92%;
 
     /* Confidence colors */
     --confidence-high: 145 75% 38%;
     --confidence-low: 32 90% 50%;
 
-    /* Special Effects */
-    --glow-amber: 0 0 60px hsl(32 90% 50% / 0.35);
-    --glow-scanner: 0 0 40px hsl(210 90% 50% / 0.35);
-    --glow-linguist: 0 0 40px hsl(145 70% 42% / 0.35);
-    --glow-historian: 0 0 40px hsl(270 65% 55% / 0.35);
-    --glow-validator: 0 0 40px hsl(0 75% 55% / 0.35);
-    --glow-repair: 0 0 40px hsl(35 95% 50% / 0.35);
+    /* Special Effects - Enhanced Glow */
+    --glow-amber: 0 0 60px hsl(32 90% 50% / 0.45);
+    --glow-scanner: 0 0 40px hsl(210 100% 50% / 0.5);
+    --glow-linguist: 0 0 40px hsl(145 85% 40% / 0.5);
+    --glow-historian: 0 0 40px hsl(270 80% 55% / 0.5);
+    --glow-validator: 0 0 40px hsl(0 85% 50% / 0.5);
+    --glow-repair: 0 0 40px hsl(35 100% 50% / 0.5);
 
     /* Gradients - Enhanced & Richer */
     --gradient-hero: linear-gradient(180deg, hsl(38 28% 94%) 0%, hsl(35 35% 88%) 40%, hsl(32 40% 85%) 70%, hsl(38 30% 92%) 100%);
