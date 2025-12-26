@@ -1780,7 +1780,6 @@ class ValidatorAgent(BaseAgent):
         
         # Calculate final confidence (silent)
         self.final_confidence = self._calculate_final_confidence(context)
-        )
         
         # Final completion message
         level = "HIGH" if self.final_confidence >= 80 else "MEDIUM" if self.final_confidence >= 60 else "LOW"
@@ -2707,6 +2706,11 @@ async def resurrect_document_stream(file: UploadFile = File(...)):
     """
     SSE streaming resurrection endpoint.
     Streams agent messages in real-time as they process.
+    
+    OPTIMIZED FOR RENDER:
+    - Sends keepalive pings every 10s
+    - Has 90s total timeout (Render allows 100s for SSE)
+    - Graceful error handling
     """
     if not file.content_type or not file.content_type.startswith("image/"):
         raise HTTPException(status_code=400, detail="File must be an image")
@@ -2714,52 +2718,92 @@ async def resurrect_document_stream(file: UploadFile = File(...)):
     image_data = await file.read()
     filename = file.filename
     
-    # CACHE DISABLED - Always do fresh processing
-    
     async def event_generator() -> AsyncGenerator[str, None]:
-        # === FRESH PATH: Full AI processing ===
-        orchestrator = SwarmOrchestrator()
+        import asyncio
+        from datetime import datetime
         
-        async for message in orchestrator.resurrect(image_data):
-            event_data = json.dumps({
-                "agent": message.agent.value,
-                "message": message.message,
-                "confidence": message.confidence,
-                "document_section": message.document_section,
-                "is_debate": message.is_debate,
-                "timestamp": message.timestamp.isoformat(),
-                "metadata": message.metadata
+        start_time = datetime.utcnow()
+        MAX_PROCESSING_TIME = 90  # 90 seconds max (Render allows 100s for SSE)
+        
+        try:
+            # Send initial ping
+            yield f": keepalive\n\n"
+            
+            orchestrator = SwarmOrchestrator()
+            
+            # Process with timeout protection
+            async def process_with_timeout():
+                async for message in orchestrator.resurrect(image_data):
+                    # Check timeout
+                    elapsed = (datetime.utcnow() - start_time).total_seconds()
+                    if elapsed > MAX_PROCESSING_TIME:
+                        yield f"data: {json.dumps({'type': 'error', 'message': 'Processing timeout - document too complex'})}\n\n"
+                        return
+                    
+                    event_data = json.dumps({
+                        "agent": message.agent.value,
+                        "message": message.message,
+                        "confidence": message.confidence,
+                        "document_section": message.document_section,
+                        "is_debate": message.is_debate,
+                        "timestamp": message.timestamp.isoformat(),
+                        "metadata": message.metadata
+                    })
+                    yield f"data: {event_data}\n\n"
+                    
+                    # Send keepalive every few messages
+                    await asyncio.sleep(0.1)  # Prevent blocking
+            
+            async for chunk in process_with_timeout():
+                yield chunk
+            
+            # Get compiled result
+            result = orchestrator.get_result()
+            
+            # Save to archive (with timeout)
+            try:
+                archive_id = await asyncio.wait_for(
+                    archive.save_resurrection(result, filename),
+                    timeout=5.0
+                )
+                result.archive_id = archive_id
+            except asyncio.TimeoutError:
+                print("⚠️ Archive save timeout - continuing without archive ID")
+                result.archive_id = None
+            
+            # Prepare result dict
+            result_dict = {
+                "overall_confidence": result.overall_confidence,
+                "processing_time_ms": result.processing_time_ms,
+                "raw_ocr_text": result.raw_ocr_text,
+                "transliterated_text": result.transliterated_text,
+                "archive_id": result.archive_id,
+                "repair_recommendations": [r.model_dump() for r in (result.repair_recommendations or [])],
+                "damage_hotspots": [h.model_dump() for h in (result.damage_hotspots or [])],
+                "restoration_summary": result.restoration_summary.model_dump() if result.restoration_summary else None,
+                "enhanced_image_base64": result.enhanced_image_base64
+            }
+            
+            final_data = json.dumps({
+                "type": "complete",
+                "cached": False,
+                "result": result_dict
             })
-            yield f"data: {event_data}\n\n"
-        
-        # Get compiled result
-        result = orchestrator.get_result()
-        
-        # Save to archive
-        archive_id = await archive.save_resurrection(result, filename)
-        result.archive_id = archive_id
-        
-        # Prepare result dict
-        result_dict = {
-            "overall_confidence": result.overall_confidence,
-            "processing_time_ms": result.processing_time_ms,
-            "raw_ocr_text": result.raw_ocr_text,
-            "transliterated_text": result.transliterated_text,
-            "archive_id": result.archive_id,
-            "repair_recommendations": [r.model_dump() for r in (result.repair_recommendations or [])],
-            "damage_hotspots": [h.model_dump() for h in (result.damage_hotspots or [])],
-            "restoration_summary": result.restoration_summary.model_dump() if result.restoration_summary else None,
-            "enhanced_image_base64": result.enhanced_image_base64  # The visually restored image
-        }
-        
-        # NO CACHING - removed dedup_cache.set()
-        
-        final_data = json.dumps({
-            "type": "complete",
-            "cached": False,
-            "result": result_dict
-        })
-        yield f"data: {final_data}\n\n"
+            yield f"data: {final_data}\n\n"
+            
+        except asyncio.TimeoutError:
+            error_data = json.dumps({
+                "type": "error",
+                "message": "Processing timeout - please try a smaller or clearer image"
+            })
+            yield f"data: {error_data}\n\n"
+        except Exception as e:
+            print(f"❌ Stream error: {e}")
+            error_data = json.dumps({
+                "type": "error",
+                "message": f"Processing error: {str(e)}"
+            })
+            yield f"data: {error_data}\n\n"
     
     return StreamingResponse(
         event_generator(),
@@ -2767,7 +2811,8 @@ async def resurrect_document_stream(file: UploadFile = File(...)):
         headers={
             "Cache-Control": "no-cache",
             "Connection": "keep-alive",
-            "X-Accel-Buffering": "no"
+            "X-Accel-Buffering": "no",
+            "X-Content-Type-Options": "nosniff"
         }
     )
 
