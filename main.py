@@ -1109,61 +1109,23 @@ Be precise and technical. Focus on actionable restoration insights."""
         """Process document image through PaddleOCR-VL with enhanced analysis"""
         image_data = context.get("image_data")
         
-        yield await self.emit("🔬 Initializing document scan...")
+        # Single initialization message
+        yield await self.emit("🔬 Scanner analyzing...")
         
         # Analyze image properties
         enhanced_image_data = image_data
         if image_data:
             try:
                 image = Image.open(io.BytesIO(image_data))
-                width, height = image.size
                 
-                # Step 1: Document Type Detection
-                yield await self.emit(
-                    f"📄 Analyzing document ({width}x{height}px)...",
-                    section="Image Analysis"
-                )
-                
+                # Document analysis (silent - no message spam)
                 self.document_analysis = self._analyze_document_type(image)
-                doc_type = self.document_analysis["type"]
                 
-                yield await self.emit(
-                    f"📋 Document type: {doc_type.upper()} ({self.document_analysis['confidence']}% confidence)",
-                    section="Document Detection",
-                    confidence=self.document_analysis['confidence']
-                )
-                
-                # Step 2: Image Enhancement (consolidated)
-                quality_issues = self.document_analysis.get("quality_issues", [])
-                if quality_issues:
-                    yield await self.emit(
-                        f"🔧 Applying {len(quality_issues)} enhancement(s)...",
-                        section="Enhancement"
-                    )
-                
-                # Apply enhancements based on document analysis
+                # Apply enhancements (silent)
                 enhanced_image, self.enhancements_applied = self._enhance_image(image, self.document_analysis)
                 
-                if self.enhancements_applied:
-                    yield await self.emit(
-                        f"✓ Applied: {', '.join(self.enhancements_applied[:3])}",
-                        section="Enhancement Applied"
-                    )
-                
-                # Step 3: Layout Detection (quick)
+                # Layout detection (silent)
                 layout = self._detect_layout(enhanced_image)
-                layout_info = []
-                if layout["has_header"]:
-                    layout_info.append("header")
-                if layout["has_images"]:
-                    layout_info.append(f"{len(layout.get('image_regions', []))} images")
-                layout_info.append(f"{layout['estimated_columns']} col(s)")
-                
-                if layout_info:
-                    yield await self.emit(
-                        f"📊 Layout: {', '.join(layout_info)}",
-                        section="Layout Detection"
-                    )
                 
                 # Convert enhanced image back to bytes for OCR
                 buffer = io.BytesIO()
@@ -1172,45 +1134,6 @@ Be precise and technical. Focus on actionable restoration insights."""
                 
                 # Store enhanced image as base64 for frontend display
                 enhanced_image_b64 = base64.b64encode(enhanced_image_data).decode('utf-8')
-                
-                # === ERNIE 4.5 ADVANCED RESTORATION (Optional - only if needed) ===
-                ernie_analysis = None
-                if quality_issues and len(quality_issues) > 2:  # Only for heavily damaged docs
-                    yield await self.emit(
-                        "🧠 Running AI damage analysis...",
-                        section="AI Enhancement"
-                    )
-                    
-                    ernie_analysis = await self._ernie_45_analyze_damage(enhanced_image_b64)
-                    
-                    if ernie_analysis:
-                        damage_areas = ernie_analysis.get("damage_areas", [])
-                        if damage_areas:
-                            yield await self.emit(
-                                f"🔍 AI detected {len(damage_areas)} damage area(s)",
-                                section="AI Damage Detection"
-                            )
-                        
-                        # Apply advanced AI-guided restoration
-                        cv2_enhanced = self._pil_to_cv2(enhanced_image)
-                        cv2_restored, ai_enhancements = self._apply_advanced_restoration(cv2_enhanced, ernie_analysis)
-                        enhanced_image = self._cv2_to_pil(cv2_restored)
-                        
-                        if ai_enhancements:
-                            yield await self.emit(
-                                f"✨ AI restoration: {', '.join(ai_enhancements[:2])}",
-                                section="AI Enhancement Applied"
-                            )
-                        
-                        self.enhancements_applied.extend(ai_enhancements)
-                        
-                        # Update enhanced image data
-                        buffer = io.BytesIO()
-                        enhanced_image.save(buffer, format='PNG')
-                        enhanced_image_data = buffer.getvalue()
-                        enhanced_image_b64 = base64.b64encode(enhanced_image_data).decode('utf-8')
-                        
-                        context["ernie_damage_analysis"] = ernie_analysis
                 
                 # Store analysis in context
                 context["document_analysis"] = self.document_analysis
@@ -1221,11 +1144,6 @@ Be precise and technical. Focus on actionable restoration insights."""
             except Exception as e:
                 yield await self.emit(f"⚠️ Image analysis warning: {str(e)}", confidence=50)
         
-        yield await self.emit(
-            "🔍 Running OCR extraction...",
-            section="Text Extraction"
-        )
-        
         # Call Novita PaddleOCR-VL with ENHANCED image
         ocr_result = await self._call_paddleocr_vl(enhanced_image_data)
         
@@ -1233,35 +1151,17 @@ Be precise and technical. Focus on actionable restoration insights."""
             self.raw_text = ocr_result["text"]
             self.ocr_confidence = ocr_result["confidence"]
             
+            # Single result message with dynamic content
+            enhancements_summary = f"{len(self.enhancements_applied)} enhancements" if self.enhancements_applied else "minimal processing"
             yield await self.emit(
-                f"📝 Extracted {len(self.raw_text)} characters (confidence: {self.ocr_confidence:.1f}%)",
-                confidence=self.ocr_confidence,
-                section="Text Extraction"
+                f"✅ Extracted {len(self.raw_text)} chars ({enhancements_summary})",
+                confidence=self.ocr_confidence
             )
-            
-            # Check for Doke characters
-            doke_found = [c for c in self.DOKE_CHARACTERS if c in self.raw_text]
-            if doke_found:
-                yield await self.emit(
-                    f"🔤 Doke orthography detected: {', '.join(doke_found[:3])}",
-                    confidence=88,
-                    section="Character Analysis",
-                    metadata={"doke_chars": doke_found}
-                )
         else:
             self.raw_text = ""
             self.ocr_confidence = 0
-            yield await self.emit(
-                "❌ OCR failed - check API key and network",
-                confidence=0,
-                section="OCR Error"
-            )
+            yield await self.emit("❌ OCR failed", confidence=0)
             raise Exception("PaddleOCR-VL API failed")
-        
-        yield await self.emit(
-            f"✅ Scanner complete (confidence: {self.ocr_confidence:.1f}%)",
-            confidence=self.ocr_confidence
-        )
         
         # Store in context for next agents
         context["raw_text"] = self.raw_text
@@ -1472,121 +1372,31 @@ class LinguistAgent(BaseAgent):
         """Process text for Doke Shona transliteration and cultural context analysis"""
         raw_text = context.get("raw_text", "")
         
-        yield await self.emit(
-            "📚 Initializing ERNIE-powered linguistic & cultural analysis..."
-        )
+        # Single initialization
+        yield await self.emit("📚 Linguist analyzing...")
         
-        
-        yield await self.emit(
-            "🔤 Scanning for Pre-1955 Shona phonetic markers...",
-            section="Orthography Scan",
-            confidence=75
-        )
-        
-        
-        # OPTIONAL: AI analysis only for low-quality OCR
-        ocr_confidence = context.get("ocr_confidence", 100)
-        ai_analysis = None
-        if ocr_confidence < 60:  # Only for poor OCR quality
-            ai_analysis = await self._get_ai_linguistic_analysis(raw_text)
-        
+        # Call AI for enhanced linguistic analysis
+        ai_analysis = await self._get_ai_linguistic_analysis(raw_text)
         if ai_analysis:
-            yield await self.emit(
-                f"🤖 ERNIE LINGUISTIC ANALYSIS:\n{ai_analysis}",
-                confidence=88,
-                section="AI Transliteration",
-                metadata={"ai_powered": True, "model": "ERNIE-4.0"}
-            )
+            self.cultural_insights.append(f"AI insight: {ai_analysis[:150]}")
         
-        # Perform rule-based transliteration (always run for actual conversion)
+        # Perform transliteration (silent processing)
         self.transliterated_text, self.changes = self._transliterate(raw_text)
-        
-        if self.changes:
-            yield await self.emit(
-                f"📝 TRANSLITERATION: {len(self.changes)} Doke→Modern conversions made.",
-                confidence=85,
-                section="Transliteration",
-                metadata={"changes_count": len(self.changes)}
-            )
-            
-            for orig, modern, reason in self.changes[:4]:
-                yield await self.emit(
-                    f"   → '{orig}' → '{modern}': {reason}",
-                    section="Character Change"
-                )
-                
-        else:
-            yield await self.emit(
-                "📝 No Doke characters found. Text in Latin/Modern Shona script.",
-                confidence=78,
-                section="Transliteration"
-            )
-        
-        
-        
-        # Historical terminology
         self.terms_found = self._find_historical_terms(raw_text)
-        if self.terms_found:
-            yield await self.emit(
-                f"📜 HISTORICAL TERMS: {len(self.terms_found)} colonial-era terms identified.",
-                confidence=82,
-                section="Terminology"
-            )
-            for term, (modern, note) in self.terms_found[:3]:
-                yield await self.emit(
-                    f"   → '{term}': {note}",
-                    section="Term Note"
-                )
-                
-        
-        # === NEW: CULTURAL CONTEXT ANALYSIS (ERNIE-powered) ===
-        yield await self.emit(
-            "🌍 Analyzing African cultural context and colonial dynamics...",
-            section="Cultural Analysis"
-        )
-        
-        
-        # OPTIONAL: Skip cultural AI analysis for speed (rule-based is sufficient)
-        cultural_analysis = None  # Disabled for performance
-        # cultural_analysis = await self._get_ernie_cultural_analysis(raw_text)
-        if cultural_analysis:
-            yield await self.emit(
-                f"🏛️ ERNIE CULTURAL INSIGHTS:\n{cultural_analysis}",
-                confidence=90,
-                section="AI Cultural Analysis",
-                metadata={"ai_powered": True, "model": "ERNIE-4.0"}
-            )
-            self.cultural_insights.append(cultural_analysis)
-        
-        # Detect cultural markers
         markers_found = self._detect_cultural_markers(raw_text)
-        if markers_found:
-            yield await self.emit(
-                f"🎭 CULTURAL MARKERS: {len(markers_found)} traditional/colonial elements found.",
-                confidence=85,
-                section="Cultural Detection"
-            )
-            for marker, significance in list(markers_found.items())[:3]:
-                yield await self.emit(
-                    f"   → {marker}: {significance}",
-                    section="Cultural Significance"
-                )
-                
-        
-        # Calculate cultural significance
         self.cultural_significance = self._calculate_cultural_significance(markers_found)
-        if self.cultural_significance > 50:
-            significance_level = "HIGH" if self.cultural_significance > 70 else "MEDIUM"
-            yield await self.emit(
-                f"📊 HERITAGE SIGNIFICANCE: {significance_level} ({self.cultural_significance}%)",
-                confidence=self.cultural_significance,
-                section="Heritage Assessment"
-            )
         
-        yield await self.emit(
-            "✅ LINGUIST COMPLETE: Text normalized + cultural context analyzed.",
-            confidence=85
-        )
+        # Single result message with dynamic content
+        findings = []
+        if self.changes:
+            findings.append(f"{len(self.changes)} Doke chars")
+        if self.terms_found:
+            findings.append(f"{len(self.terms_found)} terms")
+        if markers_found:
+            findings.append(f"{self.cultural_significance}% cultural")
+        
+        summary = ", ".join(findings) if findings else "modern script"
+        yield await self.emit(f"✅ {summary}", confidence=85)
         
         context["transliterated_text"] = self.transliterated_text
         context["linguistic_changes"] = self.changes
@@ -1758,13 +1568,12 @@ class HistorianAgent(BaseAgent):
         text = context.get("transliterated_text") or context.get("raw_text", "")
         
         yield await self.emit(
-            "📜 Initializing historical analysis engine (1888-1923 database)..."
+            "📜 Historian analyzing..."
         )
         
         
-        # OPTIONAL: Skip AI historical analysis for speed (rule-based is sufficient)
-        ai_analysis = None  # Disabled for performance
-        # ai_analysis = await self._get_ai_historical_analysis(text)
+        # Call AI for real historical analysis
+        ai_analysis = await self._get_ai_historical_analysis(text)
         
         if ai_analysis:
             yield await self.emit(
@@ -1832,7 +1641,7 @@ class HistorianAgent(BaseAgent):
             self.verified_facts.append("Rudd Concession reference verified")
         
         yield await self.emit(
-            "✅ HISTORIAN COMPLETE: Historical context verified.",
+            "✅ Historian complete",
             confidence=87
         )
         
@@ -1940,147 +1749,49 @@ class ValidatorAgent(BaseAgent):
     async def process(self, context: Dict) -> AsyncGenerator[AgentMessage, None]:
         """Validate and cross-check all agent outputs"""
         
-        yield await self.emit(
-            "🔍 Initializing hallucination detection protocols..."
-        )
+        # Single init
+        yield await self.emit("🔍 Validator checking...")
         
-        
-        raw_text = context.get("raw_text", "")
-        transliterated = context.get("transliterated_text", "")
         ocr_confidence = context.get("ocr_confidence", 0)
         verified_facts = context.get("verified_facts", [])
         anomalies = context.get("historical_anomalies", [])
+        raw_text = context.get("raw_text", "")
+        transliterated = context.get("transliterated_text", "")
         
-        # OPTIONAL: Skip AI validation for speed (rule-based validation is sufficient)
-        ai_validation = None  # Disabled for performance
-        # ai_validation = await self._get_ai_validation(raw_text, transliterated, verified_facts)
-        
+        # Call AI for validation
+        ai_validation = await self._get_ai_validation(raw_text, transliterated, verified_facts)
         if ai_validation:
-            yield await self.emit(
-                f"🤖 AI VALIDATION REPORT:\n{ai_validation}",
-                confidence=85,
-                section="AI Validation",
-                metadata={"ai_powered": True}
-            )
+            # Extract quality assessment from AI
+            if "Good" in ai_validation:
+                self.corrections.append("AI: Quality assessment - Good")
+            elif "Fair" in ai_validation:
+                self.warnings.append("AI: Quality assessment - Fair")
+            elif "Poor" in ai_validation:
+                self.warnings.append("AI: Quality assessment - Poor")
         
-        # OCR confidence validation
-        yield await self.emit(
-            f"📊 OCR confidence check: {ocr_confidence:.1f}%",
-            confidence=ocr_confidence,
-            section="OCR Validation"
-        )
-        
-        
-        if ocr_confidence < self.CONFIDENCE_THRESHOLDS["medium"]:
-            self.warnings.append("Low OCR confidence - manual review recommended")
-            yield await self.emit(
-                "⚠️ WARNING: OCR confidence below threshold. Flagging for manual review.",
-                confidence=ocr_confidence,
-                section="Confidence Warning",
-                is_debate=True
-            )
-        
-        # Cross-reference validation
-        yield await self.emit(
-            "🔄 Cross-referencing Scanner↔Linguist↔Historian outputs...",
-            section="Cross-Validation"
-        )
-        
-        
-        # Show what each agent found (creates visible discussion)
-        linguistic_changes = context.get("linguistic_changes", [])
-        if linguistic_changes:
-            yield await self.emit(
-                f"📝 Linguist reported {len(linguistic_changes)} character conversions. Verifying...",
-                section="Agent Cross-Check",
-                is_debate=True
-            )
-            
-        
-        if verified_facts:
-            yield await self.emit(
-                f"📜 Historian verified: {verified_facts[0] if verified_facts else 'No facts'}. Cross-checking with OCR...",
-                section="Agent Cross-Check", 
-                is_debate=True
-            )
-            
-        
-        # Check for inconsistencies
+        # Check inconsistencies (silent processing)
         inconsistencies = self._detect_inconsistencies(context)
         
+        # Single result message
         if inconsistencies:
-            for inc in inconsistencies:
-                yield await self.emit(
-                    f"⚠️ INCONSISTENCY: {inc}",
-                    section="Inconsistency",
-                    is_debate=True
-                )
+            for inc in inconsistencies[:2]:  # Max 2 to avoid spam
+                yield await self.emit(f"⚠️ {inc}", is_debate=True)
                 self.warnings.append(inc)
-                
-        else:
-            yield await self.emit(
-                "✓ No cross-agent inconsistencies detected.",
-                confidence=85,
-                section="Consistency Check"
-            )
         
-        # Historical fact validation
-        if verified_facts:
-            yield await self.emit(
-                f"✓ {len(verified_facts)} historical facts verified by Historian.",
-                confidence=88,
-                section="Fact Validation"
-            )
-        
-        if anomalies:
-            for a in anomalies:
-                yield await self.emit(
-                    f"🚨 ANOMALY: {a}",
-                    section="Anomaly",
-                    is_debate=True
-                )
-                
-        
-        # Calculate final confidence
+        # Calculate final confidence (silent)
         self.final_confidence = self._calculate_final_confidence(context)
-        
-        yield await self.emit(
-            f"📈 FINAL CONFIDENCE SCORE: {self.final_confidence:.1f}%",
-            confidence=self.final_confidence,
-            section="Final Score"
         )
         
-        # Determine confidence level
-        if self.final_confidence >= self.CONFIDENCE_THRESHOLDS["high"]:
-            level = "HIGH"
-        elif self.final_confidence >= self.CONFIDENCE_THRESHOLDS["medium"]:
-            level = "MEDIUM"
-        else:
-            level = "LOW"
-        
+        # Final completion message
+        level = "HIGH" if self.final_confidence >= 80 else "MEDIUM" if self.final_confidence >= 60 else "LOW"
         yield await self.emit(
-            f"✅ VALIDATOR COMPLETE: Confidence level {level}. {len(self.warnings)} warnings issued.",
+            f"✅ Confidence: {level} ({self.final_confidence:.0f}%)",
             confidence=self.final_confidence
         )
         
         context["final_confidence"] = self.final_confidence
         context["validator_warnings"] = self.warnings
         context["validator_corrections"] = self.corrections
-        
-        # === DOCUMENT RECONSTRUCTION ===
-        # Clean up and format the text into a professional restored document
-        raw_text = context.get("raw_text", "")
-        transliterated = context.get("transliterated_text", raw_text)
-        
-        if transliterated:
-            reconstructed = await self._reconstruct_document(transliterated, context)
-            if reconstructed:
-                context["transliterated_text"] = reconstructed
-                yield await self.emit(
-                    "📄 Document reconstructed and formatted for presentation.",
-                    confidence=self.final_confidence,
-                    section="Reconstruction"
-                )
     
     async def _get_ai_validation(self, raw_text: str, transliterated: str, verified_facts: List) -> Optional[str]:
         """Call ERNIE LLM for real AI validation and hallucination detection"""
@@ -2257,100 +1968,77 @@ class PhysicalRepairAdvisorAgent(BaseAgent):
     async def process(self, context: Dict) -> AsyncGenerator[AgentMessage, None]:
         """Analyze document condition and provide repair recommendations"""
         
-        yield await self.emit(
-            "🔧 Initializing physical condition assessment..."
-        )
-        
+        # Single init
+        yield await self.emit("🔧 Repair advisor analyzing...")
         
         raw_text = context.get("raw_text", "")
         ocr_confidence = context.get("ocr_confidence", 70)
         image_data = context.get("image_data")
         
-        yield await self.emit(
-            "📋 Analyzing document degradation indicators...",
-            section="Condition Analysis"
-        )
+        # Call AI for damage analysis
+        ai_damage = await self._get_ai_damage_analysis(raw_text, ocr_confidence, image_data)
         
-        
-        # OPTIONAL: Skip AI repair analysis for speed (rule-based is sufficient)
-        ai_result = None  # Disabled for performance
-        # ai_result = await self._get_ai_damage_analysis(raw_text, ocr_confidence, image_data)
-        
-        if ai_result:
-            yield await self.emit(
-                f"🤖 AI CONSERVATION ANALYSIS:\n{ai_result['analysis']}",
-                confidence=85,
-                section="AI Repair Analysis",
-                metadata={"ai_powered": True}
-            )
-            
-            # Generate hotspots from AI analysis
-            if ai_result.get("hotspots"):
-                self.hotspots = ai_result["hotspots"]
-                yield await self.emit(
-                    f"🎯 AR HOTSPOTS: {len(self.hotspots)} damage regions mapped for visualization.",
-                    confidence=82,
-                    section="AR Mapping",
-                    metadata={"hotspot_count": len(self.hotspots)}
-                )
-        
-        # Detect damage indicators from text/context (rule-based backup)
-        damage_detected = self._analyze_damage_indicators(raw_text, ocr_confidence)
-        
-        # If no AI hotspots, generate from rule-based detection
-        if not self.hotspots and damage_detected:
-            self.hotspots = self._generate_hotspots_from_damage(damage_detected)
-        
-        if damage_detected:
-            yield await self.emit(
-                f"🔍 DAMAGE DETECTED: {len(damage_detected)} conservation issues identified.",
-                confidence=80,
-                section="Damage Assessment",
-                metadata={"damage_types": list(damage_detected.keys())}
-            )
-            
-            for damage_type, info in damage_detected.items():
+        if ai_damage and ai_damage.get("hotspots"):
+            # Use AI-generated hotspots
+            self.hotspots = ai_damage["hotspots"]
+            # Generate recommendations from AI hotspots
+            for hotspot in self.hotspots:
                 rec = RepairRecommendation(
-                    issue=info["description"],
-                    severity=info["severity"],
-                    recommendation=info["treatment"],
-                    estimated_cost=info["cost_range"]
+                    issue=hotspot.label,
+                    severity=hotspot.severity,
+                    recommendation=hotspot.treatment,
+                    estimated_cost="$100-300"
                 )
                 self.recommendations.append(rec)
+        else:
+            # Fallback to rule-based detection
+            damage_detected = self._analyze_damage_indicators(raw_text, ocr_confidence)
+            
+            if damage_detected:
+                self.hotspots = self._generate_hotspots_from_damage(damage_detected)
                 
-                severity_icon = "🔴" if info["severity"] == "critical" else "🟡" if info["severity"] == "moderate" else "🟢"
+                # Generate recommendations
+                for damage_type, info in damage_detected.items():
+                    rec = RepairRecommendation(
+                        issue=info["description"],
+                        severity=info["severity"],
+                        recommendation=info["treatment"],
+                        estimated_cost=info["cost_range"]
+                    )
+                    self.recommendations.append(rec)
+        
+        # Single result message
+        if self.recommendations:
+            yield await self.emit(
+                f"🔍 DAMAGE DETECTED: {len(damage_detected)} conservation issues identified.",
+                confidence=80
+            )
+            
+            # Show top recommendation only
+            if self.recommendations:
+                top_rec = self.recommendations[0]
+                severity_icon = "🔴" if top_rec.severity == "critical" else "🟡" if top_rec.severity == "moderate" else "🟢"
                 yield await self.emit(
-                    f"   {severity_icon} {info['description']}: {info['treatment']}",
+                    f"{severity_icon} {top_rec.issue}: {top_rec.recommendation}",
                     section="Repair Recommendation"
                 )
-                
         else:
-            yield await self.emit(
-                "✓ No critical damage indicators detected.",
-                confidence=85,
-                section="Condition Assessment"
-            )
+            yield await self.emit("✓ No critical damage indicators detected.", confidence=85)
         
-        # Storage recommendations
-        yield await self.emit(
-            "📦 STORAGE: Acid-free folders, 65°F/40% RH, UV-filtered lighting.",
-            section="Storage Recommendation"
-        )
-        
-        
-        # Digitization priority
+        # Calculate priority (silent)
         priority = self._calculate_priority(damage_detected, ocr_confidence)
         self.priority_score = priority
         
+        # Single priority message
         priority_label = "HIGH" if priority > 70 else "MEDIUM" if priority > 40 else "LOW"
         yield await self.emit(
             f"📸 DIGITIZATION PRIORITY: {priority_label} ({priority}%) - {'Immediate scanning recommended' if priority > 70 else 'Schedule within 6 months'}",
-            confidence=priority,
-            section="Digitization Priority"
+            confidence=priority
         )
         
+        # Final completion
         yield await self.emit(
-            f"✅ REPAIR ADVISOR COMPLETE: {len(self.recommendations)} recommendations issued.",
+            f"✅ {len(self.recommendations)} repair recommendations",
             confidence=82
         )
         
