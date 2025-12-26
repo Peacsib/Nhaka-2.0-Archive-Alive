@@ -1484,8 +1484,11 @@ class LinguistAgent(BaseAgent):
         )
         
         
-        # Try REAL AI analysis first - enhanced with cultural context
-        ai_analysis = await self._get_ai_linguistic_analysis(raw_text)
+        # OPTIONAL: AI analysis only for low-quality OCR
+        ocr_confidence = context.get("ocr_confidence", 100)
+        ai_analysis = None
+        if ocr_confidence < 60:  # Only for poor OCR quality
+            ai_analysis = await self._get_ai_linguistic_analysis(raw_text)
         
         if ai_analysis:
             yield await self.emit(
@@ -1543,8 +1546,9 @@ class LinguistAgent(BaseAgent):
         )
         
         
-        # ERNIE cultural analysis
-        cultural_analysis = await self._get_ernie_cultural_analysis(raw_text)
+        # OPTIONAL: Skip cultural AI analysis for speed (rule-based is sufficient)
+        cultural_analysis = None  # Disabled for performance
+        # cultural_analysis = await self._get_ernie_cultural_analysis(raw_text)
         if cultural_analysis:
             yield await self.emit(
                 f"🏛️ ERNIE CULTURAL INSIGHTS:\n{cultural_analysis}",
@@ -1758,8 +1762,9 @@ class HistorianAgent(BaseAgent):
         )
         
         
-        # Try REAL AI historical analysis first
-        ai_analysis = await self._get_ai_historical_analysis(text)
+        # OPTIONAL: Skip AI historical analysis for speed (rule-based is sufficient)
+        ai_analysis = None  # Disabled for performance
+        # ai_analysis = await self._get_ai_historical_analysis(text)
         
         if ai_analysis:
             yield await self.emit(
@@ -1946,8 +1951,9 @@ class ValidatorAgent(BaseAgent):
         verified_facts = context.get("verified_facts", [])
         anomalies = context.get("historical_anomalies", [])
         
-        # Try REAL AI validation first
-        ai_validation = await self._get_ai_validation(raw_text, transliterated, verified_facts)
+        # OPTIONAL: Skip AI validation for speed (rule-based validation is sufficient)
+        ai_validation = None  # Disabled for performance
+        # ai_validation = await self._get_ai_validation(raw_text, transliterated, verified_facts)
         
         if ai_validation:
             yield await self.emit(
@@ -2266,8 +2272,9 @@ class PhysicalRepairAdvisorAgent(BaseAgent):
         )
         
         
-        # Try REAL AI repair analysis with hotspot detection
-        ai_result = await self._get_ai_damage_analysis(raw_text, ocr_confidence, image_data)
+        # OPTIONAL: Skip AI repair analysis for speed (rule-based is sufficient)
+        ai_result = None  # Disabled for performance
+        # ai_result = await self._get_ai_damage_analysis(raw_text, ocr_confidence, image_data)
         
         if ai_result:
             yield await self.emit(
