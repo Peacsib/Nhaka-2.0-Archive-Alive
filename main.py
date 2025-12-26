@@ -1109,8 +1109,7 @@ Be precise and technical. Focus on actionable restoration insights."""
         """Process document image through PaddleOCR-VL with enhanced analysis"""
         image_data = context.get("image_data")
         
-        yield await self.emit("🔬 Initializing PaddleOCR-VL forensic scan...")
-        await asyncio.sleep(0.3)
+        yield await self.emit("🔬 Initializing document scan...")
         
         # Analyze image properties
         enhanced_image_data = image_data
@@ -1121,14 +1120,12 @@ Be precise and technical. Focus on actionable restoration insights."""
                 
                 # Step 1: Document Type Detection
                 yield await self.emit(
-                    f"📄 Document loaded: {width}x{height}px. Analyzing document type...",
+                    f"📄 Analyzing document ({width}x{height}px)...",
                     section="Image Analysis"
                 )
-                await asyncio.sleep(0.2)
                 
                 self.document_analysis = self._analyze_document_type(image)
                 doc_type = self.document_analysis["type"]
-                characteristics = self.document_analysis["characteristics"]
                 
                 yield await self.emit(
                     f"📋 Document type: {doc_type.upper()} ({self.document_analysis['confidence']}% confidence)",
@@ -1136,99 +1133,37 @@ Be precise and technical. Focus on actionable restoration insights."""
                     confidence=self.document_analysis['confidence']
                 )
                 
-                for char in characteristics[:2]:  # Show top 2 characteristics
-                    yield await self.emit(f"   → {char}", section="Analysis Detail")
-                    await asyncio.sleep(0.1)
-                
-                # Step 2: Image Enhancement
-                yield await self.emit(
-                    "🔧 Applying image enhancements...",
-                    section="Enhancement"
-                )
-                await asyncio.sleep(0.2)
-                
-                # Show detected quality issues first
+                # Step 2: Image Enhancement (consolidated)
                 quality_issues = self.document_analysis.get("quality_issues", [])
                 if quality_issues:
-                    for issue in quality_issues[:3]:
-                        yield await self.emit(f"   ⚠️ {issue}", section="Quality Issue")
-                        await asyncio.sleep(0.1)
+                    yield await self.emit(
+                        f"🔧 Applying {len(quality_issues)} enhancement(s)...",
+                        section="Enhancement"
+                    )
                 
                 # Apply enhancements based on document analysis
                 enhanced_image, self.enhancements_applied = self._enhance_image(image, self.document_analysis)
                 
-                for enhancement in self.enhancements_applied[:5]:  # Show more enhancements
-                    yield await self.emit(f"   ✓ {enhancement}", section="Enhancement Applied")
-                    await asyncio.sleep(0.1)
+                if self.enhancements_applied:
+                    yield await self.emit(
+                        f"✓ Applied: {', '.join(self.enhancements_applied[:3])}",
+                        section="Enhancement Applied"
+                    )
                 
-                # Step 3: Layout Detection
-                yield await self.emit(
-                    "📐 Detecting document layout structure...",
-                    section="Layout Analysis"
-                )
-                await asyncio.sleep(0.2)
-                
+                # Step 3: Layout Detection (quick)
                 layout = self._detect_layout(enhanced_image)
                 layout_info = []
                 if layout["has_header"]:
-                    layout_info.append("Header detected")
-                if layout["has_footer"]:
-                    layout_info.append("Footer detected")
+                    layout_info.append("header")
                 if layout["has_images"]:
-                    layout_info.append(f"Embedded images ({len(layout.get('image_regions', []))} regions)")
-                if layout["has_tables"]:
-                    layout_info.append("Table structure detected")
-                layout_info.append(f"{layout['estimated_columns']} column(s)")
+                    layout_info.append(f"{len(layout.get('image_regions', []))} images")
+                layout_info.append(f"{layout['estimated_columns']} col(s)")
                 
-                # Show structure info
-                structure = layout.get("structure", {})
-                if structure.get("headings"):
-                    layout_info.append(f"{len(structure['headings'])} heading(s)")
-                if structure.get("paragraphs"):
-                    layout_info.append(f"{len(structure['paragraphs'])} paragraph(s)")
-                
-                yield await self.emit(
-                    f"📊 Layout: {', '.join(layout_info)}",
-                    section="Layout Detection",
-                    confidence=80
-                )
-                
-                # Describe embedded images if found
-                if layout["has_images"] and layout.get("image_regions"):
-                    image_count = len(layout["image_regions"])
+                if layout_info:
                     yield await self.emit(
-                        f"🖼️ Found {image_count} embedded image(s) - likely stamps, logos, or signatures",
-                        section="Image Detection",
-                        confidence=75
+                        f"📊 Layout: {', '.join(layout_info)}",
+                        section="Layout Detection"
                     )
-                    
-                    # Enhance embedded image regions to match document quality
-                    yield await self.emit(
-                        "✨ Enhancing embedded images (stamps, logos, signatures)...",
-                        section="Image Enhancement"
-                    )
-                    await asyncio.sleep(0.2)
-                    
-                    # Apply targeted enhancement to image regions
-                    cv2_enhanced = self._pil_to_cv2(enhanced_image)
-                    cv2_enhanced = self._enhance_image_regions(cv2_enhanced, layout["image_regions"])
-                    enhanced_image = self._cv2_to_pil(cv2_enhanced)
-                    self.enhancements_applied.append(f"Enhanced {image_count} embedded image(s)")
-                    
-                    yield await self.emit(
-                        f"   ✓ {image_count} image region(s) enhanced (contrast, sharpness, color)",
-                        section="Image Enhancement Applied"
-                    )
-                    
-                    # Store image region info for display
-                    context["detected_images"] = [
-                        {
-                            "type": "stamp/logo/signature",
-                            "position": f"({r['x']:.0f}%, {r['y']:.0f}%)",
-                            "size": f"{r['width']:.0f}% x {r['height']:.0f}%"
-                        }
-                        for r in layout["image_regions"][:5]  # Max 5
-                    ]
                 
                 # Convert enhanced image back to bytes for OCR
                 buffer = io.BytesIO()
@@ -1238,89 +1173,60 @@ Be precise and technical. Focus on actionable restoration insights."""
                 # Store enhanced image as base64 for frontend display
                 enhanced_image_b64 = base64.b64encode(enhanced_image_data).decode('utf-8')
                 
-                # === ERNIE 4.5 ADVANCED RESTORATION (Competing with Gemini 3 Pro) ===
-                yield await self.emit(
-                    "🧠 Activating ERNIE 4.5 AI vision for advanced damage analysis...",
-                    section="AI Enhancement",
-                    confidence=85
-                )
-                await asyncio.sleep(0.3)
-                
-                # Get ERNIE 4.5 damage analysis
-                ernie_analysis = await self._ernie_45_analyze_damage(enhanced_image_b64)
-                
-                if ernie_analysis:
-                    # Show AI-detected damage
-                    damage_areas = ernie_analysis.get("damage_areas", [])
-                    if damage_areas:
-                        yield await self.emit(
-                            f"🔍 ERNIE 4.5 detected {len(damage_areas)} damage area(s)",
-                            section="AI Damage Detection",
-                            confidence=90
-                        )
-                        for damage in damage_areas[:3]:
-                            yield await self.emit(
-                                f"   → {damage.get('type', 'unknown').replace('_', ' ').title()} ({damage.get('severity', 'moderate')}) at {damage.get('location', 'unknown')}",
-                                section="Damage Detail"
-                            )
-                            await asyncio.sleep(0.1)
-                    
-                    # Apply advanced AI-guided restoration
+                # === ERNIE 4.5 ADVANCED RESTORATION (Optional - only if needed) ===
+                ernie_analysis = None
+                if quality_issues and len(quality_issues) > 2:  # Only for heavily damaged docs
                     yield await self.emit(
-                        "✨ Applying ERNIE 4.5 guided restoration...",
-                        section="AI Restoration"
-                    )
-                    await asyncio.sleep(0.2)
-                    
-                    cv2_enhanced = self._pil_to_cv2(enhanced_image)
-                    cv2_restored, ai_enhancements = self._apply_advanced_restoration(cv2_enhanced, ernie_analysis)
-                    enhanced_image = self._cv2_to_pil(cv2_restored)
-                    
-                    for enhancement in ai_enhancements[:4]:
-                        yield await self.emit(f"   ✓ {enhancement}", section="AI Enhancement Applied")
-                        await asyncio.sleep(0.1)
-                    
-                    self.enhancements_applied.extend(ai_enhancements)
-                    
-                    # Show restoration difficulty
-                    difficulty = ernie_analysis.get("overall_restoration_difficulty", "moderate")
-                    yield await self.emit(
-                        f"📊 Restoration difficulty: {difficulty.upper()}",
-                        section="AI Assessment",
-                        confidence=88
-                    )
-                    
-                    # Update enhanced image data
-                    buffer = io.BytesIO()
-                    enhanced_image.save(buffer, format='PNG')
-                    enhanced_image_data = buffer.getvalue()
-                    enhanced_image_b64 = base64.b64encode(enhanced_image_data).decode('utf-8')
-                    
-                    # Store ERNIE analysis for other agents
-                    context["ernie_damage_analysis"] = ernie_analysis
-                else:
-                    yield await self.emit(
-                        "⚡ ERNIE 4.5 analysis skipped (using OpenCV enhancements)",
+                        "🧠 Running AI damage analysis...",
                         section="AI Enhancement"
                     )
+                    
+                    ernie_analysis = await self._ernie_45_analyze_damage(enhanced_image_b64)
+                    
+                    if ernie_analysis:
+                        damage_areas = ernie_analysis.get("damage_areas", [])
+                        if damage_areas:
+                            yield await self.emit(
+                                f"🔍 AI detected {len(damage_areas)} damage area(s)",
+                                section="AI Damage Detection"
+                            )
+                        
+                        # Apply advanced AI-guided restoration
+                        cv2_enhanced = self._pil_to_cv2(enhanced_image)
+                        cv2_restored, ai_enhancements = self._apply_advanced_restoration(cv2_enhanced, ernie_analysis)
+                        enhanced_image = self._cv2_to_pil(cv2_restored)
+                        
+                        if ai_enhancements:
+                            yield await self.emit(
+                                f"✨ AI restoration: {', '.join(ai_enhancements[:2])}",
+                                section="AI Enhancement Applied"
+                            )
+                        
+                        self.enhancements_applied.extend(ai_enhancements)
+                        
+                        # Update enhanced image data
+                        buffer = io.BytesIO()
+                        enhanced_image.save(buffer, format='PNG')
+                        enhanced_image_data = buffer.getvalue()
+                        enhanced_image_b64 = base64.b64encode(enhanced_image_data).decode('utf-8')
+                        
+                        context["ernie_damage_analysis"] = ernie_analysis
                 
                 # Store analysis in context
                 context["document_analysis"] = self.document_analysis
                 context["layout_analysis"] = layout
                 context["enhancements_applied"] = self.enhancements_applied
-                context["enhanced_image_base64"] = enhanced_image_b64  # For frontend display
+                context["enhanced_image_base64"] = enhanced_image_b64
                 
             except Exception as e:
                 yield await self.emit(f"⚠️ Image analysis warning: {str(e)}", confidence=50)
         
-        await asyncio.sleep(0.3)
         yield await self.emit(
-            "🔍 Scanning for iron-gall ink oxidation signatures...",
-            section="Ink Analysis",
-            confidence=65
+            "🔍 Running OCR extraction...",
+            section="Text Extraction"
         )
         
-        # Call Novita PaddleOCR-VL with ENHANCED image (or original if enhancement failed)
+        # Call Novita PaddleOCR-VL with ENHANCED image
         ocr_result = await self._call_paddleocr_vl(enhanced_image_data)
         
         if ocr_result["success"]:
@@ -1328,7 +1234,7 @@ Be precise and technical. Focus on actionable restoration insights."""
             self.ocr_confidence = ocr_result["confidence"]
             
             yield await self.emit(
-                f"📝 OCR extraction complete: {len(self.raw_text)} characters extracted.",
+                f"📝 Extracted {len(self.raw_text)} characters (confidence: {self.ocr_confidence:.1f}%)",
                 confidence=self.ocr_confidence,
                 section="Text Extraction"
             )
@@ -1337,31 +1243,23 @@ Be precise and technical. Focus on actionable restoration insights."""
             doke_found = [c for c in self.DOKE_CHARACTERS if c in self.raw_text]
             if doke_found:
                 yield await self.emit(
-                    f"🔤 DOKE ORTHOGRAPHY DETECTED: {doke_found}. Pre-1955 Shona script confirmed.",
+                    f"🔤 Doke orthography detected: {', '.join(doke_found[:3])}",
                     confidence=88,
                     section="Character Analysis",
                     metadata={"doke_chars": doke_found}
                 )
-            else:
-                yield await self.emit(
-                    "🔤 Standard Latin script detected. Transliteration may be required.",
-                    confidence=75,
-                    section="Character Analysis"
-                )
         else:
-            # NO FALLBACK - Fail loudly so we can debug
             self.raw_text = ""
             self.ocr_confidence = 0
             yield await self.emit(
-                "❌ PADDLEOCR-VL FAILED: API call unsuccessful. Check API key and network.",
+                "❌ OCR failed - check API key and network",
                 confidence=0,
                 section="OCR Error"
             )
-            raise Exception("PaddleOCR-VL API failed - no fallback available")
+            raise Exception("PaddleOCR-VL API failed")
         
-        await asyncio.sleep(0.3)
         yield await self.emit(
-            f"✅ SCANNER COMPLETE: OCR confidence {self.ocr_confidence:.1f}%",
+            f"✅ Scanner complete (confidence: {self.ocr_confidence:.1f}%)",
             confidence=self.ocr_confidence
         )
         
@@ -1577,14 +1475,14 @@ class LinguistAgent(BaseAgent):
         yield await self.emit(
             "📚 Initializing ERNIE-powered linguistic & cultural analysis..."
         )
-        await asyncio.sleep(0.4)
+        
         
         yield await self.emit(
             "🔤 Scanning for Pre-1955 Shona phonetic markers...",
             section="Orthography Scan",
             confidence=75
         )
-        await asyncio.sleep(0.3)
+        
         
         # Try REAL AI analysis first - enhanced with cultural context
         ai_analysis = await self._get_ai_linguistic_analysis(raw_text)
@@ -1613,7 +1511,7 @@ class LinguistAgent(BaseAgent):
                     f"   → '{orig}' → '{modern}': {reason}",
                     section="Character Change"
                 )
-                await asyncio.sleep(0.2)
+                
         else:
             yield await self.emit(
                 "📝 No Doke characters found. Text in Latin/Modern Shona script.",
@@ -1621,7 +1519,7 @@ class LinguistAgent(BaseAgent):
                 section="Transliteration"
             )
         
-        await asyncio.sleep(0.3)
+        
         
         # Historical terminology
         self.terms_found = self._find_historical_terms(raw_text)
@@ -1636,14 +1534,14 @@ class LinguistAgent(BaseAgent):
                     f"   → '{term}': {note}",
                     section="Term Note"
                 )
-                await asyncio.sleep(0.15)
+                
         
         # === NEW: CULTURAL CONTEXT ANALYSIS (ERNIE-powered) ===
         yield await self.emit(
             "🌍 Analyzing African cultural context and colonial dynamics...",
             section="Cultural Analysis"
         )
-        await asyncio.sleep(0.3)
+        
         
         # ERNIE cultural analysis
         cultural_analysis = await self._get_ernie_cultural_analysis(raw_text)
@@ -1669,7 +1567,7 @@ class LinguistAgent(BaseAgent):
                     f"   → {marker}: {significance}",
                     section="Cultural Significance"
                 )
-                await asyncio.sleep(0.15)
+                
         
         # Calculate cultural significance
         self.cultural_significance = self._calculate_cultural_significance(markers_found)
@@ -1858,7 +1756,7 @@ class HistorianAgent(BaseAgent):
         yield await self.emit(
             "📜 Initializing historical analysis engine (1888-1923 database)..."
         )
-        await asyncio.sleep(0.4)
+        
         
         # Try REAL AI historical analysis first
         ai_analysis = await self._get_ai_historical_analysis(text)
@@ -1883,9 +1781,9 @@ class HistorianAgent(BaseAgent):
             )
             for name, role in list(figures_found.items())[:3]:
                 yield await self.emit(f"   → {name}: {role}", section="Figure Info")
-                await asyncio.sleep(0.15)
+                
         
-        await asyncio.sleep(0.3)
+        
         
         # Cross-reference with Scanner's OCR confidence
         ocr_confidence = context.get("ocr_confidence", 0)
@@ -1895,7 +1793,7 @@ class HistorianAgent(BaseAgent):
                 section="Cross-Agent Check",
                 is_debate=True
             )
-            await asyncio.sleep(0.2)
+            
         
         # Extract and verify dates
         dates = self._extract_dates(text)
@@ -1904,7 +1802,7 @@ class HistorianAgent(BaseAgent):
             section="Date Verification",
             confidence=80
         )
-        await asyncio.sleep(0.3)
+        
         
         # Cross-reference verification (rule-based)
         verifications = self._verify_historical_context(text, figures_found, dates)
@@ -1916,7 +1814,7 @@ class HistorianAgent(BaseAgent):
                 section=v.get("section", "Verification"),
                 is_debate=v.get("is_debate", False)
             )
-            await asyncio.sleep(0.25)
+            
         
         # Final assessment
         if "Rudd" in text and any(d for d in dates if "1888" in d):
@@ -2040,7 +1938,7 @@ class ValidatorAgent(BaseAgent):
         yield await self.emit(
             "🔍 Initializing hallucination detection protocols..."
         )
-        await asyncio.sleep(0.4)
+        
         
         raw_text = context.get("raw_text", "")
         transliterated = context.get("transliterated_text", "")
@@ -2065,7 +1963,7 @@ class ValidatorAgent(BaseAgent):
             confidence=ocr_confidence,
             section="OCR Validation"
         )
-        await asyncio.sleep(0.3)
+        
         
         if ocr_confidence < self.CONFIDENCE_THRESHOLDS["medium"]:
             self.warnings.append("Low OCR confidence - manual review recommended")
@@ -2081,7 +1979,7 @@ class ValidatorAgent(BaseAgent):
             "🔄 Cross-referencing Scanner↔Linguist↔Historian outputs...",
             section="Cross-Validation"
         )
-        await asyncio.sleep(0.4)
+        
         
         # Show what each agent found (creates visible discussion)
         linguistic_changes = context.get("linguistic_changes", [])
@@ -2091,7 +1989,7 @@ class ValidatorAgent(BaseAgent):
                 section="Agent Cross-Check",
                 is_debate=True
             )
-            await asyncio.sleep(0.2)
+            
         
         if verified_facts:
             yield await self.emit(
@@ -2099,7 +1997,7 @@ class ValidatorAgent(BaseAgent):
                 section="Agent Cross-Check", 
                 is_debate=True
             )
-            await asyncio.sleep(0.2)
+            
         
         # Check for inconsistencies
         inconsistencies = self._detect_inconsistencies(context)
@@ -2112,7 +2010,7 @@ class ValidatorAgent(BaseAgent):
                     is_debate=True
                 )
                 self.warnings.append(inc)
-                await asyncio.sleep(0.2)
+                
         else:
             yield await self.emit(
                 "✓ No cross-agent inconsistencies detected.",
@@ -2135,7 +2033,7 @@ class ValidatorAgent(BaseAgent):
                     section="Anomaly",
                     is_debate=True
                 )
-                await asyncio.sleep(0.2)
+                
         
         # Calculate final confidence
         self.final_confidence = self._calculate_final_confidence(context)
@@ -2356,7 +2254,7 @@ class PhysicalRepairAdvisorAgent(BaseAgent):
         yield await self.emit(
             "🔧 Initializing physical condition assessment..."
         )
-        await asyncio.sleep(0.4)
+        
         
         raw_text = context.get("raw_text", "")
         ocr_confidence = context.get("ocr_confidence", 70)
@@ -2366,7 +2264,7 @@ class PhysicalRepairAdvisorAgent(BaseAgent):
             "📋 Analyzing document degradation indicators...",
             section="Condition Analysis"
         )
-        await asyncio.sleep(0.3)
+        
         
         # Try REAL AI repair analysis with hotspot detection
         ai_result = await self._get_ai_damage_analysis(raw_text, ocr_confidence, image_data)
@@ -2418,7 +2316,7 @@ class PhysicalRepairAdvisorAgent(BaseAgent):
                     f"   {severity_icon} {info['description']}: {info['treatment']}",
                     section="Repair Recommendation"
                 )
-                await asyncio.sleep(0.2)
+                
         else:
             yield await self.emit(
                 "✓ No critical damage indicators detected.",
@@ -2431,7 +2329,7 @@ class PhysicalRepairAdvisorAgent(BaseAgent):
             "📦 STORAGE: Acid-free folders, 65°F/40% RH, UV-filtered lighting.",
             section="Storage Recommendation"
         )
-        await asyncio.sleep(0.2)
+        
         
         # Digitization priority
         priority = self._calculate_priority(damage_detected, ocr_confidence)
