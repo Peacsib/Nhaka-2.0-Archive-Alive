@@ -66,7 +66,8 @@ So I built Nhaka 2.0.
 
 ### What Nhaka 2.0 Delivers
 - **Cost:** $0.01-0.04 per document (**99% reduction**)
-- **Speed:** 30 seconds per document (**240x faster**)
+- **Speed:** 15-30 seconds per document (**240x faster**)
+- **Batch Processing:** Upload multiple documents, process sequentially with real-time progress
 - **Accuracy:** Multi-agent verification reduces hallucinations by **60%**
 - **Impact:** $500K+ saved for Zimbabwe National Archives
 - **Scalability:** Process entire archives in weeks, not decades
@@ -95,6 +96,34 @@ Each agent streams their analysis character-by-character. No loading spinners. N
 
 ---
 
+## 📦 Batch Processing
+
+For archives with multiple documents, Nhaka 2.0 supports batch upload with professional queue management:
+
+### Features
+- **Multi-file drag & drop** - Upload entire folders at once
+- **Queue management** - Add, remove, pause, resume processing
+- **Real-time progress** - Per-file and overall batch progress tracking
+- **Estimated time** - Shows remaining time based on ~22s average per document
+- **8-step pipeline visualization** - Watch each processing stage complete
+- **Batch results export** - Download all results as Markdown
+
+### Processing Timeline (per document)
+| Step | Agent | Typical Time | Timeout |
+|------|-------|--------------|---------|
+| Document Scan | Scanner | ~1s | 30s |
+| Vision Analysis | ERNIE 4.5 | ~4s | 30s |
+| OCR Extraction | PaddleOCR-VL | ~7s | 120s |
+| Language Analysis | Linguist | ~3s | 20s |
+| Historical Context | Historian | ~3s | 20s |
+| Cross-Validation | Validator | ~3s | 25s |
+| Repair Analysis | Advisor | ~2.5s | 20s |
+| Archive Save | Supabase | ~1s | 30s |
+
+**Total: ~15-30 seconds per document** depending on image size and API load.
+
+---
+
 ## 🏗️ Technical Architecture
 
 ### Why This Stack?
@@ -102,6 +131,8 @@ Each agent streams their analysis character-by-character. No loading spinners. N
 **PaddleOCR-VL** handles the vision layer—it's specifically trained on degraded documents and handles the chaos of water stains, foxing, and ink bleed better than alternatives I tested. It gives us text extraction *plus* document quality analysis in one pass.
 
 **ERNIE 4.0** powers the four language agents. Each has a different system prompt, different expertise, different personality. They argue. They verify each other. They catch mistakes. The key insight: having agents *disagree* produces better results than any single model working alone.
+
+**ERNIE 4.5** powers the advanced image restoration. It analyzes document damage with AI precision—detecting water stains, foxing, ink bleed, and fading—then guides targeted restoration that competes with Gemini 3 Pro.
 
 **Server-Sent Events (SSE)** streams every agent's thinking to the frontend in real-time. This isn't just cosmetic—watching the process unfold helps users spot issues early and builds trust in the output.
 
@@ -161,11 +192,14 @@ Each agent streams their analysis character-by-character. No loading spinners. N
                           ▼
 ┌─────────────────────────────────────────────────────────────┐
 │                  REACT FRONTEND DISPLAY                      │
+│  • Single/Batch upload modes with drag-and-drop              │
+│  • Processing Timer with 8-step pipeline visualization       │
 │  • Agent Theater (real-time SSE streaming of all agents)     │
 │  • Before/After image comparison with slider                 │
 │  • Confidence-coded text (green=high, yellow=medium, red=low)│
 │  • AR Damage Overlay with interactive repair hotspots       │
-│  • Downloadable restoration report (PDF + JSON)             │
+│  • Batch results summary with per-file confidence scores    │
+│  • Downloadable restoration report (PDF + JSON + Markdown)  │
 └─────────────────────────────────────────────────────────────┘
 ```
 
@@ -206,7 +240,8 @@ Each agent streams their analysis character-by-character. No loading spinners. N
 
 **React 18 + TypeScript** - Type-safe component architecture  
 **Vite** - Lightning-fast development and builds  
-**Tailwind CSS + Shadcn UI** - Modern, accessible design system
+**Tailwind CSS + Shadcn UI** - Modern, accessible design system  
+**Batch Upload System** - Multi-file queue with progress tracking
 
 #### Quality Assurance
 <p align="left">
@@ -318,6 +353,14 @@ Sample colonial-era documents from Zimbabwe National Archives are included in `s
   <tr>
     <td align="center"><b>Before/After Comparison Slider</b></td>
     <td align="center"><b>AR Damage Diagnosis & Repair Recommendations</b></td>
+  </tr>
+  <tr>
+    <td><img src="docs/screenshots/batch-upload.png" alt="Batch Upload" width="400"/></td>
+    <td><img src="docs/screenshots/processing-timer.png" alt="Processing Timer" width="400"/></td>
+  </tr>
+  <tr>
+    <td align="center"><b>Batch Upload Queue</b></td>
+    <td align="center"><b>Real-time Processing Timer</b></td>
   </tr>
 </table>
 

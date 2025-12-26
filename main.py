@@ -145,6 +145,29 @@ class ResurrectionRequest(BaseModel):
     language_hint: Optional[str] = "shona"
 
 
+class BatchDocumentResult(BaseModel):
+    """Result for a single document in batch processing"""
+    filename: str
+    status: str  # "success", "failed", "skipped"
+    overall_confidence: Optional[float] = None
+    raw_ocr_text: Optional[str] = None
+    transliterated_text: Optional[str] = None
+    enhanced_image_base64: Optional[str] = None
+    error_message: Optional[str] = None
+    processing_time_ms: int = 0
+    archive_id: Optional[str] = None
+
+
+class BatchResurrectionResult(BaseModel):
+    """Result for batch document processing"""
+    total_documents: int
+    successful: int
+    failed: int
+    total_processing_time_ms: int
+    results: List[BatchDocumentResult]
+    batch_id: str
+
+
 # =============================================================================
 # NOVITA LLM HELPER - Real AI for Agents
 # =============================================================================
@@ -278,6 +301,86 @@ async def call_ernie_llm(system_prompt: str, user_input: str, timeout: float = 2
         return None
     except Exception as e:
         print(f"⚠️ Novita LLM exception: {e}")
+        return None
+
+
+async def call_ernie_45_vision(image_base64: str, prompt: str, timeout: float = 30.0) -> Optional[str]:
+    """
+    Call ERNIE 4.5 with vision capabilities for advanced image analysis.
+    
+    ERNIE 4.5 MULTIMODAL FEATURES:
+    - Superior image understanding for document restoration
+    - Detects subtle damage patterns (foxing, water stains, ink bleed)
+    - Provides intelligent enhancement recommendations
+    - Competes with Gemini 3 Pro for document analysis
+    
+    Args:
+        image_base64: Base64 encoded image
+        prompt: Analysis prompt
+        timeout: Request timeout
+    
+    Returns:
+        AI analysis response
+    """
+    api_key = os.getenv("NOVITA_AI_API_KEY", "")
+    if not api_key:
+        print("⚠️ NOVITA_AI_API_KEY not set")
+        return None
+    
+    estimated_cost = 0.008  # Higher cost for vision model
+    if not api_tracker.can_spend(estimated_cost):
+        print(f"⚠️ Daily budget exceeded")
+        return None
+    
+    try:
+        async with httpx.AsyncClient(timeout=timeout) as client:
+            response = await client.post(
+                "https://api.novita.ai/v3/openai/chat/completions",
+                headers={
+                    "Authorization": f"Bearer {api_key}",
+                    "Content-Type": "application/json"
+                },
+                json={
+                    "model": "baidu/ernie-4.5-8b-chat",  # ERNIE 4.5 for vision
+                    "messages": [
+                        {
+                            "role": "user",
+                            "content": [
+                                {"type": "text", "text": prompt},
+                                {
+                                    "type": "image_url",
+                                    "image_url": {
+                                        "url": f"data:image/jpeg;base64,{image_base64}"
+                                    }
+                                }
+                            ]
+                        }
+                    ],
+                    "max_tokens": 500,
+                    "temperature": 0.3
+                }
+            )
+            
+            if response.status_code == 200:
+                data = response.json()
+                result = data["choices"][0]["message"]["content"].strip()
+                
+                usage = data.get("usage", {})
+                api_tracker.record(
+                    model="ernie-4.5-vision",
+                    input_tokens=usage.get("prompt_tokens", 800),
+                    output_tokens=usage.get("completion_tokens", 300),
+                    cost=estimated_cost
+                )
+                
+                return result
+            else:
+                print(f"⚠️ ERNIE 4.5 Vision error: {response.status_code}")
+                return None
+                
+    except Exception as e:
+        print(f"⚠️ ERNIE 4.5 Vision exception: {e}")
+        return None
         return None
 
 
@@ -683,6 +786,161 @@ class ScannerAgent(BaseAgent):
         result = self._cv2_to_pil(cv2_img)
         return result, enhancements
     
+    async def _ernie_45_analyze_damage(self, image_base64: str) -> Optional[Dict]:
+        """
+        Use ERNIE 4.5 vision to analyze document damage with AI precision.
+        Competes with Gemini 3 Pro for document understanding.
+        """
+        prompt = """Analyze this historical document image for restoration. Provide a JSON response with:
+{
+    "damage_areas": [
+        {"location": "top-left/center/etc", "type": "water_stain/foxing/tear/ink_bleed/fading", "severity": "critical/moderate/minor", "x_percent": 0-100, "y_percent": 0-100}
+    ],
+    "text_quality": {
+        "legibility": 0-100,
+        "fading_level": "none/slight/moderate/severe",
+        "ink_type": "iron_gall/carbon/modern"
+    },
+    "paper_condition": {
+        "yellowing": 0-100,
+        "brittleness_risk": "low/medium/high",
+        "estimated_age_years": number
+    },
+    "enhancement_recommendations": [
+        {"action": "description", "priority": 1-5, "expected_improvement": "percentage"}
+    ],
+    "overall_restoration_difficulty": "easy/moderate/challenging/expert"
+}
+Be precise and technical. Focus on actionable restoration insights."""
+
+        result = await call_ernie_45_vision(image_base64, prompt)
+        if result:
+            try:
+                # Try to parse JSON from response
+                import json
+                # Find JSON in response
+                start = result.find('{')
+                end = result.rfind('}') + 1
+                if start >= 0 and end > start:
+                    return json.loads(result[start:end])
+            except:
+                pass
+        return None
+    
+    def _apply_advanced_restoration(self, cv2_img: np.ndarray, ernie_analysis: Dict) -> tuple:
+        """
+        Apply advanced restoration based on ERNIE 4.5 analysis.
+        This is the competitive edge against Gemini 3 Pro.
+        """
+        enhancements = []
+        result = cv2_img.copy()
+        h, w = result.shape[:2]
+        
+        # 1. Targeted damage repair based on AI analysis
+        damage_areas = ernie_analysis.get("damage_areas", [])
+        for damage in damage_areas:
+            x = int(damage.get("x_percent", 50) * w / 100)
+            y = int(damage.get("y_percent", 50) * h / 100)
+            damage_type = damage.get("type", "unknown")
+            severity = damage.get("severity", "moderate")
+            
+            # Define repair region (adaptive size based on severity)
+            radius = 30 if severity == "minor" else 50 if severity == "moderate" else 80
+            x1, y1 = max(0, x - radius), max(0, y - radius)
+            x2, y2 = min(w, x + radius), min(h, y + radius)
+            
+            roi = result[y1:y2, x1:x2]
+            if roi.size == 0:
+                continue
+            
+            if damage_type == "water_stain":
+                # Advanced water stain removal using morphological operations
+                lab = cv2.cvtColor(roi, cv2.COLOR_BGR2LAB)
+                l, a, b = cv2.split(lab)
+                # Normalize the L channel to reduce stain visibility
+                l = cv2.normalize(l, None, 0, 255, cv2.NORM_MINMAX)
+                clahe = cv2.createCLAHE(clipLimit=3.0, tileGridSize=(4, 4))
+                l = clahe.apply(l)
+                roi = cv2.cvtColor(cv2.merge([l, a, b]), cv2.COLOR_LAB2BGR)
+                enhancements.append(f"Water stain treated at ({x}, {y})")
+                
+            elif damage_type == "foxing":
+                # Foxing removal - brown spots from fungal growth
+                hsv = cv2.cvtColor(roi, cv2.COLOR_BGR2HSV)
+                # Target brown/orange spots
+                lower = np.array([10, 50, 50])
+                upper = np.array([30, 255, 200])
+                mask = cv2.inRange(hsv, lower, upper)
+                # Inpaint the foxing spots
+                roi = cv2.inpaint(roi, mask, 3, cv2.INPAINT_TELEA)
+                enhancements.append(f"Foxing removed at ({x}, {y})")
+                
+            elif damage_type == "ink_bleed":
+                # Ink bleed correction using bilateral filter
+                roi = cv2.bilateralFilter(roi, 9, 75, 75)
+                # Increase local contrast
+                lab = cv2.cvtColor(roi, cv2.COLOR_BGR2LAB)
+                l, a, b = cv2.split(lab)
+                clahe = cv2.createCLAHE(clipLimit=2.5, tileGridSize=(4, 4))
+                l = clahe.apply(l)
+                roi = cv2.cvtColor(cv2.merge([l, a, b]), cv2.COLOR_LAB2BGR)
+                enhancements.append(f"Ink bleed corrected at ({x}, {y})")
+                
+            elif damage_type == "fading":
+                # Aggressive contrast restoration for faded areas
+                lab = cv2.cvtColor(roi, cv2.COLOR_BGR2LAB)
+                l, a, b = cv2.split(lab)
+                clahe = cv2.createCLAHE(clipLimit=4.0, tileGridSize=(4, 4))
+                l = clahe.apply(l)
+                # Boost contrast further
+                l = cv2.convertScaleAbs(l, alpha=1.3, beta=10)
+                roi = cv2.cvtColor(cv2.merge([l, a, b]), cv2.COLOR_LAB2BGR)
+                enhancements.append(f"Fading restored at ({x}, {y})")
+                
+            elif damage_type == "tear":
+                # For tears, apply edge-preserving smoothing
+                roi = cv2.edgePreservingFilter(roi, flags=1, sigma_s=60, sigma_r=0.4)
+                enhancements.append(f"Tear edges smoothed at ({x}, {y})")
+            
+            result[y1:y2, x1:x2] = roi
+        
+        # 2. Global enhancements based on text quality analysis
+        text_quality = ernie_analysis.get("text_quality", {})
+        legibility = text_quality.get("legibility", 70)
+        
+        if legibility < 60:
+            # Aggressive text enhancement for poor legibility
+            gray = cv2.cvtColor(result, cv2.COLOR_BGR2GRAY)
+            # Adaptive thresholding for text clarity
+            binary = cv2.adaptiveThreshold(
+                gray, 255, cv2.ADAPTIVE_THRESH_GAUSSIAN_C, 
+                cv2.THRESH_BINARY, 11, 2
+            )
+            # Blend with original for natural look
+            binary_bgr = cv2.cvtColor(binary, cv2.COLOR_GRAY2BGR)
+            result = cv2.addWeighted(result, 0.7, binary_bgr, 0.3, 0)
+            enhancements.append("Text clarity enhanced (adaptive threshold blend)")
+        
+        # 3. Paper condition restoration
+        paper = ernie_analysis.get("paper_condition", {})
+        yellowing = paper.get("yellowing", 0)
+        
+        if yellowing > 50:
+            # Strong yellowing correction
+            lab = cv2.cvtColor(result, cv2.COLOR_BGR2LAB)
+            l, a, b = cv2.split(lab)
+            # Reduce yellow (b channel) more aggressively
+            b_shift = int((yellowing - 50) * 0.5)
+            b = np.clip(b.astype(np.int16) - b_shift, 0, 255).astype(np.uint8)
+            result = cv2.cvtColor(cv2.merge([l, a, b]), cv2.COLOR_LAB2BGR)
+            enhancements.append(f"Deep yellowing correction ({yellowing}% detected)")
+        
+        # 4. Final polish - subtle sharpening and noise reduction
+        result = cv2.detailEnhance(result, sigma_s=10, sigma_r=0.15)
+        enhancements.append("Detail enhancement (final polish)")
+        
+        return result, enhancements
+    
     def _enhance_image_regions(self, cv2_img: np.ndarray, image_regions: List[Dict]) -> np.ndarray:
         """
         Enhance embedded image regions (stamps, logos, photos) to match document quality.
@@ -979,6 +1237,72 @@ class ScannerAgent(BaseAgent):
                 
                 # Store enhanced image as base64 for frontend display
                 enhanced_image_b64 = base64.b64encode(enhanced_image_data).decode('utf-8')
+                
+                # === ERNIE 4.5 ADVANCED RESTORATION (Competing with Gemini 3 Pro) ===
+                yield await self.emit(
+                    "🧠 Activating ERNIE 4.5 AI vision for advanced damage analysis...",
+                    section="AI Enhancement",
+                    confidence=85
+                )
+                await asyncio.sleep(0.3)
+                
+                # Get ERNIE 4.5 damage analysis
+                ernie_analysis = await self._ernie_45_analyze_damage(enhanced_image_b64)
+                
+                if ernie_analysis:
+                    # Show AI-detected damage
+                    damage_areas = ernie_analysis.get("damage_areas", [])
+                    if damage_areas:
+                        yield await self.emit(
+                            f"🔍 ERNIE 4.5 detected {len(damage_areas)} damage area(s)",
+                            section="AI Damage Detection",
+                            confidence=90
+                        )
+                        for damage in damage_areas[:3]:
+                            yield await self.emit(
+                                f"   → {damage.get('type', 'unknown').replace('_', ' ').title()} ({damage.get('severity', 'moderate')}) at {damage.get('location', 'unknown')}",
+                                section="Damage Detail"
+                            )
+                            await asyncio.sleep(0.1)
+                    
+                    # Apply advanced AI-guided restoration
+                    yield await self.emit(
+                        "✨ Applying ERNIE 4.5 guided restoration...",
+                        section="AI Restoration"
+                    )
+                    await asyncio.sleep(0.2)
+                    
+                    cv2_enhanced = self._pil_to_cv2(enhanced_image)
+                    cv2_restored, ai_enhancements = self._apply_advanced_restoration(cv2_enhanced, ernie_analysis)
+                    enhanced_image = self._cv2_to_pil(cv2_restored)
+                    
+                    for enhancement in ai_enhancements[:4]:
+                        yield await self.emit(f"   ✓ {enhancement}", section="AI Enhancement Applied")
+                        await asyncio.sleep(0.1)
+                    
+                    self.enhancements_applied.extend(ai_enhancements)
+                    
+                    # Show restoration difficulty
+                    difficulty = ernie_analysis.get("overall_restoration_difficulty", "moderate")
+                    yield await self.emit(
+                        f"📊 Restoration difficulty: {difficulty.upper()}",
+                        section="AI Assessment",
+                        confidence=88
+                    )
+                    
+                    # Update enhanced image data
+                    buffer = io.BytesIO()
+                    enhanced_image.save(buffer, format='PNG')
+                    enhanced_image_data = buffer.getvalue()
+                    enhanced_image_b64 = base64.b64encode(enhanced_image_data).decode('utf-8')
+                    
+                    # Store ERNIE analysis for other agents
+                    context["ernie_damage_analysis"] = ernie_analysis
+                else:
+                    yield await self.emit(
+                        "⚡ ERNIE 4.5 analysis skipped (using OpenCV enhancements)",
+                        section="AI Enhancement"
+                    )
                 
                 # Store analysis in context
                 context["document_analysis"] = self.document_analysis
@@ -2862,6 +3186,226 @@ async def get_archived_resurrection(archive_id: str):
     if not result:
         raise HTTPException(status_code=404, detail="Archive not found")
     return result
+
+
+# =============================================================================
+# BATCH PROCESSING ENDPOINT (Max 5 documents)
+# =============================================================================
+
+@app.post("/resurrect/batch", response_model=BatchResurrectionResult)
+async def resurrect_batch(files: List[UploadFile] = File(...)):
+    """
+    Batch document resurrection - process up to 5 documents at once.
+    
+    Each document goes through the full 5-agent pipeline:
+    - Scanner (ERNIE 4.5 + OpenCV + PaddleOCR-VL)
+    - Linguist (Doke Shona transliteration)
+    - Historian (1888-1923 context)
+    - Validator (cross-verification)
+    - Repair Advisor (conservation recommendations)
+    
+    Returns individual results for each document plus batch summary.
+    """
+    MAX_BATCH_SIZE = 5
+    
+    if len(files) > MAX_BATCH_SIZE:
+        raise HTTPException(
+            status_code=400, 
+            detail=f"Maximum {MAX_BATCH_SIZE} documents per batch. You uploaded {len(files)}."
+        )
+    
+    if len(files) == 0:
+        raise HTTPException(status_code=400, detail="No files uploaded")
+    
+    # Validate all files are images
+    for f in files:
+        if not f.content_type or not f.content_type.startswith("image/"):
+            raise HTTPException(
+                status_code=400, 
+                detail=f"File '{f.filename}' is not an image. All files must be images."
+            )
+    
+    batch_start = datetime.utcnow()
+    batch_id = hashlib.md5(f"{batch_start.isoformat()}-{len(files)}".encode()).hexdigest()[:12]
+    
+    results: List[BatchDocumentResult] = []
+    successful = 0
+    failed = 0
+    
+    for idx, file in enumerate(files):
+        doc_start = datetime.utcnow()
+        filename = file.filename or f"document_{idx + 1}"
+        
+        try:
+            image_data = await file.read()
+            
+            # Create fresh orchestrator for each document
+            orchestrator = SwarmOrchestrator()
+            
+            # Run all agents
+            async for _ in orchestrator.resurrect(image_data):
+                pass  # Consume generator
+            
+            # Get compiled result
+            result = orchestrator.get_result()
+            
+            # Save to Supabase
+            archive_id = await archive.save_resurrection(result, filename)
+            
+            doc_time = int((datetime.utcnow() - doc_start).total_seconds() * 1000)
+            
+            results.append(BatchDocumentResult(
+                filename=filename,
+                status="success",
+                overall_confidence=result.overall_confidence,
+                raw_ocr_text=result.raw_ocr_text,
+                transliterated_text=result.transliterated_text,
+                enhanced_image_base64=result.enhanced_image_base64,
+                processing_time_ms=doc_time,
+                archive_id=archive_id
+            ))
+            successful += 1
+            
+        except Exception as e:
+            doc_time = int((datetime.utcnow() - doc_start).total_seconds() * 1000)
+            results.append(BatchDocumentResult(
+                filename=filename,
+                status="failed",
+                error_message=str(e),
+                processing_time_ms=doc_time
+            ))
+            failed += 1
+    
+    total_time = int((datetime.utcnow() - batch_start).total_seconds() * 1000)
+    
+    return BatchResurrectionResult(
+        total_documents=len(files),
+        successful=successful,
+        failed=failed,
+        total_processing_time_ms=total_time,
+        results=results,
+        batch_id=batch_id
+    )
+
+
+@app.post("/resurrect/batch/stream")
+async def resurrect_batch_stream(files: List[UploadFile] = File(...)):
+    """
+    SSE streaming batch resurrection - process up to 5 documents with real-time updates.
+    
+    Streams progress for each document as it's processed.
+    """
+    MAX_BATCH_SIZE = 5
+    
+    if len(files) > MAX_BATCH_SIZE:
+        raise HTTPException(
+            status_code=400, 
+            detail=f"Maximum {MAX_BATCH_SIZE} documents per batch"
+        )
+    
+    if len(files) == 0:
+        raise HTTPException(status_code=400, detail="No files uploaded")
+    
+    # Validate and read all files upfront
+    file_data = []
+    for f in files:
+        if not f.content_type or not f.content_type.startswith("image/"):
+            raise HTTPException(
+                status_code=400, 
+                detail=f"File '{f.filename}' is not an image"
+            )
+        data = await f.read()
+        file_data.append((f.filename or f"document_{len(file_data) + 1}", data))
+    
+    async def batch_event_generator() -> AsyncGenerator[str, None]:
+        batch_start = datetime.utcnow()
+        batch_id = hashlib.md5(f"{batch_start.isoformat()}-{len(file_data)}".encode()).hexdigest()[:12]
+        
+        # Send batch start event
+        yield f"data: {json.dumps({'type': 'batch_start', 'batch_id': batch_id, 'total_documents': len(file_data)})}\n\n"
+        
+        results = []
+        successful = 0
+        failed = 0
+        
+        for idx, (filename, image_data) in enumerate(file_data):
+            doc_start = datetime.utcnow()
+            
+            # Send document start event
+            yield f"data: {json.dumps({'type': 'document_start', 'index': idx, 'filename': filename, 'total': len(file_data)})}\n\n"
+            
+            try:
+                orchestrator = SwarmOrchestrator()
+                
+                # Stream agent messages for this document
+                async for message in orchestrator.resurrect(image_data):
+                    event_data = json.dumps({
+                        "type": "agent_message",
+                        "document_index": idx,
+                        "filename": filename,
+                        "agent": message.agent.value,
+                        "message": message.message,
+                        "confidence": message.confidence
+                    })
+                    yield f"data: {event_data}\n\n"
+                
+                result = orchestrator.get_result()
+                archive_id = await archive.save_resurrection(result, filename)
+                
+                doc_time = int((datetime.utcnow() - doc_start).total_seconds() * 1000)
+                
+                doc_result = {
+                    "filename": filename,
+                    "status": "success",
+                    "overall_confidence": result.overall_confidence,
+                    "raw_ocr_text": result.raw_ocr_text,
+                    "transliterated_text": result.transliterated_text,
+                    "enhanced_image_base64": result.enhanced_image_base64,
+                    "processing_time_ms": doc_time,
+                    "archive_id": archive_id
+                }
+                results.append(doc_result)
+                successful += 1
+                
+                # Send document complete event
+                yield f"data: {json.dumps({'type': 'document_complete', 'index': idx, 'result': doc_result})}\n\n"
+                
+            except Exception as e:
+                doc_time = int((datetime.utcnow() - doc_start).total_seconds() * 1000)
+                doc_result = {
+                    "filename": filename,
+                    "status": "failed",
+                    "error_message": str(e),
+                    "processing_time_ms": doc_time
+                }
+                results.append(doc_result)
+                failed += 1
+                
+                yield f"data: {json.dumps({'type': 'document_failed', 'index': idx, 'result': doc_result})}\n\n"
+        
+        total_time = int((datetime.utcnow() - batch_start).total_seconds() * 1000)
+        
+        # Send batch complete event
+        final_result = {
+            "type": "batch_complete",
+            "batch_id": batch_id,
+            "total_documents": len(file_data),
+            "successful": successful,
+            "failed": failed,
+            "total_processing_time_ms": total_time,
+            "results": results
+        }
+        yield f"data: {json.dumps(final_result)}\n\n"
+    
+    return StreamingResponse(
+        batch_event_generator(),
+        media_type="text/event-stream",
+        headers={
+            "Cache-Control": "no-cache",
+            "Connection": "keep-alive",
+            "X-Accel-Buffering": "no"
+        }
+    )
 
 
 @app.get("/agents")

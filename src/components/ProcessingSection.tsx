@@ -1,16 +1,17 @@
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useCallback } from "react";
 import { DocumentUpload } from "./DocumentUpload";
+import { BatchUpload, QueuedFile, FileStatus } from "./BatchUpload";
 import { DocumentPreview } from "./DocumentPreview";
 import { AgentTheater } from "./AgentTheater";
+import { ProcessingTimer } from "./ProcessingTimer";
 import { SampleDocuments } from "./SampleDocuments";
 import { Button } from "./ui/button";
 import { Card } from "./ui/card";
 import { Switch } from "./ui/switch";
-import { Tooltip, TooltipContent, TooltipTrigger } from "./ui/tooltip";
-import { Play, RotateCcw, Download, Share2, AlertTriangle, Scan, Zap, X, FileText, CheckCircle2, Settings2 } from "lucide-react";
+import { Tabs, TabsList, TabsTrigger } from "./ui/tabs";
+import { Play, RotateCcw, Download, Share2, AlertTriangle, Scan, Zap, X, FileText, CheckCircle2, Settings2, Layers, File } from "lucide-react";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
-// Import all sample document images
 import bsacDecay from "@/assets/BSAC_Archive_Record_1896.png";
 import dokeLinguist from "@/assets/linguist_test.png";
 import tandiCertificate from "@/assets/Colonial_Certificate_1957.jpg";
@@ -88,7 +89,6 @@ interface StreamCompleteData {
   result: ResurrectionResult;
 }
 
-// Severity colors for hotspots
 const severityColors: Record<string, { bg: string; ring: string }> = {
   critical: { bg: "bg-red-600", ring: "bg-red-500" },
   moderate: { bg: "bg-amber-600", ring: "bg-amber-500" },
@@ -96,6 +96,7 @@ const severityColors: Record<string, { bg: string; ring: string }> = {
 };
 
 export const ProcessingSection = ({ autoStart = false }: ProcessingSectionProps) => {
+  const [uploadMode, setUploadMode] = useState<"single" | "batch">("single");
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
   const [isComplete, setIsComplete] = useState(false);
@@ -107,7 +108,17 @@ export const ProcessingSection = ({ autoStart = false }: ProcessingSectionProps)
   const [damageHotspots, setDamageHotspots] = useState<DamageHotspot[]>([]);
   const [restorationSummary, setRestorationSummary] = useState<RestorationSummary | null>(null);
   const [enhancedImageBase64, setEnhancedImageBase64] = useState<string | null>(null);
+  const [currentAgent, setCurrentAgent] = useState<AgentType | undefined>();
+  
+  // Batch processing state
+  const [queuedFiles, setQueuedFiles] = useState<QueuedFile[]>([]);
+  const [isBatchProcessing, setIsBatchProcessing] = useState(false);
+  const [isBatchPaused, setIsBatchPaused] = useState(false);
+  const [currentBatchIndex, setCurrentBatchIndex] = useState(0);
+  const [batchResults, setBatchResults] = useState<Map<string, ResurrectionResult>>(new Map());
+  
   const sectionRef = useRef<HTMLElement>(null);
+  const abortControllerRef = useRef<AbortController | null>(null);
 
   const handleFileSelect = (file: File) => {
     setSelectedFile(file);
@@ -117,61 +128,46 @@ export const ProcessingSection = ({ autoStart = false }: ProcessingSectionProps)
     setArMode(false);
     setShowArOverlay(false);
     setDamageHotspots([]);
+    setCurrentAgent(undefined);
   };
 
-  const handleSampleSelect = async (sampleId: string) => {
-    // Get the correct image for this sample
-    const imageUrl = sampleImages[sampleId];
-    if (!imageUrl) {
-      toast.error("Sample document not found");
-      return;
-    }
-    
-    const response = await fetch(imageUrl);
-    const blob = await response.blob();
-    
-    // Determine file extension from sampleId
-    const extensions: Record<string, string> = {
-      decay: "png",
-      linguist: "png", 
-      history: "jpg",
-      connection: "webp",
-    };
-    const ext = extensions[sampleId] || "jpg";
-    const mimeTypes: Record<string, string> = {
-      png: "image/png",
-      jpg: "image/jpeg",
-      webp: "image/webp",
-    };
-    
-    const file = new File([blob], `sample-${sampleId}.${ext}`, { type: mimeTypes[ext] });
-    handleFileSelect(file);
-    
-    if (autoStart) {
-      setTimeout(() => startProcessing(file), 500);
-    }
+  const handleBatchFilesSelect = (files: File[]) => {
+    const newQueuedFiles: QueuedFile[] = files.map((file, idx) => ({
+      id: `${Date.now()}-${idx}-${file.name}`,
+      file,
+      status: "queued" as FileStatus,
+      progress: 0,
+    }));
+    setQueuedFiles(prev => [...prev, ...newQueuedFiles]);
   };
 
-  const startProcessing = async (fileToProcess?: File) => {
-    const file = fileToProcess || selectedFile;
-    if (!file) {
-      toast.error("Please select a document first");
-      return;
+  const handleRemoveFile = (id: string) => {
+    setQueuedFiles(prev => prev.filter(f => f.id !== id));
+  };
+
+  const handleClearAll = () => {
+    if (isBatchProcessing) {
+      abortControllerRef.current?.abort();
     }
+    setQueuedFiles([]);
+    setIsBatchProcessing(false);
+    setIsBatchPaused(false);
+    setCurrentBatchIndex(0);
+    setBatchResults(new Map());
+  };
 
-    setIsProcessing(true);
-    setIsComplete(false);
-    setAgentMessages([]);
-    setRestoredData(null);
+  const processFile = useCallback(async (file: File, fileId?: string): Promise<ResurrectionResult | null> => {
+    const formData = new FormData();
+    formData.append("file", file);
 
+    const apiUrl = import.meta.env.VITE_API_URL || "https://nhaka-api.onrender.com";
+    
     try {
-      const formData = new FormData();
-      formData.append("file", file);
-
-      const apiUrl = import.meta.env.VITE_API_URL || "https://nhaka-api.onrender.com";
+      abortControllerRef.current = new AbortController();
       const response = await fetch(`${apiUrl}/resurrect/stream`, {
         method: "POST",
         body: formData,
+        signal: abortControllerRef.current.signal,
       });
 
       if (!response.ok) {
@@ -198,61 +194,190 @@ export const ProcessingSection = ({ autoStart = false }: ProcessingSectionProps)
               const data = JSON.parse(line.slice(6));
               
               if (data.type === "complete") {
-                // Final result - stop processing immediately
                 const completeData = data as StreamCompleteData;
-                const result = completeData.result;
-                
-                // Set all result data
-                setRestoredData({
-                  segments: [
-                    { text: result.transliterated_text || result.raw_ocr_text || "", confidence: "high" }
-                  ],
-                  overallConfidence: result.overall_confidence
-                });
-                
-                // Set damage hotspots
-                if (result.damage_hotspots && result.damage_hotspots.length > 0) {
-                  setDamageHotspots(result.damage_hotspots);
-                }
-                
-                // Set restoration summary
-                if (result.restoration_summary) {
-                  setRestorationSummary(result.restoration_summary);
-                }
-                
-                // Set enhanced image
-                if (result.enhanced_image_base64) {
-                  setEnhancedImageBase64(result.enhanced_image_base64);
-                }
-                
-                // Mark as complete FIRST, then stop processing
-                setIsComplete(true);
-                setIsProcessing(false);
-                
-                // Show success toast
-                if (completeData.cached) {
-                  toast.success(`Document resurrected! Confidence: ${result.overall_confidence.toFixed(1)}%`, {
-                    description: `⚡ Retrieved from cache (instant)`,
-                    duration: 4000,
-                  });
-                } else {
-                  toast.success(`Document resurrected! Confidence: ${result.overall_confidence.toFixed(1)}%`, {
-                    description: `Processing time: ${(result.processing_time_ms / 1000).toFixed(1)}s`,
-                    duration: 4000,
-                  });
-                }
-                
-                // Break out of the loop - we're done
-                return;
+                return completeData.result;
               } else {
-                // Agent message
-                setAgentMessages(prev => [...prev, data as AgentMessageData]);
+                const msgData = data as AgentMessageData;
+                setCurrentAgent(msgData.agent);
+                setAgentMessages(prev => [...prev, msgData]);
+                
+                // Update batch file progress
+                if (fileId) {
+                  setQueuedFiles(prev => prev.map(f => 
+                    f.id === fileId ? { ...f, progress: Math.min(f.progress + 15, 90) } : f
+                  ));
+                }
               }
             } catch {
               // Skip invalid JSON
             }
           }
         }
+      }
+    } catch (error) {
+      if ((error as Error).name === "AbortError") {
+        return null;
+      }
+      throw error;
+    }
+    
+    return null;
+  }, []);
+
+  const startBatchProcessing = useCallback(async () => {
+    if (queuedFiles.length === 0) {
+      toast.error("No files in queue");
+      return;
+    }
+
+    setIsBatchProcessing(true);
+    setIsBatchPaused(false);
+    
+    const startIndex = isBatchPaused ? currentBatchIndex : 0;
+    
+    for (let i = startIndex; i < queuedFiles.length; i++) {
+      if (isBatchPaused) break;
+      
+      const qf = queuedFiles[i];
+      if (qf.status === "complete" || qf.status === "error") continue;
+      
+      setCurrentBatchIndex(i);
+      setAgentMessages([]);
+      setCurrentAgent(undefined);
+      
+      // Update status to processing
+      setQueuedFiles(prev => prev.map((f, idx) => 
+        idx === i ? { ...f, status: "processing" as FileStatus, startTime: Date.now(), progress: 0 } : f
+      ));
+
+      try {
+        const result = await processFile(qf.file, qf.id);
+        
+        if (result) {
+          setBatchResults(prev => new Map(prev).set(qf.id, result));
+          setQueuedFiles(prev => prev.map((f, idx) => 
+            idx === i ? { 
+              ...f, 
+              status: "complete" as FileStatus, 
+              progress: 100, 
+              confidence: result.overall_confidence,
+              endTime: Date.now() 
+            } : f
+          ));
+          
+          toast.success(`${qf.file.name} processed`, {
+            description: `Confidence: ${result.overall_confidence.toFixed(1)}%`,
+          });
+        }
+      } catch (error) {
+        setQueuedFiles(prev => prev.map((f, idx) => 
+          idx === i ? { 
+            ...f, 
+            status: "error" as FileStatus, 
+            error: (error as Error).message,
+            endTime: Date.now() 
+          } : f
+        ));
+        
+        toast.error(`Failed: ${qf.file.name}`, {
+          description: (error as Error).message,
+        });
+      }
+    }
+
+    setIsBatchProcessing(false);
+    
+    const completed = queuedFiles.filter(f => f.status === "complete").length + 1;
+    const total = queuedFiles.length;
+    
+    if (completed === total) {
+      toast.success(`Batch complete! ${completed}/${total} documents processed`);
+    }
+  }, [queuedFiles, isBatchPaused, currentBatchIndex, processFile]);
+
+  const pauseBatchProcessing = () => {
+    setIsBatchPaused(true);
+    abortControllerRef.current?.abort();
+  };
+
+  const handleSampleSelect = async (sampleId: string) => {
+    const imageUrl = sampleImages[sampleId];
+    if (!imageUrl) {
+      toast.error("Sample document not found");
+      return;
+    }
+    
+    const response = await fetch(imageUrl);
+    const blob = await response.blob();
+    
+    const extensions: Record<string, string> = {
+      decay: "png",
+      linguist: "png", 
+      history: "jpg",
+      connection: "webp",
+    };
+    const ext = extensions[sampleId] || "jpg";
+    const mimeTypes: Record<string, string> = {
+      png: "image/png",
+      jpg: "image/jpeg",
+      webp: "image/webp",
+    };
+    
+    const file = new File([blob], `sample-${sampleId}.${ext}`, { type: mimeTypes[ext] });
+    
+    if (uploadMode === "batch") {
+      handleBatchFilesSelect([file]);
+    } else {
+      handleFileSelect(file);
+      if (autoStart) {
+        setTimeout(() => startProcessing(file), 500);
+      }
+    }
+  };
+
+  const startProcessing = async (fileToProcess?: File) => {
+    const file = fileToProcess || selectedFile;
+    if (!file) {
+      toast.error("Please select a document first");
+      return;
+    }
+
+    setIsProcessing(true);
+    setIsComplete(false);
+    setAgentMessages([]);
+    setRestoredData(null);
+    setCurrentAgent(undefined);
+
+    try {
+      const result = await processFile(file);
+      
+      if (result) {
+        setRestoredData({
+          segments: [
+            { text: result.transliterated_text || result.raw_ocr_text || "", confidence: "high" }
+          ],
+          overallConfidence: result.overall_confidence
+        });
+        
+        if (result.damage_hotspots && result.damage_hotspots.length > 0) {
+          setDamageHotspots(result.damage_hotspots);
+        }
+        
+        if (result.restoration_summary) {
+          setRestorationSummary(result.restoration_summary);
+        }
+        
+        if (result.enhanced_image_base64) {
+          setEnhancedImageBase64(result.enhanced_image_base64);
+        }
+        
+        setIsComplete(true);
+        setIsProcessing(false);
+        
+        toast.success(`Document resurrected! Confidence: ${result.overall_confidence.toFixed(1)}%`, {
+          description: `Processing time: ${(result.processing_time_ms / 1000).toFixed(1)}s`,
+          duration: 4000,
+        });
       }
     } catch (error) {
       console.error("Processing error:", error);
@@ -273,6 +398,7 @@ export const ProcessingSection = ({ autoStart = false }: ProcessingSectionProps)
     setDamageHotspots([]);
     setRestorationSummary(null);
     setEnhancedImageBase64(null);
+    setCurrentAgent(undefined);
   };
 
   const toggleArMode = () => {
@@ -305,6 +431,28 @@ export const ProcessingSection = ({ autoStart = false }: ProcessingSectionProps)
     toast.success("Document downloaded!");
   };
 
+  const downloadBatchResults = () => {
+    if (batchResults.size === 0) return;
+    
+    let content = "# Nhaka Batch Processing Results\n\n";
+    batchResults.forEach((result, fileId) => {
+      const qf = queuedFiles.find(f => f.id === fileId);
+      content += `## ${qf?.file.name || fileId}\n`;
+      content += `Confidence: ${result.overall_confidence.toFixed(1)}%\n\n`;
+      content += result.transliterated_text || result.raw_ocr_text || "";
+      content += "\n\n---\n\n";
+    });
+    
+    const blob = new Blob([content], { type: "text/markdown" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `nhaka-batch-results-${Date.now()}.md`;
+    a.click();
+    URL.revokeObjectURL(url);
+    toast.success("Batch results downloaded!");
+  };
+
   return (
     <section ref={sectionRef} id="upload" className="py-20 bg-secondary/30">
       <div className="container px-4 md:px-6">
@@ -317,91 +465,120 @@ export const ProcessingSection = ({ autoStart = false }: ProcessingSectionProps)
           </p>
         </div>
 
+        {/* Upload Mode Tabs */}
+        <div className="flex justify-center mb-6">
+          <Tabs value={uploadMode} onValueChange={(v) => setUploadMode(v as "single" | "batch")} className="w-full max-w-md">
+            <TabsList className="grid w-full grid-cols-2">
+              <TabsTrigger value="single" className="gap-2">
+                <File className="w-4 h-4" />
+                Single Document
+              </TabsTrigger>
+              <TabsTrigger value="batch" className="gap-2">
+                <Layers className="w-4 h-4" />
+                Batch Upload
+              </TabsTrigger>
+            </TabsList>
+          </Tabs>
+        </div>
+
         {/* Sample Documents */}
-        {!selectedFile && (
+        {!selectedFile && queuedFiles.length === 0 && (
           <SampleDocuments onSelect={handleSampleSelect} />
         )}
 
         <div className="grid lg:grid-cols-2 gap-8 mt-8">
           {/* Left Column - Upload & Preview */}
           <div className="space-y-6">
-            {!selectedFile ? (
-              <DocumentUpload onFileSelect={handleFileSelect} />
-            ) : (
-              <div className="relative">
-                {/* AR Mode Overlay */}
-                {arMode && showArOverlay && damageHotspots.length > 0 && (
-                  <div className="absolute inset-0 z-20 pointer-events-none">
-                    <div className="absolute inset-0 bg-gradient-to-br from-cyan-500/10 to-purple-500/10 rounded-lg" />
-                    
-                    {/* Real AI-detected Hotspots */}
-                    {damageHotspots.map((hotspot) => {
-                      const colors = severityColors[hotspot.severity] || severityColors.moderate;
-                      const sizeClass = hotspot.severity === "critical" ? "w-8 h-8" : hotspot.severity === "moderate" ? "w-6 h-6" : "w-5 h-5";
-                      
-                      return (
-                        <div
-                          key={hotspot.id}
-                          className="absolute pointer-events-auto cursor-pointer"
-                          style={{ left: `${hotspot.x}%`, top: `${hotspot.y}%`, transform: "translate(-50%, -50%)" }}
-                          onMouseEnter={() => setActiveHotspot(hotspot.id)}
-                          onMouseLeave={() => setActiveHotspot(null)}
-                        >
-                          {/* Pulsing ring */}
-                          <div className={cn(
-                            "absolute inset-0 rounded-full animate-ping opacity-75",
-                            colors.ring
-                          )} />
+            {uploadMode === "single" ? (
+              <>
+                {!selectedFile ? (
+                  <DocumentUpload onFileSelect={handleFileSelect} />
+                ) : (
+                  <div className="relative">
+                    {/* AR Mode Overlay */}
+                    {arMode && showArOverlay && damageHotspots.length > 0 && (
+                      <div className="absolute inset-0 z-20 pointer-events-none">
+                        <div className="absolute inset-0 bg-gradient-to-br from-cyan-500/10 to-purple-500/10 rounded-lg" />
+                        
+                        {damageHotspots.map((hotspot) => {
+                          const colors = severityColors[hotspot.severity] || severityColors.moderate;
+                          const sizeClass = hotspot.severity === "critical" ? "w-8 h-8" : hotspot.severity === "moderate" ? "w-6 h-6" : "w-5 h-5";
                           
-                          {/* Hotspot dot */}
-                          <div className={cn(
-                            "relative rounded-full flex items-center justify-center text-white font-bold shadow-lg",
-                            sizeClass,
-                            colors.bg
-                          )}>
-                            <span className="text-xs">{hotspot.icon}</span>
-                          </div>
+                          return (
+                            <div
+                              key={hotspot.id}
+                              className="absolute pointer-events-auto cursor-pointer"
+                              style={{ left: `${hotspot.x}%`, top: `${hotspot.y}%`, transform: "translate(-50%, -50%)" }}
+                              onMouseEnter={() => setActiveHotspot(hotspot.id)}
+                              onMouseLeave={() => setActiveHotspot(null)}
+                            >
+                              <div className={cn("absolute inset-0 rounded-full animate-ping opacity-75", colors.ring)} />
+                              <div className={cn("relative rounded-full flex items-center justify-center text-white font-bold shadow-lg", sizeClass, colors.bg)}>
+                                <span className="text-xs">{hotspot.icon}</span>
+                              </div>
 
-                          {/* Tooltip */}
-                          {activeHotspot === hotspot.id && (
-                            <div className="absolute left-full ml-2 top-1/2 -translate-y-1/2 z-30 w-64 p-3 bg-background/95 backdrop-blur-sm rounded-lg shadow-xl border border-border animate-in fade-in slide-in-from-left-2">
-                              <div className="flex items-center gap-2 mb-2">
-                                <span className="text-lg">{hotspot.icon}</span>
-                                <span className="font-semibold text-foreground">{hotspot.label}</span>
-                              </div>
-                              <p className="text-sm text-muted-foreground mb-2">
-                                <span className="font-medium text-accent">Treatment:</span> {hotspot.treatment}
-                              </p>
-                              <div className="flex items-center gap-1 text-xs text-muted-foreground">
-                                <AlertTriangle className="w-3 h-3" />
-                                <span>AI-detected ({hotspot.severity})</span>
-                              </div>
+                              {activeHotspot === hotspot.id && (
+                                <div className="absolute left-full ml-2 top-1/2 -translate-y-1/2 z-30 w-64 p-3 bg-background/95 backdrop-blur-sm rounded-lg shadow-xl border border-border animate-in fade-in slide-in-from-left-2">
+                                  <div className="flex items-center gap-2 mb-2">
+                                    <span className="text-lg">{hotspot.icon}</span>
+                                    <span className="font-semibold text-foreground">{hotspot.label}</span>
+                                  </div>
+                                  <p className="text-sm text-muted-foreground mb-2">
+                                    <span className="font-medium text-accent">Treatment:</span> {hotspot.treatment}
+                                  </p>
+                                  <div className="flex items-center gap-1 text-xs text-muted-foreground">
+                                    <AlertTriangle className="w-3 h-3" />
+                                    <span>AI-detected ({hotspot.severity})</span>
+                                  </div>
+                                </div>
+                              )}
                             </div>
-                          )}
-                        </div>
-                      );
-                    })}
+                          );
+                        })}
 
-                    {/* AR Mode Badge */}
-                    <div className="absolute top-4 left-4 flex items-center gap-2 px-3 py-1.5 bg-cyan-500/90 text-white rounded-full text-sm font-medium shadow-lg">
-                      <Scan className="w-4 h-4 animate-pulse" />
-                      AR Diagnosis Active ({damageHotspots.length} issues)
-                    </div>
+                        <div className="absolute top-4 left-4 flex items-center gap-2 px-3 py-1.5 bg-cyan-500/90 text-white rounded-full text-sm font-medium shadow-lg">
+                          <Scan className="w-4 h-4 animate-pulse" />
+                          AR Diagnosis Active ({damageHotspots.length} issues)
+                        </div>
+                      </div>
+                    )}
+
+                    <DocumentPreview
+                      file={selectedFile}
+                      isProcessing={isProcessing}
+                      isComplete={isComplete}
+                      restoredData={restoredData}
+                      enhancedImageBase64={enhancedImageBase64}
+                    />
                   </div>
                 )}
-
-                <DocumentPreview
-                  file={selectedFile}
-                  isProcessing={isProcessing}
-                  isComplete={isComplete}
-                  restoredData={restoredData}
-                  enhancedImageBase64={enhancedImageBase64}
-                />
-              </div>
+              </>
+            ) : (
+              <BatchUpload
+                onFilesSelect={handleBatchFilesSelect}
+                onStartBatch={startBatchProcessing}
+                onPauseBatch={pauseBatchProcessing}
+                onRemoveFile={handleRemoveFile}
+                onClearAll={handleClearAll}
+                queuedFiles={queuedFiles}
+                isProcessing={isBatchProcessing}
+                isPaused={isBatchPaused}
+                currentFileIndex={currentBatchIndex}
+              />
             )}
 
-            {/* Action Buttons */}
-            {selectedFile && (
+            {/* Processing Timer - Shows during processing */}
+            {(isProcessing || isBatchProcessing) && (
+              <ProcessingTimer
+                isProcessing={isProcessing || isBatchProcessing}
+                isComplete={isComplete}
+                currentAgent={currentAgent}
+                className="mt-4"
+              />
+            )}
+
+            {/* Action Buttons - Single Mode */}
+            {uploadMode === "single" && selectedFile && (
               <div className="flex flex-wrap gap-3">
                 {!isProcessing && !isComplete && (
                   <Button onClick={() => startProcessing()} size="lg" className="gap-2">
@@ -428,7 +605,6 @@ export const ProcessingSection = ({ autoStart = false }: ProcessingSectionProps)
                   Reset
                 </Button>
 
-                {/* AR Mode Toggle */}
                 {isComplete && (
                   <div className="flex items-center gap-2 ml-auto px-3 py-2 bg-muted rounded-lg">
                     <Scan className={cn("w-4 h-4", arMode && "text-cyan-500")} />
@@ -442,17 +618,25 @@ export const ProcessingSection = ({ autoStart = false }: ProcessingSectionProps)
                 )}
               </div>
             )}
+
+            {/* Batch Results Download */}
+            {uploadMode === "batch" && batchResults.size > 0 && !isBatchProcessing && (
+              <Button onClick={downloadBatchResults} className="gap-2 w-full">
+                <Download className="w-4 h-4" />
+                Download All Results ({batchResults.size} documents)
+              </Button>
+            )}
           </div>
 
           {/* Right Column - Agent Theater */}
           <div>
             <AgentTheater
               messages={agentMessages}
-              isProcessing={isProcessing}
+              isProcessing={isProcessing || isBatchProcessing}
               isComplete={isComplete}
             />
 
-            {/* AR Diagnosis Panel - Shows when AR mode is active */}
+            {/* AR Diagnosis Panel */}
             {arMode && (
               <Card className="mt-4 p-4 border-cyan-500/50 bg-gradient-to-br from-cyan-500/5 to-purple-500/5">
                 <div className="flex items-center justify-between mb-3">
@@ -466,31 +650,29 @@ export const ProcessingSection = ({ autoStart = false }: ProcessingSectionProps)
                 </div>
                 
                 <div className="space-y-2">
-                  {damageHotspots.map((hotspot) => {
-                    return (
-                      <div
-                        key={hotspot.id}
-                        className={cn(
-                          "flex items-center gap-3 p-2 rounded-lg transition-colors cursor-pointer",
-                          activeHotspot === hotspot.id ? "bg-accent/20" : "hover:bg-muted"
-                        )}
-                        onMouseEnter={() => setActiveHotspot(hotspot.id)}
-                        onMouseLeave={() => setActiveHotspot(null)}
-                      >
-                        <span className="text-lg">{hotspot.icon}</span>
-                        <div className="flex-1">
-                          <p className="text-sm font-medium">{hotspot.label}</p>
-                          <p className="text-xs text-muted-foreground">{hotspot.treatment}</p>
-                        </div>
-                        <div className={cn(
-                          "w-2 h-2 rounded-full",
-                          hotspot.severity === "critical" && "bg-red-500",
-                          hotspot.severity === "moderate" && "bg-amber-500",
-                          hotspot.severity === "minor" && "bg-green-500",
-                        )} />
+                  {damageHotspots.map((hotspot) => (
+                    <div
+                      key={hotspot.id}
+                      className={cn(
+                        "flex items-center gap-3 p-2 rounded-lg transition-colors cursor-pointer",
+                        activeHotspot === hotspot.id ? "bg-accent/20" : "hover:bg-muted"
+                      )}
+                      onMouseEnter={() => setActiveHotspot(hotspot.id)}
+                      onMouseLeave={() => setActiveHotspot(null)}
+                    >
+                      <span className="text-lg">{hotspot.icon}</span>
+                      <div className="flex-1">
+                        <p className="text-sm font-medium">{hotspot.label}</p>
+                        <p className="text-xs text-muted-foreground">{hotspot.treatment}</p>
                       </div>
-                    );
-                  })}
+                      <div className={cn(
+                        "w-2 h-2 rounded-full",
+                        hotspot.severity === "critical" && "bg-red-500",
+                        hotspot.severity === "moderate" && "bg-amber-500",
+                        hotspot.severity === "minor" && "bg-green-500",
+                      )} />
+                    </div>
+                  ))}
                 </div>
 
                 <div className="mt-4 pt-3 border-t border-border">
@@ -501,7 +683,7 @@ export const ProcessingSection = ({ autoStart = false }: ProcessingSectionProps)
               </Card>
             )}
 
-            {/* Restoration Summary Panel - Shows when processing is complete */}
+            {/* Restoration Summary Panel */}
             {isComplete && restorationSummary && (
               <Card className="mt-4 p-4 border-emerald-500/50 bg-gradient-to-br from-emerald-500/5 to-teal-500/5">
                 <div className="flex items-center justify-between mb-3">
@@ -516,7 +698,6 @@ export const ProcessingSection = ({ autoStart = false }: ProcessingSectionProps)
                   </div>
                 </div>
                 
-                {/* Document Type */}
                 <div className="flex items-center gap-2 mb-3 p-2 bg-muted/50 rounded-lg">
                   <span className="text-lg">
                     {restorationSummary.document_type === "scan" ? "📄" : 
@@ -528,7 +709,6 @@ export const ProcessingSection = ({ autoStart = false }: ProcessingSectionProps)
                   </div>
                 </div>
 
-                {/* Detected Issues */}
                 {restorationSummary.detected_issues.length > 0 && (
                   <div className="mb-3">
                     <div className="flex items-center gap-2 mb-2">
@@ -546,7 +726,6 @@ export const ProcessingSection = ({ autoStart = false }: ProcessingSectionProps)
                   </div>
                 )}
 
-                {/* Enhancements Applied */}
                 {restorationSummary.enhancements_applied.length > 0 && (
                   <div className="mb-3">
                     <div className="flex items-center gap-2 mb-2">
@@ -564,7 +743,6 @@ export const ProcessingSection = ({ autoStart = false }: ProcessingSectionProps)
                   </div>
                 )}
 
-                {/* Quick Restoration Stats */}
                 {(restorationSummary.skew_corrected || restorationSummary.shadows_removed || restorationSummary.yellowing_fixed || restorationSummary.image_regions_count) && (
                   <div className="mb-3 flex flex-wrap gap-2">
                     {restorationSummary.skew_corrected && (
@@ -582,53 +760,11 @@ export const ProcessingSection = ({ autoStart = false }: ProcessingSectionProps)
                         📜 Yellowing Fixed
                       </span>
                     )}
-                    {restorationSummary.image_regions_count > 0 && (
+                    {restorationSummary.image_regions_count && restorationSummary.image_regions_count > 0 && (
                       <span className="px-2 py-1 text-xs bg-pink-500/20 text-pink-600 rounded-full flex items-center gap-1">
                         🖼️ {restorationSummary.image_regions_count} Image(s)
                       </span>
                     )}
-                  </div>
-                )}
-
-                {/* Text Structure */}
-                {restorationSummary.text_structure && (
-                  (restorationSummary.text_structure.headings?.length > 0 || restorationSummary.text_structure.paragraphs?.length > 0) && (
-                    <div className="mb-3 p-2 bg-muted/30 rounded-lg">
-                      <p className="text-xs font-medium mb-1">Document Structure</p>
-                      <div className="flex gap-3 text-xs text-muted-foreground">
-                        {restorationSummary.text_structure.headings?.length > 0 && (
-                          <span>📑 {restorationSummary.text_structure.headings.length} heading(s)</span>
-                        )}
-                        {restorationSummary.text_structure.paragraphs?.length > 0 && (
-                          <span>📝 {restorationSummary.text_structure.paragraphs.length} paragraph(s)</span>
-                        )}
-                      </div>
-                    </div>
-                  )
-                )}
-
-                {/* Layout Info */}
-                {restorationSummary.layout_info && Object.keys(restorationSummary.layout_info).length > 0 && (
-                  <div className="pt-3 border-t border-border">
-                    <div className="flex flex-wrap gap-2">
-                      {restorationSummary.layout_info.has_header && (
-                        <span className="px-2 py-1 text-xs bg-muted rounded-full">📋 Header</span>
-                      )}
-                      {restorationSummary.layout_info.has_footer && (
-                        <span className="px-2 py-1 text-xs bg-muted rounded-full">📋 Footer</span>
-                      )}
-                      {restorationSummary.layout_info.has_tables && (
-                        <span className="px-2 py-1 text-xs bg-muted rounded-full">📊 Table</span>
-                      )}
-                      {restorationSummary.layout_info.has_images && (
-                        <span className="px-2 py-1 text-xs bg-muted rounded-full">🖼️ Images</span>
-                      )}
-                      {restorationSummary.layout_info.estimated_columns && (
-                        <span className="px-2 py-1 text-xs bg-muted rounded-full">
-                          📰 {restorationSummary.layout_info.estimated_columns} column(s)
-                        </span>
-                      )}
-                    </div>
                   </div>
                 )}
               </Card>
