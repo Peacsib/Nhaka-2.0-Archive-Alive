@@ -199,7 +199,7 @@ async def call_ernie_llm(system_prompt: str, user_input: str, timeout: float = 2
     Call ERNIE AI model via Novita API with cost optimization.
     
     ERNIE INTEGRATION FOR CONTEST:
-    - Uses ERNIE-4.5 for better multilingual understanding
+    - Uses ERNIE-4.0 for better multilingual understanding
     - Optimized for African heritage document analysis
     - Enhanced cultural context processing
     
@@ -223,7 +223,7 @@ async def call_ernie_llm(system_prompt: str, user_input: str, timeout: float = 2
         return None
     
     # COST OPTIMIZATION 1: Check budget before calling
-    estimated_cost = 0.003  # ~$0.003 per call for ERNIE-4.5
+    estimated_cost = 0.003  # ~$0.003 per call for ERNIE-4.0
     if not api_tracker.can_spend(estimated_cost):
         print(f"⚠️ Daily budget exceeded (${api_tracker.today_spend:.2f}/${api_tracker.daily_budget_usd})")
         return None
@@ -244,7 +244,7 @@ async def call_ernie_llm(system_prompt: str, user_input: str, timeout: float = 2
                     "Content-Type": "application/json"
                 },
                 json={
-                    "model": "baidu/ernie-4.5-8b-chat",  # ERNIE model for contest
+                    "model": "baidu/ernie-4.0-8b-chat",  # ERNIE model for contest
                     "messages": [
                         {"role": "system", "content": system_prompt},
                         {"role": "user", "content": user_input}
@@ -262,7 +262,7 @@ async def call_ernie_llm(system_prompt: str, user_input: str, timeout: float = 2
                 # Track usage - updated for ERNIE model
                 usage = data.get("usage", {})
                 api_tracker.record(
-                    model="ernie-4.5-8b",
+                    model="ernie-4.0-8b",
                     input_tokens=usage.get("prompt_tokens", 400),
                     output_tokens=usage.get("completion_tokens", 200),
                     cost=estimated_cost
@@ -1270,7 +1270,7 @@ class LinguistAgent(BaseAgent):
                 f"🤖 ERNIE LINGUISTIC ANALYSIS:\n{ai_analysis}",
                 confidence=88,
                 section="AI Transliteration",
-                metadata={"ai_powered": True, "model": "ERNIE-4.5"}
+                metadata={"ai_powered": True, "model": "ERNIE-4.0"}
             )
         
         # Perform rule-based transliteration (always run for actual conversion)
@@ -1328,7 +1328,7 @@ class LinguistAgent(BaseAgent):
                 f"🏛️ ERNIE CULTURAL INSIGHTS:\n{cultural_analysis}",
                 confidence=90,
                 section="AI Cultural Analysis",
-                metadata={"ai_powered": True, "model": "ERNIE-4.5"}
+                metadata={"ai_powered": True, "model": "ERNIE-4.0"}
             )
             self.cultural_insights.append(cultural_analysis)
         
@@ -2302,7 +2302,7 @@ class SwarmOrchestrator:
     Orchestrates the multi-agent swarm for document resurrection.
     
     ENHANCED FOR ERNIE CONTEST:
-    - All agents powered by ERNIE-4.5 via Novita API
+    - All agents powered by ERNIE-4.0 via Novita API
     - Linguist now includes cultural context analysis
     - 5-agent swarm for comprehensive analysis
     """
@@ -2573,7 +2573,7 @@ async def root():
         "status": "operational",
         "contest": "ERNIE AI Developer Challenge 2025",
         "ai_models": {
-            "primary": "ERNIE-4.5-8B via Novita API",
+            "primary": "ERNIE-4.0-8B via Novita API",
             "ocr": "PaddleOCR-VL via Novita API",
             "enhancement": "OpenCV + PIL image processing"
         },
@@ -2601,7 +2601,7 @@ async def root():
             "cache_enabled": True,
             "daily_budget_usd": api_tracker.daily_budget_usd,
             "budget_remaining": round(api_tracker.daily_budget_usd - api_tracker.today_spend, 4),
-            "ernie_model": "baidu/ernie-4.5-8b-chat"
+            "ernie_model": "baidu/ernie-4.0-8b-chat"
         }
     }
 
@@ -2869,7 +2869,7 @@ async def list_agents():
     """List all available agents and their capabilities"""
     return {
         "contest": "ERNIE AI Developer Challenge 2025",
-        "ai_framework": "ERNIE-4.5 + PaddleOCR-VL via Novita API",
+        "ai_framework": "ERNIE-4.0 + PaddleOCR-VL via Novita API",
         "agents": [
             {
                 "type": "scanner",
@@ -2889,7 +2889,7 @@ async def list_agents():
                     "Cultural marker detection",
                     "African heritage significance scoring"
                 ],
-                "ai_model": "ERNIE-4.5-8B",
+                "ai_model": "ERNIE-4.0-8B",
                 "contest_feature": "Enhanced with cultural context analysis for ERNIE Contest"
             },
             {
@@ -2897,21 +2897,21 @@ async def list_agents():
                 "name": "Historian Agent", 
                 "description": "ERNIE-powered Zimbabwean colonial history specialist (1888-1923)",
                 "capabilities": ["Historical figure identification", "Date verification", "Treaty cross-referencing"],
-                "ai_model": "ERNIE-4.5-8B"
+                "ai_model": "ERNIE-4.0-8B"
             },
             {
                 "type": "validator",
                 "name": "Validator Agent",
                 "description": "ERNIE-powered hallucination detection and cross-verification",
                 "capabilities": ["Confidence scoring", "Inconsistency detection", "Fact validation", "Document reconstruction"],
-                "ai_model": "ERNIE-4.5-8B"
+                "ai_model": "ERNIE-4.0-8B"
             },
             {
                 "type": "repair_advisor",
                 "name": "Physical Repair Advisor",
                 "description": "ERNIE-powered document conservation specialist with AR damage mapping",
                 "capabilities": ["Damage assessment", "Treatment recommendations", "AR hotspot generation", "Digitization prioritization"],
-                "ai_model": "ERNIE-4.5-8B"
+                "ai_model": "ERNIE-4.0-8B"
             }
         ],
         "ernie_advantages": [

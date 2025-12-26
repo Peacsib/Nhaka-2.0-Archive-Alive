@@ -186,7 +186,7 @@ Return JSON:
   const userPrompt = `Analyze and correct this OCR-extracted text from a historical document:\n\n${text}`;
 
   try {
-    const result = await callNovitaAI("baidu/ernie-4.5-21b-a3b", systemPrompt, userPrompt);
+    const result = await callNovitaAI("baidu/ernie-4.0-21b-a3b", systemPrompt, userPrompt);
     
     let enhancedText = text;
     let confidence = 75;
@@ -258,7 +258,7 @@ Return JSON:
   const userPrompt = `Verify the historical accuracy of this document text:\n\n${text}`;
 
   try {
-    const result = await callNovitaAI("baidu/ernie-4.5-21b-a3b", systemPrompt, userPrompt);
+    const result = await callNovitaAI("baidu/ernie-4.0-21b-a3b", systemPrompt, userPrompt);
     
     let verifiedText = text;
     let historicalContext = "";
@@ -344,7 +344,7 @@ ${historicalContext}
 Produce the final verified document with confidence markers.`;
 
   try {
-    const result = await callNovitaAI("baidu/ernie-4.5-21b-a3b", systemPrompt, userPrompt);
+    const result = await callNovitaAI("baidu/ernie-4.0-21b-a3b", systemPrompt, userPrompt);
     
     let finalText = enhancedText;
     let segments: TextSegment[] = [];

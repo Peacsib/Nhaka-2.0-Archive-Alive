@@ -15,7 +15,7 @@ const stats = [
     icon: Library,
     value: "2",
     label: "ERNIE Models",
-    description: "PaddleOCR-VL + ERNIE 4.5 via Novita AI",
+    description: "PaddleOCR-VL + ERNIE 4.0 via Novita AI",
     color: "text-agent-historian",
     bgColor: "bg-agent-historian/10",
   },
@@ -46,7 +46,7 @@ export const ImpactStats = () => {
             Powered by ERNIE Multimodal AI
           </h2>
           <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-            A multi-agent system combining PaddleOCR-VL vision and ERNIE 4.5 language models.
+            A multi-agent system combining PaddleOCR-VL vision and ERNIE 4.0 language models.
           </p>
         </div>
 

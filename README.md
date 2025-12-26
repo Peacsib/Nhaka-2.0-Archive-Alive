@@ -101,7 +101,7 @@ Each agent streams their analysis character-by-character. No loading spinners. N
 
 **PaddleOCR-VL** handles the vision layer—it's specifically trained on degraded documents and handles the chaos of water stains, foxing, and ink bleed better than alternatives I tested. It gives us text extraction *plus* document quality analysis in one pass.
 
-**ERNIE 4.5** powers the four language agents. Each has a different system prompt, different expertise, different personality. They argue. They verify each other. They catch mistakes. The key insight: having agents *disagree* produces better results than any single model working alone.
+**ERNIE 4.0** powers the four language agents. Each has a different system prompt, different expertise, different personality. They argue. They verify each other. They catch mistakes. The key insight: having agents *disagree* produces better results than any single model working alone.
 
 **Server-Sent Events (SSE)** streams every agent's thinking to the frontend in real-time. This isn't just cosmetic—watching the process unfold helps users spot issues early and builds trust in the output.
 
@@ -124,7 +124,7 @@ Each agent streams their analysis character-by-character. No loading spinners. N
                           │ Raw OCR + Enhanced Image
                           ▼
 ┌─────────────────────────────────────────────────────────────┐
-│                 LINGUIST AGENT (ERNIE 4.5)                  │
+│                 LINGUIST AGENT (ERNIE 4.0)                  │
 │  • Doke Shona transliteration (ɓ→b, ɗ→d, ȿ→s, ɀ→z)         │
 │  • Archaic term modernization with etymology notes          │
 │  • Context-aware character disambiguation                    │
@@ -133,7 +133,7 @@ Each agent streams their analysis character-by-character. No loading spinners. N
                           │ Transliterated Text
                           ▼
 ┌─────────────────────────────────────────────────────────────┐
-│                HISTORIAN AGENT (ERNIE 4.5)                  │
+│                HISTORIAN AGENT (ERNIE 4.0)                  │
 │  • Historical fact verification (1888-1923 database)         │
 │  • Named entity recognition (Lobengula, Rhodes, treaties)    │
 │  • Date/event cross-referencing against known timelines      │
@@ -142,7 +142,7 @@ Each agent streams their analysis character-by-character. No loading spinners. N
                           │ Verified Facts + Context
                           ▼
 ┌─────────────────────────────────────────────────────────────┐
-│                VALIDATOR AGENT (ERNIE 4.5)                  │
+│                VALIDATOR AGENT (ERNIE 4.0)                  │
 │  • Cross-agent consistency checking                          │
 │  • Hallucination detection via contradiction analysis        │
 │  • Confidence score calculation (0-100% per section)         │
@@ -151,7 +151,7 @@ Each agent streams their analysis character-by-character. No loading spinners. N
                           │ Validated Result + Confidence
                           ▼
 ┌─────────────────────────────────────────────────────────────┐
-│            REPAIR ADVISOR AGENT (ERNIE 4.5)                 │
+│            REPAIR ADVISOR AGENT (ERNIE 4.0)                 │
 │  • Physical damage assessment (stains, tears, fading)        │
 │  • Conservation treatment recommendations (prioritized)      │
 │  • Damage hotspot mapping for AR visualization              │
@@ -180,7 +180,7 @@ Each agent streams their analysis character-by-character. No loading spinners. N
 </p>
 
 **PaddleOCR-VL** (Novita API) - Multimodal document understanding  
-**ERNIE 4.5** (Novita API) - Multi-agent language intelligence  
+**ERNIE 4.0** (Novita API) - Multi-agent language intelligence  
 **OpenCV** - Image preprocessing and enhancement
 
 #### Backend
@@ -273,7 +273,7 @@ Sample colonial-era documents from Zimbabwe National Archives are included in `s
 **What This Demonstrates:**
 
 1. **Novel Multimodal Integration**
-   - PaddleOCR-VL vision feeding structured context to ERNIE 4.5 language agents
+   - PaddleOCR-VL vision feeding structured context to ERNIE 4.0 language agents
    - Not just "OCR then LLM"—each agent sees previous outputs and can challenge them
 
 2. **Architectural Innovation**
@@ -343,6 +343,6 @@ Most importantly: cultural preservation needs technology that respects the sourc
 ---
 
 **Peace Sibanda**  
-*Software Engineer | AI/ML Enthusiast | Heritage Preservationist*
+*Aspiring Software Engineer | AI/ML Enthusiast | Heritage Preservationist*
 
 ---

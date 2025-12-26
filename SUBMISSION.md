@@ -35,22 +35,22 @@ Most AI document restoration is a **black box**: upload → wait → hope for th
    - Detects ink degradation, water damage, foxing, tears
    - OpenCV enhancement: skew correction, shadow removal, contrast optimization
 
-2. **📚 Linguist Agent** (ERNIE 4.5 via Novita AI)
+2. **📚 Linguist Agent** (ERNIE 4.0 via Novita AI)
    - Transliterates pre-1955 Doke Shona orthography (ɓ→b, ɗ→d, ȿ→sv, ɀ→zv)
    - Identifies cultural markers (kinship terms, place names, ceremonies)
    - Maps archaic terminology to modern equivalents
 
-3. **📜 Historian Agent** (ERNIE 4.5 via Novita AI)
+3. **📜 Historian Agent** (ERNIE 4.0 via Novita AI)
    - Verifies facts against 1888-1923 Zimbabwe historical database
    - Cross-references names (Lobengula, Rhodes, Rudd, Jameson)
    - Validates dates and events for accuracy
 
-4. **🛡️ Validator Agent** (ERNIE 4.5 via Novita AI)
+4. **🛡️ Validator Agent** (ERNIE 4.0 via Novita AI)
    - Detects AI hallucinations through cross-verification
    - Calculates confidence scores (0-100%) per text section
    - Flags contradictions between agents for human review
 
-5. **🔧 Repair Advisor Agent** (ERNIE 4.5 via Novita AI)
+5. **🔧 Repair Advisor Agent** (ERNIE 4.0 via Novita AI)
    - Assesses physical damage severity (critical/moderate/minor)
    - Generates conservation treatment recommendations
    - Provides cost estimates and urgency ratings
@@ -109,7 +109,7 @@ class BaseAgent:
   - Multimodal OCR trained on degraded documents
   - Handles water stains, foxing, ink bleed better than alternatives
   
-- **ERNIE 4.5** (`baidu/ernie-4.5-8b-chat`) via Novita AI
+- **ERNIE 4.0** (`baidu/ernie-4.0-8b-chat`) via Novita AI
   - Powers 4 language-based agents
   - Each agent has distinct system prompt and personality
   - Sequential pipeline with context passing
@@ -353,7 +353,7 @@ uvicorn main:app --reload & npm run dev
 - "99% cost reduction. 240x faster. $500K+ saved for Zimbabwe."
 
 **2:20-2:45** - Technical Deep Dive
-- "PaddleOCR-VL + ERNIE 4.5 via Novita AI"
+- "PaddleOCR-VL + ERNIE 4.0 via Novita AI"
 - Show architecture diagram briefly
 - "Multi-agent swarm with real-time streaming"
 
