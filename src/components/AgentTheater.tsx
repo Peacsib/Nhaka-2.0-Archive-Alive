@@ -69,36 +69,59 @@ export const AgentTheater = ({ isProcessing, isComplete, onComplete, documentNam
   // Handle external messages from SSE stream
   useEffect(() => {
     if (externalMessages && externalMessages.length > 0) {
-      const newMessages: Message[] = externalMessages.map((msg, idx) => ({
-        id: `msg-${idx}-${msg.agent}-${msg.message.slice(0, 20).replace(/\s/g, '_')}`,
-        agent: msg.agent,
-        message: msg.message,
-        timestamp: msg.timestamp ? new Date(msg.timestamp).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }) : new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
-        confidence: msg.confidence,
-        documentSection: msg.document_section,
-        isDebate: msg.is_debate,
-      }));
-      setMessages(newMessages);
+      // Deduplicate messages - skip if message text is very similar to previous
+      const seenMessages = new Set<string>();
+      const deduplicatedMessages: Message[] = [];
       
-      // Update active agent based on last message
-      if (newMessages.length > 0) {
-        setActiveAgent(newMessages[newMessages.length - 1].agent);
+      for (let idx = 0; idx < externalMessages.length; idx++) {
+        const msg = externalMessages[idx];
+        // Create a key based on agent + first 50 chars of message
+        const msgKey = `${msg.agent}-${msg.message.slice(0, 50)}`;
+        
+        // Skip duplicate "Initializing" messages from same agent
+        if (msg.message.toLowerCase().includes('initializing') && seenMessages.has(`${msg.agent}-init`)) {
+          continue;
+        }
+        if (msg.message.toLowerCase().includes('initializing')) {
+          seenMessages.add(`${msg.agent}-init`);
+        }
+        
+        // Skip if exact same message key seen before
+        if (seenMessages.has(msgKey)) {
+          continue;
+        }
+        seenMessages.add(msgKey);
+        
+        deduplicatedMessages.push({
+          id: `msg-${idx}-${msg.agent}`,
+          agent: msg.agent,
+          message: msg.message,
+          timestamp: msg.timestamp ? new Date(msg.timestamp).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }) : new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
+          confidence: msg.confidence,
+          documentSection: msg.document_section,
+          isDebate: msg.is_debate,
+        });
       }
       
-      // Calculate progress based on agent stages (not message count)
-      // Each agent represents ~20% of progress
+      setMessages(deduplicatedMessages);
+      
+      // Update active agent based on last message
+      if (deduplicatedMessages.length > 0) {
+        setActiveAgent(deduplicatedMessages[deduplicatedMessages.length - 1].agent);
+      }
+      
+      // Calculate progress based on agent stages - ONLY INCREASES
       const agentOrder: AgentType[] = ["scanner", "linguist", "historian", "validator", "repair_advisor"];
-      const lastAgent = newMessages[newMessages.length - 1]?.agent;
+      const lastAgent = deduplicatedMessages[deduplicatedMessages.length - 1]?.agent;
       const agentIndex = agentOrder.indexOf(lastAgent);
       
-      // Base progress on which agent is active + some progress within that agent
-      const baseProgress = agentIndex >= 0 ? (agentIndex / agentOrder.length) * 100 : 0;
-      const withinAgentProgress = Math.min(10, newMessages.filter(m => m.agent === lastAgent).length * 2);
+      // Each agent = 20%, progress within agent based on message count for that agent
+      const agentProgress = agentIndex >= 0 ? ((agentIndex + 1) / agentOrder.length) * 100 : 0;
       
-      // Progress only goes forward, never backward
       setProgress(prev => {
-        const newProgress = Math.min(baseProgress + withinAgentProgress, isComplete ? 100 : 95);
-        return Math.max(prev, newProgress); // Never decrease
+        // Never decrease progress
+        const newProgress = isComplete ? 100 : Math.min(agentProgress, 95);
+        return Math.max(prev, newProgress);
       });
     }
   }, [externalMessages, isComplete]);

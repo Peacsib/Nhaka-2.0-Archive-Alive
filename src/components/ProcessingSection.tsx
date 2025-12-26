@@ -198,10 +198,11 @@ export const ProcessingSection = ({ autoStart = false }: ProcessingSectionProps)
               const data = JSON.parse(line.slice(6));
               
               if (data.type === "complete") {
-                // Final result
+                // Final result - stop processing immediately
                 const completeData = data as StreamCompleteData;
                 const result = completeData.result;
                 
+                // Set all result data
                 setRestoredData({
                   segments: [
                     { text: result.transliterated_text || result.raw_ocr_text || "", confidence: "high" }
@@ -209,33 +210,40 @@ export const ProcessingSection = ({ autoStart = false }: ProcessingSectionProps)
                   overallConfidence: result.overall_confidence
                 });
                 
-                // Set real damage hotspots from AI analysis
+                // Set damage hotspots
                 if (result.damage_hotspots && result.damage_hotspots.length > 0) {
                   setDamageHotspots(result.damage_hotspots);
                 }
                 
-                // Set restoration summary from AI analysis
+                // Set restoration summary
                 if (result.restoration_summary) {
                   setRestorationSummary(result.restoration_summary);
                 }
                 
-                // Set enhanced image for visual display
+                // Set enhanced image
                 if (result.enhanced_image_base64) {
                   setEnhancedImageBase64(result.enhanced_image_base64);
                 }
                 
-                // Check if this was a cached result
+                // Mark as complete FIRST, then stop processing
+                setIsComplete(true);
+                setIsProcessing(false);
+                
+                // Show success toast
                 if (completeData.cached) {
                   toast.success(`Document resurrected! Confidence: ${result.overall_confidence.toFixed(1)}%`, {
-                    description: `⚡ Retrieved from cache (90% faster)`,
+                    description: `⚡ Retrieved from cache (instant)`,
                     duration: 4000,
                   });
                 } else {
-                  toast.success(`Document resurrected! Confidence: ${result.overall_confidence.toFixed(1)}%`);
+                  toast.success(`Document resurrected! Confidence: ${result.overall_confidence.toFixed(1)}%`, {
+                    description: `Processing time: ${(result.processing_time_ms / 1000).toFixed(1)}s`,
+                    duration: 4000,
+                  });
                 }
                 
-                setIsComplete(true);
-                setIsProcessing(false);
+                // Break out of the loop - we're done
+                return;
               } else {
                 // Agent message
                 setAgentMessages(prev => [...prev, data as AgentMessageData]);
