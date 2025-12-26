@@ -13,6 +13,6 @@ services:
       - key: DAILY_API_BUDGET
         value: "5.0"
       - key: PYTHON_VERSION
-        value: "3.10.0"
+        value: "3.12.7"
     healthCheckPath: /
     autoDeploy: true
