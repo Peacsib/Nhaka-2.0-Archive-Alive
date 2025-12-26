@@ -307,42 +307,11 @@ export const ProcessingSection = ({ autoStart = false }: ProcessingSectionProps)
       return;
     }
     
-    const response = await fetch(imageUrl);
-    const blob = await response.blob();
-    
-    const extensions: Record<string, string> = {
-      decay: "png",
-      linguist: "png", 
-      history: "jpg",
-      connection: "webp",
-    };
-    const ext = extensions[sampleId] || "jpg";
-    const mimeTypes: Record<string, string> = {
-      png: "image/png",
-      jpg: "image/jpeg",
-      webp: "image/webp",
-    };
-    
-    const file = new File([blob], `sample-${sampleId}.${ext}`, { type: mimeTypes[ext] });
-    
-    if (uploadMode === "batch") {
-      handleBatchFilesSelect([file]);
-    } else {
-      handleFileSelect(file);
-      if (autoStart) {
-        setTimeout(() => startProcessing(file), 500);
-      }
-    }
-  };
-
-  const handleSampleSelectMultiple = async (sampleIds: string[]) => {
-    const files: File[] = [];
-    
-    for (const sampleId of sampleIds) {
-      const imageUrl = sampleImages[sampleId];
-      if (!imageUrl) continue;
-      
+    try {
       const response = await fetch(imageUrl);
+      if (!response.ok) {
+        throw new Error(`Failed to fetch sample: ${response.status}`);
+      }
       const blob = await response.blob();
       
       const extensions: Record<string, string> = {
@@ -359,12 +328,62 @@ export const ProcessingSection = ({ autoStart = false }: ProcessingSectionProps)
       };
       
       const file = new File([blob], `sample-${sampleId}.${ext}`, { type: mimeTypes[ext] });
-      files.push(file);
+      
+      if (uploadMode === "batch") {
+        handleBatchFilesSelect([file]);
+        toast.success("Sample document added to queue");
+      } else {
+        handleFileSelect(file);
+        if (autoStart) {
+          setTimeout(() => startProcessing(file), 500);
+        }
+      }
+    } catch (error) {
+      console.error("Error loading sample document:", error);
+      toast.error("Failed to load sample document");
+      throw error; // Re-throw so SampleDocuments can handle it
     }
+  };
+
+  const handleSampleSelectMultiple = async (sampleIds: string[]) => {
+    const files: File[] = [];
     
-    if (files.length > 0) {
-      handleBatchFilesSelect(files);
-      toast.success(`Added ${files.length} sample documents to queue`);
+    try {
+      for (const sampleId of sampleIds) {
+        const imageUrl = sampleImages[sampleId];
+        if (!imageUrl) continue;
+        
+        const response = await fetch(imageUrl);
+        if (!response.ok) {
+          throw new Error(`Failed to fetch sample: ${response.status}`);
+        }
+        const blob = await response.blob();
+        
+        const extensions: Record<string, string> = {
+          decay: "png",
+          linguist: "png", 
+          history: "jpg",
+          connection: "webp",
+        };
+        const ext = extensions[sampleId] || "jpg";
+        const mimeTypes: Record<string, string> = {
+          png: "image/png",
+          jpg: "image/jpeg",
+          webp: "image/webp",
+        };
+        
+        const file = new File([blob], `sample-${sampleId}.${ext}`, { type: mimeTypes[ext] });
+        files.push(file);
+      }
+      
+      if (files.length > 0) {
+        handleBatchFilesSelect(files);
+        toast.success(`Added ${files.length} sample documents to queue`);
+      }
+    } catch (error) {
+      console.error("Error loading sample documents:", error);
+      toast.error("Failed to load sample documents");
+      throw error; // Re-throw so SampleDocuments can handle it
     }
   };
 

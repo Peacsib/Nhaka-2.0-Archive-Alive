@@ -3,6 +3,7 @@ import { Card } from "./ui/card";
 import { Button } from "./ui/button";
 import { FileText, Clock, Star, Wrench, Languages, BookOpen, Globe, Check, Plus } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { toast } from "sonner";
 
 // Hero Asset imports
 import bsacDecay from "@/assets/BSAC_Archive_Record_1896.png";
@@ -84,15 +85,17 @@ const agentIcons: Record<string, React.ReactNode> = {
 };
 
 interface SampleDocumentsProps {
-  onSelect: (id: string) => void;
-  onSelectMultiple?: (ids: string[]) => void;
+  onSelect: (id: string) => Promise<void> | void;
+  onSelectMultiple?: (ids: string[]) => Promise<void> | void;
   batchMode?: boolean;
 }
 
 export const SampleDocuments = ({ onSelect, onSelectMultiple, batchMode = false }: SampleDocumentsProps) => {
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [isLoading, setIsLoading] = useState(false);
+  const [loadingDocId, setLoadingDocId] = useState<string | null>(null);
 
-  const handleCardClick = (docId: string) => {
+  const handleCardClick = async (docId: string) => {
     if (batchMode) {
       setSelectedIds(prev => {
         const newSet = new Set(prev);
@@ -104,14 +107,32 @@ export const SampleDocuments = ({ onSelect, onSelectMultiple, batchMode = false 
         return newSet;
       });
     } else {
-      onSelect(docId);
+      // Show loading state for single document selection
+      setLoadingDocId(docId);
+      try {
+        await onSelect(docId);
+      } catch (error) {
+        console.error("Error selecting sample document:", error);
+        toast.error("Failed to load sample document");
+      } finally {
+        setLoadingDocId(null);
+      }
     }
   };
 
-  const handleAddSelected = () => {
+  const handleAddSelected = async () => {
     if (onSelectMultiple && selectedIds.size > 0) {
-      onSelectMultiple(Array.from(selectedIds));
+      const idsToAdd = Array.from(selectedIds);
       setSelectedIds(new Set());
+      setIsLoading(true);
+      try {
+        await onSelectMultiple(idsToAdd);
+      } catch (error) {
+        console.error("Error adding sample documents:", error);
+        toast.error("Failed to add sample documents to queue");
+      } finally {
+        setIsLoading(false);
+      }
     }
   };
 
@@ -138,17 +159,22 @@ export const SampleDocuments = ({ onSelect, onSelectMultiple, batchMode = false 
               variant="outline"
               size="sm"
               onClick={handleSelectAll}
+              disabled={isLoading}
             >
               {selectedIds.size === sampleDocs.length ? "Deselect All" : "Select All"}
             </Button>
             <Button
               size="sm"
               onClick={handleAddSelected}
-              disabled={selectedIds.size === 0}
+              disabled={selectedIds.size === 0 || isLoading}
               className="gap-1"
             >
-              <Plus className="w-4 h-4" />
-              Add {selectedIds.size > 0 ? `(${selectedIds.size})` : ""} to Queue
+              {isLoading ? (
+                <span className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin" />
+              ) : (
+                <Plus className="w-4 h-4" />
+              )}
+              {isLoading ? "Loading..." : `Add ${selectedIds.size > 0 ? `(${selectedIds.size})` : ""} to Queue`}
             </Button>
           </div>
         )}
@@ -157,6 +183,7 @@ export const SampleDocuments = ({ onSelect, onSelectMultiple, batchMode = false 
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         {sampleDocs.map((doc, index) => {
           const isSelected = selectedIds.has(doc.id);
+          const isLoadingThis = loadingDocId === doc.id;
           return (
           <Card
             key={doc.id}
@@ -164,10 +191,20 @@ export const SampleDocuments = ({ onSelect, onSelectMultiple, batchMode = false 
               "p-4 hover:shadow-lg transition-all duration-300 cursor-pointer group overflow-hidden relative",
               batchMode && isSelected 
                 ? "border-accent ring-2 ring-accent/50" 
-                : "hover:border-accent/50"
+                : "hover:border-accent/50",
+              isLoadingThis && "opacity-75 pointer-events-none"
             )}
             onClick={() => handleCardClick(doc.id)}
           >
+            {/* Loading overlay for single mode */}
+            {isLoadingThis && (
+              <div className="absolute inset-0 z-20 flex items-center justify-center bg-background/80 rounded-lg">
+                <div className="flex flex-col items-center gap-2">
+                  <span className="w-8 h-8 border-3 border-accent border-t-transparent rounded-full animate-spin" />
+                  <span className="text-sm font-medium text-accent">Loading...</span>
+                </div>
+              </div>
+            )}
             {/* Selection indicator for batch mode */}
             {batchMode && (
               <div className={cn(
