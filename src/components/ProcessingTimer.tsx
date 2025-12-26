@@ -46,7 +46,6 @@ export const ProcessingTimer = ({
   const [stepStatuses, setStepStatuses] = useState<Record<string, StepStatus>>({});
   const [currentStepIndex, setCurrentStepIndex] = useState(0);
   const [stepStartTime, setStepStartTime] = useState<number | null>(null);
-  const intervalRef = useRef<NodeJS.Timeout | null>(null);
 
   // Map agent names to step IDs
   const agentToStepMap: Record<string, string> = {
@@ -82,23 +81,15 @@ export const ProcessingTimer = ({
     }
   }, [currentAgent, currentStepIndex]);
 
-  // Timer logic
+  // Timer logic with proper cleanup
   useEffect(() => {
     if (isProcessing && !isComplete) {
-      intervalRef.current = setInterval(() => {
+      const interval = setInterval(() => {
         setElapsedMs(prev => prev + 100);
       }, 100);
-    } else {
-      if (intervalRef.current) {
-        clearInterval(intervalRef.current);
-      }
+      
+      return () => clearInterval(interval);
     }
-
-    return () => {
-      if (intervalRef.current) {
-        clearInterval(intervalRef.current);
-      }
-    };
   }, [isProcessing, isComplete]);
 
   // Reset on new processing
