@@ -11,19 +11,17 @@ interface ProcessingStep {
   icon: string;
 }
 
-// Processing pipeline steps with realistic timing
+// Processing pipeline steps with FAST realistic timing (under 1 minute total)
 const PROCESSING_STEPS: ProcessingStep[] = [
-  { id: "scanner", name: "Document Scan", agent: "Scanner", estimatedMs: 3000, timeoutMs: 30000, icon: "🔬" },
-  { id: "vision", name: "Vision Analysis", agent: "ERNIE 4.5", estimatedMs: 4000, timeoutMs: 30000, icon: "👁️" },
-  { id: "ocr", name: "OCR Extraction", agent: "PaddleOCR-VL", estimatedMs: 7000, timeoutMs: 120000, icon: "📝" },
-  { id: "linguist", name: "Language Analysis", agent: "Linguist", estimatedMs: 3000, timeoutMs: 20000, icon: "📚" },
-  { id: "historian", name: "Historical Context", agent: "Historian", estimatedMs: 3000, timeoutMs: 20000, icon: "📜" },
-  { id: "validator", name: "Cross-Validation", agent: "Validator", estimatedMs: 3000, timeoutMs: 25000, icon: "✓" },
-  { id: "repair", name: "Repair Analysis", agent: "Advisor", estimatedMs: 2500, timeoutMs: 20000, icon: "🔧" },
-  { id: "save", name: "Archive Save", agent: "Supabase", estimatedMs: 1000, timeoutMs: 30000, icon: "💾" },
+  { id: "scanner", name: "Document Scan", agent: "Scanner", estimatedMs: 5000, timeoutMs: 30000, icon: "🔬" },
+  { id: "linguist", name: "Language Analysis", agent: "Linguist", estimatedMs: 8000, timeoutMs: 20000, icon: "📚" },
+  { id: "historian", name: "Historical Context", agent: "Historian", estimatedMs: 8000, timeoutMs: 20000, icon: "📜" },
+  { id: "validator", name: "Cross-Validation", agent: "Validator", estimatedMs: 8000, timeoutMs: 25000, icon: "✓" },
+  { id: "repair", name: "Repair Analysis", agent: "Advisor", estimatedMs: 8000, timeoutMs: 20000, icon: "🔧" },
+  { id: "complete", name: "Complete", agent: "System", estimatedMs: 3000, timeoutMs: 5000, icon: "✅" },
 ];
 
-const TOTAL_ESTIMATED_MS = PROCESSING_STEPS.reduce((sum, step) => sum + step.estimatedMs, 0);
+const TOTAL_ESTIMATED_MS = 40000; // 40 seconds max
 
 type StepStatus = "pending" | "active" | "complete" | "timeout" | "error";
 

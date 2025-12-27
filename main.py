@@ -2288,6 +2288,19 @@ class SwarmOrchestrator:
                     # Next agent can see this debate point
                     context["last_debate"] = message.message
         
+        # COMPLETION SUMMARY - Let users know we're done!
+        processing_time = (datetime.utcnow() - context["start_time"]).total_seconds()
+        final_conf = context.get("final_confidence", 70)
+        
+        # Create a completion summary message
+        summary_msg = AgentMessage(
+            agent=AgentType.VALIDATOR,  # Validator announces completion
+            message=f"🎉 Document resurrection complete! Processed in {processing_time:.1f}s with {final_conf:.0f}% confidence. All agents have finished their analysis.",
+            confidence=final_conf,
+            timestamp=datetime.utcnow()
+        )
+        yield summary_msg
+        
         # Store final context
         self.final_context = context
     
