@@ -1427,11 +1427,11 @@ Speak naturally and conversationally. Provide insights about:
 - Cultural or historical terminology
 
 Be concise (2-3 sentences max). Sound like a knowledgeable colleague, not a robot.
-Example: "This text mixes colonial English with Shona terms. I notice 'Mambo' and 'VaRungu' - typical 1890s colonial correspondence. OCR quality is decent but some characters are unclear."
+IMPORTANT: Analyze what you ACTUALLY see in the text. Don't use generic phrases. Be specific.
 
 Do NOT use formal headers or bullet points. Just speak naturally."""
         
-        user_input = f"Analyze this document text:\n\n{text[:1500]}"
+        user_input = f"What do you observe in this document text? Be specific about what you actually see:\n\n{text[:1500]}"
         
         return await call_ernie_llm(system_prompt, user_input)
     
@@ -1646,11 +1646,11 @@ Speak conversationally like you're discussing a document with a colleague. Ident
 - Historical context (treaties, concessions, conflicts)
 
 Be concise (2-3 sentences). Sound knowledgeable but natural.
-Example: "I see Lobengula and Rudd mentioned - this looks like Rudd Concession era (1888). The reference to 'Matabele' and mining rights is typical of that period. This could be correspondence about the controversial mineral rights deal."
+IMPORTANT: Only mention what you ACTUALLY find in the text. Don't make assumptions.
 
 No formal formatting. Just natural expert commentary."""
         
-        user_input = f"Analyze this historical document:\n\n{text[:1500]}"
+        user_input = f"What historical elements do you see in this document? Be specific:\n\n{text[:1500]}"
         
         return await call_ernie_llm(system_prompt, user_input)
     
@@ -1796,11 +1796,11 @@ Assess:
 - Confidence in the text accuracy
 
 Be conversational (2-3 sentences). Sound like a colleague reviewing work.
-Example: "The text quality is pretty good overall - most words are clear. I see a few OCR artifacts but nothing major. I'd rate this about 80% reliable for historical analysis."
+IMPORTANT: Base your assessment on what you ACTUALLY see, not generic statements.
 
 No formal structure. Just natural expert opinion."""
         
-        user_input = f"""Review this document:
+        user_input = f"""Review this document and give your honest assessment:
 
 Original OCR: {raw_text[:800]}
 
@@ -1808,7 +1808,7 @@ Processed: {transliterated[:800]}
 
 Historical facts found: {len(verified_facts)} items
 
-What's your assessment?"""
+What's your specific assessment of THIS document?"""
         
         return await call_ernie_llm(system_prompt, user_input)
     
