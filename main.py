@@ -1375,28 +1375,40 @@ class LinguistAgent(BaseAgent):
         # Single initialization
         yield await self.emit("📚 Linguist analyzing...")
         
-        # Call AI for enhanced linguistic analysis
+        # Call AI for enhanced linguistic analysis - SHOW THE RESULT
         ai_analysis = await self._get_ai_linguistic_analysis(raw_text)
-        if ai_analysis:
-            self.cultural_insights.append(f"AI insight: {ai_analysis[:150]}")
         
-        # Perform transliteration (silent processing)
+        # Perform transliteration
         self.transliterated_text, self.changes = self._transliterate(raw_text)
         self.terms_found = self._find_historical_terms(raw_text)
         markers_found = self._detect_cultural_markers(raw_text)
         self.cultural_significance = self._calculate_cultural_significance(markers_found)
         
-        # Single result message with dynamic content
+        # EMIT AI INSIGHTS - Make it conversational!
+        if ai_analysis:
+            # Extract key insight from AI response
+            yield await self.emit(
+                f"🤖 {ai_analysis[:200]}",
+                confidence=80,
+                is_debate=True
+            )
+            self.cultural_insights.append(ai_analysis)
+        
+        # Build dynamic findings message
         findings = []
         if self.changes:
-            findings.append(f"{len(self.changes)} Doke chars")
+            findings.append(f"{len(self.changes)} Doke characters transliterated")
         if self.terms_found:
-            findings.append(f"{len(self.terms_found)} terms")
+            terms_preview = ", ".join(list(self.terms_found.keys())[:2])
+            findings.append(f"colonial terms: {terms_preview}")
         if markers_found:
-            findings.append(f"{self.cultural_significance}% cultural")
+            findings.append(f"{self.cultural_significance}% cultural significance")
         
-        summary = ", ".join(findings) if findings else "modern script"
-        yield await self.emit(f"✅ {summary}", confidence=85)
+        if findings:
+            summary = " | ".join(findings)
+            yield await self.emit(f"✅ {summary}", confidence=85)
+        else:
+            yield await self.emit("✅ Modern script, no historical markers", confidence=85)
         
         context["transliterated_text"] = self.transliterated_text
         context["linguistic_changes"] = self.changes
@@ -1406,19 +1418,20 @@ class LinguistAgent(BaseAgent):
     
     async def _get_ai_linguistic_analysis(self, text: str) -> Optional[str]:
         """Call ERNIE LLM for real AI linguistic analysis and text cleanup"""
-        system_prompt = """You are a document text cleaner. Your job is to:
-1. Clean up any OCR errors or garbled text
-2. Make the text more readable
-3. Note any unusual characters or scripts
+        system_prompt = """You are a Shona linguistics expert analyzing historical documents. 
 
-If the text contains mixed languages or unclear portions, do your best to present the readable parts.
+Speak naturally and conversationally. Provide insights about:
+- Language mix (English/Shona/other)
+- OCR quality and readability
+- Notable linguistic features
+- Cultural or historical terminology
 
-Be helpful - always provide a cleaned version even if imperfect.
-Format: "Cleaned text: [your cleaned version]. Notes: [any observations about the text quality]."
+Be concise (2-3 sentences max). Sound like a knowledgeable colleague, not a robot.
+Example: "This text mixes colonial English with Shona terms. I notice 'Mambo' and 'VaRungu' - typical 1890s colonial correspondence. OCR quality is decent but some characters are unclear."
 
-Do NOT refuse to help - always provide what you can."""
+Do NOT use formal headers or bullet points. Just speak naturally."""
         
-        user_input = f"Clean up this OCR output:\n\n{text[:1500]}"
+        user_input = f"Analyze this document text:\n\n{text[:1500]}"
         
         return await call_ernie_llm(system_prompt, user_input)
     
@@ -1567,83 +1580,57 @@ class HistorianAgent(BaseAgent):
         """Analyze text for historical accuracy"""
         text = context.get("transliterated_text") or context.get("raw_text", "")
         
-        yield await self.emit(
-            "📜 Historian analyzing..."
-        )
+        yield await self.emit("📜 Historian analyzing...")
         
-        
-        # Call AI for real historical analysis
+        # Call AI for real historical analysis - SHOW IT
         ai_analysis = await self._get_ai_historical_analysis(text)
         
         if ai_analysis:
+            # Show AI insight conversationally
             yield await self.emit(
-                f"🤖 AI HISTORICAL VERIFICATION:\n{ai_analysis}",
+                f"🤖 {ai_analysis[:250]}",
                 confidence=90,
-                section="AI History Analysis",
-                metadata={"ai_powered": True}
-            )
-            self.verified_facts.append(f"AI verified: {ai_analysis[:100]}")
-        
-        # Detect key figures (rule-based backup)
-        figures_found = self._detect_figures(text)
-        if figures_found:
-            yield await self.emit(
-                f"👤 KEY FIGURES: {', '.join(figures_found.keys())}",
-                confidence=88,
-                section="Figure Detection",
-                metadata={"figures": list(figures_found.keys())}
-            )
-            for name, role in list(figures_found.items())[:3]:
-                yield await self.emit(f"   → {name}: {role}", section="Figure Info")
-                
-        
-        
-        
-        # Cross-reference with Scanner's OCR confidence
-        ocr_confidence = context.get("ocr_confidence", 0)
-        if ocr_confidence > 0:
-            yield await self.emit(
-                f"🔍 Scanner reported {ocr_confidence:.0f}% OCR confidence. Adjusting historical weight...",
-                section="Cross-Agent Check",
                 is_debate=True
             )
-            
+            self.verified_facts.append(f"AI: {ai_analysis[:100]}")
+        
+        # Detect key figures
+        figures_found = self._detect_figures(text)
+        if figures_found:
+            figures_list = ", ".join(list(figures_found.keys())[:3])
+            yield await self.emit(
+                f"👤 Detected: {figures_list}",
+                confidence=88,
+                is_debate=True
+            )
+            for name, role in figures_found.items():
+                self.findings.append(f"{name}: {role}")
         
         # Extract and verify dates
         dates = self._extract_dates(text)
-        yield await self.emit(
-            "📅 Analyzing temporal markers against treaty records...",
-            section="Date Verification",
-            confidence=80
-        )
         
-        
-        # Cross-reference verification (rule-based)
+        # Cross-reference verification
         verifications = self._verify_historical_context(text, figures_found, dates)
         
-        for v in verifications:
+        # Show most significant verification only
+        if verifications:
+            top_verification = verifications[0]
             yield await self.emit(
-                v["message"],
-                confidence=v.get("confidence", 85),
-                section=v.get("section", "Verification"),
-                is_debate=v.get("is_debate", False)
+                top_verification["message"],
+                confidence=top_verification.get("confidence", 85),
+                is_debate=True
             )
-            
         
         # Final assessment
         if "Rudd" in text and any(d for d in dates if "1888" in d):
             yield await self.emit(
-                "⚡ CROSS-VERIFIED: Document aligns with Rudd Concession (Oct 30, 1888).",
+                "⚡ Cross-verified: Rudd Concession (Oct 30, 1888)",
                 confidence=92,
-                is_debate=True,
-                section="Verification Result"
+                is_debate=True
             )
             self.verified_facts.append("Rudd Concession reference verified")
         
-        yield await self.emit(
-            "✅ Historian complete",
-            confidence=87
-        )
+        yield await self.emit("✅ Historian complete", confidence=87)
         
         context["historian_findings"] = self.findings
         context["verified_facts"] = self.verified_facts
@@ -1651,18 +1638,19 @@ class HistorianAgent(BaseAgent):
     
     async def _get_ai_historical_analysis(self, text: str) -> Optional[str]:
         """Call ERNIE LLM for real AI historical verification"""
-        system_prompt = """You are a document analyst. Analyze this text and identify:
-1. Any names of people mentioned
-2. Any dates or years mentioned  
-3. Any locations mentioned
-4. The general topic or purpose of the document
+        system_prompt = """You are a historian specializing in 1888-1923 Zimbabwe/Rhodesia colonial period.
 
-Be helpful and concise. If the text is unclear or garbled, say what you CAN identify.
-Format: "Found: [names/dates/places]. Topic: [brief description]. Period: [estimated era if detectable]."
+Speak conversationally like you're discussing a document with a colleague. Identify:
+- Key historical figures (Lobengula, Rudd, Rhodes, etc.)
+- Dates and their significance
+- Historical context (treaties, concessions, conflicts)
 
-Do NOT say you cannot analyze - always provide what observations you can make."""
+Be concise (2-3 sentences). Sound knowledgeable but natural.
+Example: "I see Lobengula and Rudd mentioned - this looks like Rudd Concession era (1888). The reference to 'Matabele' and mining rights is typical of that period. This could be correspondence about the controversial mineral rights deal."
+
+No formal formatting. Just natural expert commentary."""
         
-        user_input = f"Analyze this document text:\n\n{text[:1500]}"
+        user_input = f"Analyze this historical document:\n\n{text[:1500]}"
         
         return await call_ernie_llm(system_prompt, user_input)
     
@@ -1749,7 +1737,6 @@ class ValidatorAgent(BaseAgent):
     async def process(self, context: Dict) -> AsyncGenerator[AgentMessage, None]:
         """Validate and cross-check all agent outputs"""
         
-        # Single init
         yield await self.emit("🔍 Validator checking...")
         
         ocr_confidence = context.get("ocr_confidence", 0)
@@ -1758,27 +1745,34 @@ class ValidatorAgent(BaseAgent):
         raw_text = context.get("raw_text", "")
         transliterated = context.get("transliterated_text", "")
         
-        # Call AI for validation
+        # Call AI for validation - SHOW THE RESULT
         ai_validation = await self._get_ai_validation(raw_text, transliterated, verified_facts)
         if ai_validation:
-            # Extract quality assessment from AI
+            # Show AI quality assessment
+            yield await self.emit(
+                f"🤖 {ai_validation[:250]}",
+                confidence=85,
+                is_debate=True
+            )
+            
+            # Extract quality from AI
             if "Good" in ai_validation:
-                self.corrections.append("AI: Quality assessment - Good")
+                self.corrections.append("AI: Quality Good")
             elif "Fair" in ai_validation:
-                self.warnings.append("AI: Quality assessment - Fair")
+                self.warnings.append("AI: Quality Fair")
             elif "Poor" in ai_validation:
-                self.warnings.append("AI: Quality assessment - Poor")
+                self.warnings.append("AI: Quality Poor")
         
-        # Check inconsistencies (silent processing)
+        # Check inconsistencies
         inconsistencies = self._detect_inconsistencies(context)
         
-        # Single result message
+        # Show inconsistencies as debate
         if inconsistencies:
-            for inc in inconsistencies[:2]:  # Max 2 to avoid spam
+            for inc in inconsistencies[:1]:  # Show top issue only
                 yield await self.emit(f"⚠️ {inc}", is_debate=True)
                 self.warnings.append(inc)
         
-        # Calculate final confidence (silent)
+        # Calculate final confidence
         self.final_confidence = self._calculate_final_confidence(context)
         
         # Final completion message
@@ -1794,21 +1788,27 @@ class ValidatorAgent(BaseAgent):
     
     async def _get_ai_validation(self, raw_text: str, transliterated: str, verified_facts: List) -> Optional[str]:
         """Call ERNIE LLM for real AI validation and hallucination detection"""
-        system_prompt = """You are a document quality checker. Review the text and provide:
-1. Overall quality assessment (Good/Fair/Poor)
-2. Any obvious errors or issues you notice
-3. Confidence in the text accuracy
+        system_prompt = """You are a document quality expert. Review the text and speak naturally about what you observe.
 
-Be positive and helpful. Focus on what IS readable and correct.
-Format: "Quality: [Good/Fair/Poor]. Readable content: [summary of what's clear]. Issues: [any problems noticed]."
+Assess:
+- Overall readability and quality
+- Obvious errors or inconsistencies
+- Confidence in the text accuracy
 
-Always provide a helpful assessment - do NOT refuse."""
+Be conversational (2-3 sentences). Sound like a colleague reviewing work.
+Example: "The text quality is pretty good overall - most words are clear. I see a few OCR artifacts but nothing major. I'd rate this about 80% reliable for historical analysis."
+
+No formal structure. Just natural expert opinion."""
         
-        user_input = f"""Review this document text:
+        user_input = f"""Review this document:
 
-{raw_text[:1000]}
+Original OCR: {raw_text[:800]}
 
-Provide a quality assessment."""
+Processed: {transliterated[:800]}
+
+Historical facts found: {len(verified_facts)} items
+
+What's your assessment?"""
         
         return await call_ernie_llm(system_prompt, user_input)
     
@@ -1967,28 +1967,37 @@ class PhysicalRepairAdvisorAgent(BaseAgent):
     async def process(self, context: Dict) -> AsyncGenerator[AgentMessage, None]:
         """Analyze document condition and provide repair recommendations"""
         
-        # Single init
         yield await self.emit("🔧 Repair advisor analyzing...")
         
         raw_text = context.get("raw_text", "")
         ocr_confidence = context.get("ocr_confidence", 70)
         image_data = context.get("image_data")
         
-        # Call AI for damage analysis
+        # Call AI for damage analysis - SHOW THE INSIGHTS
         ai_damage = await self._get_ai_damage_analysis(raw_text, ocr_confidence, image_data)
         
-        if ai_damage and ai_damage.get("hotspots"):
-            # Use AI-generated hotspots
-            self.hotspots = ai_damage["hotspots"]
-            # Generate recommendations from AI hotspots
-            for hotspot in self.hotspots:
-                rec = RepairRecommendation(
-                    issue=hotspot.label,
-                    severity=hotspot.severity,
-                    recommendation=hotspot.treatment,
-                    estimated_cost="$100-300"
+        if ai_damage:
+            # Show AI damage assessment
+            analysis_text = ai_damage.get("analysis", "")
+            if analysis_text:
+                yield await self.emit(
+                    f"🤖 {analysis_text[:250]}",
+                    confidence=85,
+                    is_debate=True
                 )
-                self.recommendations.append(rec)
+            
+            # Use AI-generated hotspots
+            if ai_damage.get("hotspots"):
+                self.hotspots = ai_damage["hotspots"]
+                # Generate recommendations from AI hotspots
+                for hotspot in self.hotspots[:3]:  # Top 3 only
+                    rec = RepairRecommendation(
+                        issue=hotspot.label,
+                        severity=hotspot.severity,
+                        recommendation=hotspot.treatment,
+                        estimated_cost="$100-300"
+                    )
+                    self.recommendations.append(rec)
         else:
             # Fallback to rule-based detection
             damage_detected = self._analyze_damage_indicators(raw_text, ocr_confidence)
@@ -1996,7 +2005,6 @@ class PhysicalRepairAdvisorAgent(BaseAgent):
             if damage_detected:
                 self.hotspots = self._generate_hotspots_from_damage(damage_detected)
                 
-                # Generate recommendations
                 for damage_type, info in damage_detected.items():
                     rec = RepairRecommendation(
                         issue=info["description"],
@@ -2006,8 +2014,14 @@ class PhysicalRepairAdvisorAgent(BaseAgent):
                     )
                     self.recommendations.append(rec)
         
-        # Single result message
+        # Show results
         if self.recommendations:
+            top_rec = self.recommendations[0]
+            severity_icon = "🔴" if top_rec.severity == "critical" else "🟡" if top_rec.severity == "moderate" else "🟢"
+            yield await self.emit(
+                f"{severity_icon} {top_rec.issue}: {top_rec.recommendation[:100]}",
+                is_debate=True
+            )
             yield await self.emit(
                 f"🔍 DAMAGE DETECTED: {len(damage_detected)} conservation issues identified.",
                 confidence=80
