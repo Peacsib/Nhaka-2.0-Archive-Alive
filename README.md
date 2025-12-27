@@ -78,21 +78,25 @@ So I built Nhaka 2.0.
 
 Most document restoration tools are black boxes: upload → wait → hope for the best.
 
-**Nhaka 2.0 shows you the thinking.** Five agents with distinct personalities debate in real-time. You see when they disagree. You know exactly what's original text versus AI reconstruction.
+**Nhaka 2.0 shows you the thinking.** Five agents collaborate in a **WhatsApp-style chat interface** where you watch them work together in real-time. You see when they build on each other's findings. You know exactly what's original text versus AI reconstruction.
 
 This transparency isn't just philosophical—it's practical. Users trust AI more when they can see it work, even when it makes mistakes. When the Historian says "this date is wrong" and the Validator flags the disagreement, users know to double-check. That's better than confidently wrong.
 
-### Meet the Agents
+### Meet the Agents (WhatsApp Group Chat Style 💬)
+
+Our agents collaborate like a professional WhatsApp group—familiar, natural, and transparent:
 
 | Agent | Expertise | What You'll See |
 |-------|-----------|-----------------|
-| **Scanner** | Vision & OCR | "I'm 73% confident this word is 'Lobengula'" |
-| **Linguist** | Historical orthography | "That's Doke Shona script—transliterating ɓ→b, ȿ→s" |
-| **Historian** | Fact verification | "Wait, Lobengula died in 1894. This date doesn't match." |
-| **Validator** | Quality control | "Scanner and Historian disagree. Flagging for human review." |
-| **Repair Advisor** | Conservation science | "Water damage in top-left. Recommend deacidification treatment." |
+| **Scanner** 🔬 | Vision & OCR | "I found water damage on the top-right corner" |
+| **Linguist** 📚 | Historical orthography | "I'm seeing colonial-era English mixed with Shona names. The OCR struggled with handwriting - I'll clean that up." |
+| **Historian** 📜 | Fact verification | "This looks like a 1920s letter. Notice the formal British style? I'm detecting some Doke orthography characters." |
+| **Validator** ✓ | Quality control | "Cross-checked both findings. Confidence: 85%" |
+| **Repair Advisor** 🔧 | Conservation science | "I agree with Scanner. This needs calcium phytate treatment." |
 
-Each agent streams their analysis character-by-character. No loading spinners. No waiting. You watch the document come back to life in real-time.
+**🤝 Collaboration Badges:** When agents work together toward the goal, you'll see green "Collaborating" badges—just like a productive team discussion.
+
+Each agent streams their analysis in real-time. No loading spinners. No waiting. You watch the document come back to life through natural conversation.
 
 ---
 
@@ -130,9 +134,9 @@ For archives with multiple documents, Nhaka 2.0 supports batch upload with profe
 
 **PaddleOCR-VL** handles the vision layer—it's specifically trained on degraded documents and handles the chaos of water stains, foxing, and ink bleed better than alternatives I tested. It gives us text extraction *plus* document quality analysis in one pass.
 
-**ERNIE 4.0** powers the four language agents. Each has a different system prompt, different expertise, different personality. They argue. They verify each other. They catch mistakes. The key insight: having agents *disagree* produces better results than any single model working alone.
+**ERNIE 4.5 (21B-A3B)** powers the four language agents. Each has a different system prompt, different expertise, different personality. They collaborate naturally—building on each other's findings, cross-validating results, and working together toward the goal. The key insight: having agents *collaborate* produces better results than any single model working alone.
 
-**ERNIE 4.5** powers the advanced image restoration. It analyzes document damage with AI precision—detecting water stains, foxing, ink bleed, and fading—then guides targeted restoration that competes with Gemini 3 Pro.
+**WhatsApp-Style Interface** makes AI collaboration feel natural and familiar. Everyone knows WhatsApp—2+ billion users worldwide. By using this familiar chat interface, we eliminate the learning curve and build instant trust. Users see agents working together like a professional team discussion.
 
 **Server-Sent Events (SSE)** streams every agent's thinking to the frontend in real-time. This isn't just cosmetic—watching the process unfold helps users spot issues early and builds trust in the output.
 
@@ -214,8 +218,9 @@ For archives with multiple documents, Nhaka 2.0 supports batch upload with profe
 </p>
 
 **PaddleOCR-VL** (Novita API) - Multimodal document understanding  
-**ERNIE 4.0** (Novita API) - Multi-agent language intelligence  
-**OpenCV** - Image preprocessing and enhancement
+**ERNIE 4.5 (21B-A3B)** (Novita API) - Multi-agent language intelligence with 3B active parameters  
+**OpenCV** - Image preprocessing and enhancement  
+**WhatsApp-Style UI** - Familiar chat interface for agent collaboration
 
 #### Backend
 <p align="left">
@@ -313,8 +318,10 @@ Sample colonial-era documents from Zimbabwe National Archives are included in `s
 
 2. **Architectural Innovation**
    - Multi-agent swarm with real-time streaming collaboration
-   - Agents with distinct "personalities" that argue and verify each other
+   - WhatsApp-style chat interface makes AI collaboration natural and familiar
+   - Agents with conversational personalities that collaborate toward shared goals
    - SSE streaming makes the AI reasoning process transparent and debuggable
+   - Before/After image comparison slider shows visual restoration impact
 
 3. **Real-World Impact**
    - Document preservation is a genuine crisis affecting archives globally
@@ -327,11 +334,14 @@ Sample colonial-era documents from Zimbabwe National Archives are included in `s
    - Production-ready with caching, error handling, and export functionality
 
 5. **Polish & Usability**
-   - Working frontend with Agent Theater visualization
+   - WhatsApp-style Agent Theater with familiar chat interface
+   - Before/After image comparison slider with enhancement badges
+   - Smooth progress bar that never jumps backward
+   - Working frontend with batch upload and queue management
    - Working backend with comprehensive API documentation
    - Live demo ready for evaluation
 
-**Key Differentiator:** This isn't just accurate restoration—it's *transparent* restoration. Users see the AI thinking, which builds trust and helps catch errors that black-box systems would hide.
+**Key Differentiator:** This isn't just accurate restoration—it's *transparent* restoration. Users see the AI thinking through a familiar WhatsApp-style interface, which builds trust and helps catch errors that black-box systems would hide.
 
 ---
 

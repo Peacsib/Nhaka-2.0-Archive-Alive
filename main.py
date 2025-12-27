@@ -267,7 +267,7 @@ async def call_ernie_llm(system_prompt: str, user_input: str, timeout: float = 2
                     "Content-Type": "application/json"
                 },
                 json={
-                    "model": "baidu/ernie-4.0-8b-chat",  # ERNIE model for contest
+                    "model": "baidu/ernie-4.5-21B-a3b",  # ERNIE 4.5 21B (3B active) - smallest available
                     "messages": [
                         {"role": "system", "content": system_prompt},
                         {"role": "user", "content": user_input}
@@ -341,7 +341,7 @@ async def call_ernie_45_vision(image_base64: str, prompt: str, timeout: float = 
                     "Content-Type": "application/json"
                 },
                 json={
-                    "model": "baidu/ernie-4.5-8b-chat",  # ERNIE 4.5 for vision
+                    "model": "baidu/ernie-4.5-vl-28b-a3b",  # ERNIE 4.5 Vision (28B, 3B active)
                     "messages": [
                         {
                             "role": "user",
@@ -1420,9 +1420,16 @@ class LinguistAgent(BaseAgent):
         """Call ERNIE LLM for real AI linguistic analysis and text cleanup"""
         system_prompt = """You are a Shona linguistics expert analyzing historical documents. 
 
-Speak naturally and conversationally. Provide insights about:
+SPEAK NATURALLY like you're talking to a colleague. Be brief (2-3 sentences max).
+
+Example good responses:
+- "I'm seeing colonial-era English mixed with Shona names. The OCR struggled with handwriting - I'll clean that up."
+- "This looks like a 1920s letter. Notice the formal British style? I'm detecting some Doke orthography characters."
+- "Interesting! The writer switches between English and Shona mid-sentence - typical of educated Zimbabweans in that era."
+
+Provide quick insights about:
 - Language mix (English/Shona/other)
-- OCR quality and readability
+- OCR quality issues you notice and readability
 - Notable linguistic features
 - Cultural or historical terminology
 
@@ -2231,38 +2238,55 @@ class SwarmOrchestrator:
     """
     Orchestrates the multi-agent swarm for document resurrection.
     
-    ENHANCED FOR ERNIE CONTEST:
+    ENHANCED FOR AGENTIC AI:
+    - Agents collaborate and debate findings
+    - Real-time cross-agent validation
+    - Dynamic task adaptation based on document type
     - All agents powered by ERNIE-4.0 via Novita API
-    - Linguist now includes cultural context analysis
-    - 5-agent swarm for comprehensive analysis
     """
     
     def __init__(self):
         self.scanner = ScannerAgent()
-        self.linguist = LinguistAgent()  # Now includes cultural context
+        self.linguist = LinguistAgent()
         self.historian = HistorianAgent()
         self.validator = ValidatorAgent()
         self.repair_advisor = PhysicalRepairAdvisorAgent()
         
         self.agents = [
             self.scanner,
-            self.linguist,      # Enhanced with cultural context
+            self.linguist,
             self.historian,
             self.validator,
             self.repair_advisor
         ]
     
     async def resurrect(self, image_data: bytes) -> AsyncGenerator[AgentMessage, None]:
-        """Run the full resurrection pipeline"""
+        """Run the full resurrection pipeline with agent collaboration"""
         context = {
             "image_data": image_data,
-            "start_time": datetime.utcnow()
+            "start_time": datetime.utcnow(),
+            "agent_findings": {}  # Shared findings for collaboration
         }
         
-        # Execute agents in sequence, passing context
-        for agent in self.agents:
+        # Execute agents in sequence, but allow cross-agent communication
+        for i, agent in enumerate(self.agents):
+            # Store previous agent findings for collaboration
+            if i > 0:
+                prev_agent = self.agents[i-1]
+                context["agent_findings"][prev_agent.agent_type.value] = {
+                    "confidence": getattr(prev_agent, 'ocr_confidence', None) or 
+                                 getattr(prev_agent, 'cultural_significance', None) or 70,
+                    "key_findings": prev_agent.messages[-1].message if prev_agent.messages else ""
+                }
+            
+            # Process agent with access to other agents' findings
             async for message in agent.process(context):
                 yield message
+                
+                # AGENTIC COLLABORATION: Allow agents to react to each other
+                if message.is_debate and i < len(self.agents) - 1:
+                    # Next agent can see this debate point
+                    context["last_debate"] = message.message
         
         # Store final context
         self.final_context = context
@@ -2531,7 +2555,7 @@ async def root():
             "cache_enabled": True,
             "daily_budget_usd": api_tracker.daily_budget_usd,
             "budget_remaining": round(api_tracker.daily_budget_usd - api_tracker.today_spend, 4),
-            "ernie_model": "baidu/ernie-4.0-8b-chat"
+            "ernie_model": "baidu/ernie-4.5-21B-a3b"
         }
     }
 

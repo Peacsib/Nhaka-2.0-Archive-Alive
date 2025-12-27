@@ -1,12 +1,9 @@
 import { useState, useEffect, useRef } from "react";
-import { AgentMessage, TypingIndicator } from "./AgentMessage";
-import { AgentAvatar, AgentInfo, AgentType, agentConfig } from "./AgentAvatar";
+import { AgentAvatar, AgentType, agentConfig } from "./AgentAvatar";
 import { Card } from "./ui/card";
-import { Badge } from "./ui/badge";
-import { Progress } from "./ui/progress";
 import { ScrollArea } from "./ui/scroll-area";
 import { cn } from "@/lib/utils";
-import { ChevronDown, ChevronUp } from "lucide-react";
+import { Check, CheckCheck } from "lucide-react";
 
 interface Message {
   id: string;
@@ -37,48 +34,38 @@ export interface AgentTheaterProps {
   messages?: AgentMessageData[];
 }
 
-const defaultDemoMessages: Omit<Message, "id" | "timestamp">[] = [
-  { agent: "scanner", message: "🔬 Initializing PaddleOCR-VL forensic scan...", confidence: 0 },
-  { agent: "scanner", message: "📄 Document loaded. Analyzing ink degradation patterns.", documentSection: "Image Analysis" },
-  { agent: "scanner", message: "📝 OCR extraction complete: 450 characters extracted.", confidence: 82 },
-  { agent: "linguist", message: "📚 Initializing Doke Orthography analysis (1931-1955 reference)..." },
-  { agent: "linguist", message: "🔤 Scanning for Pre-1955 Shona phonetic markers...", documentSection: "Orthography Scan", confidence: 75 },
-  { agent: "linguist", message: "📜 HISTORICAL TERMS: 3 colonial-era terms identified.", confidence: 82 },
-  { agent: "historian", message: "📜 Initializing historical analysis engine (1888-1923 database)..." },
-  { agent: "historian", message: "👤 KEY FIGURES: Lobengula, Rudd, Jameson detected.", confidence: 88 },
-  { agent: "historian", message: "⚡ CROSS-VERIFIED: Document aligns with Rudd Concession (Oct 30, 1888).", confidence: 92, isDebate: true },
-  { agent: "validator", message: "🔍 Initializing hallucination detection protocols..." },
-  { agent: "validator", message: "🔄 Cross-referencing Scanner↔Linguist↔Historian outputs...", documentSection: "Cross-Validation" },
-  { agent: "validator", message: "✓ No cross-agent inconsistencies detected.", confidence: 85 },
-  { agent: "validator", message: "📈 FINAL CONFIDENCE SCORE: 78.5%", confidence: 78.5 },
-  { agent: "repair_advisor", message: "🔧 Initializing physical condition assessment..." },
-  { agent: "repair_advisor", message: "🔍 DAMAGE DETECTED: 2 conservation issues identified.", confidence: 80, isDebate: true },
-  { agent: "repair_advisor", message: "   🔴 Iron-gall ink corrosion: Calcium phytate treatment recommended", documentSection: "Repair Recommendation" },
-  { agent: "repair_advisor", message: "📸 DIGITIZATION PRIORITY: HIGH (85%) - Immediate scanning recommended", confidence: 85 },
-];
+// WhatsApp color palette
+const WHATSAPP_COLORS = {
+  background: "#ECE5DD", // Light beige background
+  myMessage: "#DCF8C6", // Light green for sent messages
+  theirMessage: "#FFFFFF", // White for received messages
+  teal: "#075E54", // WhatsApp teal
+  green: "#25D366", // WhatsApp green
+  timestamp: "#667781", // Gray for timestamps
+};
 
-export const AgentTheater = ({ isProcessing, isComplete, onComplete, documentName, onMessagesUpdate, messages: externalMessages }: AgentTheaterProps) => {
+export const AgentTheater = ({ 
+  isProcessing, 
+  isComplete, 
+  onComplete, 
+  documentName, 
+  onMessagesUpdate, 
+  messages: externalMessages 
+}: AgentTheaterProps) => {
   const [messages, setMessages] = useState<Message[]>([]);
-  const [currentTyping, setCurrentTyping] = useState<AgentType | null>(null);
-  const [progress, setProgress] = useState(0);
-  const [activeAgent, setActiveAgent] = useState<AgentType>("scanner");
-  const [mobileTimelineOpen, setMobileTimelineOpen] = useState(false);
+  const [typingAgent, setTypingAgent] = useState<AgentType | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
-  const processedCount = useRef(0);
 
   // Handle external messages from SSE stream
   useEffect(() => {
     if (externalMessages && externalMessages.length > 0) {
-      // Deduplicate messages - skip if message text is very similar to previous
       const seenMessages = new Set<string>();
       const deduplicatedMessages: Message[] = [];
       
       for (let idx = 0; idx < externalMessages.length; idx++) {
         const msg = externalMessages[idx];
-        // Create a key based on agent + first 50 chars of message
         const msgKey = `${msg.agent}-${msg.message.slice(0, 50)}`;
         
-        // Skip duplicate "Initializing" messages from same agent
         if (msg.message.toLowerCase().includes('initializing') && seenMessages.has(`${msg.agent}-init`)) {
           continue;
         }
@@ -86,7 +73,6 @@ export const AgentTheater = ({ isProcessing, isComplete, onComplete, documentNam
           seenMessages.add(`${msg.agent}-init`);
         }
         
-        // Skip if exact same message key seen before
         if (seenMessages.has(msgKey)) {
           continue;
         }
@@ -105,97 +91,18 @@ export const AgentTheater = ({ isProcessing, isComplete, onComplete, documentNam
       
       setMessages(deduplicatedMessages);
       
-      // Update active agent based on last message
-      if (deduplicatedMessages.length > 0) {
-        setActiveAgent(deduplicatedMessages[deduplicatedMessages.length - 1].agent);
+      // Show typing indicator for last agent
+      if (isProcessing && !isComplete && deduplicatedMessages.length > 0) {
+        setTypingAgent(deduplicatedMessages[deduplicatedMessages.length - 1].agent);
+      } else {
+        setTypingAgent(null);
       }
-      
-      // Calculate progress based on agent stages - ONLY INCREASES
-      const agentOrder: AgentType[] = ["scanner", "linguist", "historian", "validator", "repair_advisor"];
-      const lastAgent = deduplicatedMessages[deduplicatedMessages.length - 1]?.agent;
-      const agentIndex = agentOrder.indexOf(lastAgent);
-      
-      // Each agent = 20%, progress within agent based on message count for that agent
-      const agentProgress = agentIndex >= 0 ? ((agentIndex + 1) / agentOrder.length) * 100 : 0;
-      
-      setProgress(prev => {
-        // Never decrease progress
-        const newProgress = isComplete ? 100 : Math.min(agentProgress, 95);
-        return Math.max(prev, newProgress);
-      });
     }
-  }, [externalMessages, isComplete]);
+  }, [externalMessages, isComplete, isProcessing]);
 
-  // Set progress to 100 when complete
-  useEffect(() => {
-    if (isComplete) {
-      setProgress(100);
-      setCurrentTyping(null);
-    }
-  }, [isComplete]);
-
-  // Demo mode - only runs if no external messages
-  useEffect(() => {
-    if (!isProcessing || (externalMessages && externalMessages.length > 0)) {
-      // Only reset if not complete and no messages
-      if (!isProcessing && !isComplete && !externalMessages?.length && messages.length === 0) {
-        setMessages([]);
-        setProgress(0);
-        processedCount.current = 0;
-      }
-      return;
-    }
-
-    const messagesToUse = defaultDemoMessages;
-    let messageIndex = 0;
-    
-    const addNextMessage = () => {
-      if (messageIndex >= messagesToUse.length) {
-        setCurrentTyping(null);
-        setProgress(100);
-        onComplete?.();
-        return;
-      }
-
-      const msg = messagesToUse[messageIndex];
-      setActiveAgent(msg.agent);
-      setCurrentTyping(msg.agent);
-
-      // Show typing for a moment
-      setTimeout(() => {
-        const newMessage: Message = {
-          id: `msg-${messageIndex}`,
-          agent: msg.agent,
-          message: msg.message,
-          timestamp: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
-          confidence: msg.confidence,
-          documentSection: msg.documentSection,
-          isDebate: msg.isDebate,
-        };
-
-        setMessages((prev) => {
-          const updated = [...prev, newMessage];
-          onMessagesUpdate?.(updated);
-          return updated;
-        });
-        setCurrentTyping(null);
-        setProgress(((messageIndex + 1) / messagesToUse.length) * 100);
-        messageIndex++;
-
-        // Schedule next message
-        setTimeout(addNextMessage, 1200 + Math.random() * 800);
-      }, 800 + Math.random() * 400);
-    };
-
-    // Start the sequence
-    const timer = setTimeout(addNextMessage, 500);
-    return () => clearTimeout(timer);
-  }, [isProcessing, isComplete, onComplete, externalMessages, messages.length]);
-
-  // Auto-scroll to bottom when new messages arrive
+  // Auto-scroll to bottom
   useEffect(() => {
     if (scrollRef.current) {
-      // Scroll the parent ScrollArea viewport to show latest messages
       const viewport = scrollRef.current.closest('[data-radix-scroll-area-viewport]');
       if (viewport) {
         requestAnimationFrame(() => {
@@ -203,142 +110,173 @@ export const AgentTheater = ({ isProcessing, isComplete, onComplete, documentNam
         });
       }
     }
-  }, [messages, currentTyping, activeAgent]);
+  }, [messages, typingAgent]);
 
   return (
-    <Card className="overflow-hidden border-2 border-border bg-gradient-to-b from-card to-card/80 backdrop-blur-sm">
-      {/* Header */}
-      <div className="p-4 border-b border-border bg-gradient-to-r from-secondary/30 to-secondary/10">
-        <div className="flex items-center justify-between mb-3">
-          <div className="flex items-center gap-2">
-            <div className="w-3 h-3 rounded-full bg-agent-scanner animate-pulse-soft" />
-            <h3 className="font-serif text-lg font-semibold">Agent Theater</h3>
-          </div>
-          {documentName && (
-            <Badge variant="secondary" className="font-mono text-xs">
-              {documentName}
-            </Badge>
-          )}
+    <Card className="overflow-hidden border-0 shadow-lg">
+      {/* WhatsApp Header */}
+      <div 
+        className="p-3 flex items-center gap-3"
+        style={{ backgroundColor: WHATSAPP_COLORS.teal }}
+      >
+        <div className="w-10 h-10 rounded-full bg-white/20 flex items-center justify-center text-white font-bold">
+          AI
         </div>
-        
-        {/* Progress Bar */}
-        <div className="space-y-1">
-          <div className="flex justify-between text-xs text-muted-foreground">
-            <span>Processing Progress</span>
-            <span>{Math.round(progress)}%</span>
-          </div>
-          <Progress value={progress} className="h-2" />
-        </div>
-      </div>
-
-      {/* Desktop Agent Status Bar */}
-      <div className="hidden md:flex gap-2 p-3 border-b border-border bg-muted/30 overflow-x-auto">
-        {(["scanner", "linguist", "historian", "validator", "repair_advisor"] as AgentType[]).map((agent) => (
-          <div
-            key={agent}
-            className={cn(
-              "flex-1 min-w-0 p-2 rounded-lg transition-all duration-300",
-              activeAgent === agent ? "bg-secondary ring-1 ring-accent shadow-sm" : "opacity-50"
-            )}
-          >
-            <AgentInfo agent={agent} />
-          </div>
-        ))}
-      </div>
-
-      {/* Mobile Agent Timeline Toggle */}
-      <div className="md:hidden border-b border-border">
-        <button
-          onClick={() => setMobileTimelineOpen(!mobileTimelineOpen)}
-          className="w-full flex items-center justify-between p-3 bg-muted/30 hover:bg-muted/50 transition-colors"
-        >
-          <div className="flex items-center gap-2">
-            <div className={cn("w-2.5 h-2.5 rounded-full animate-pulse", `bg-agent-${activeAgent}`)} />
-            <span className="text-sm font-medium capitalize">{activeAgent}</span>
-            {activeAgent && agentConfig[activeAgent] && (
-              <span className="text-xs text-muted-foreground">
-                {agentConfig[activeAgent].role}
-              </span>
-            )}
-          </div>
-          {mobileTimelineOpen ? (
-            <ChevronUp className="w-4 h-4 text-muted-foreground" />
-          ) : (
-            <ChevronDown className="w-4 h-4 text-muted-foreground" />
-          )}
-        </button>
-        
-        {/* Mobile Timeline Expanded */}
-        <div className={cn(
-          "overflow-hidden transition-all duration-300",
-          mobileTimelineOpen ? "max-h-48" : "max-h-0"
-        )}>
-          <div className="p-3 space-y-2 bg-muted/20">
-            {(["scanner", "linguist", "historian", "validator", "repair_advisor"] as AgentType[]).map((agent, idx) => (
-              <div
-                key={agent}
-                className={cn(
-                  "flex items-center gap-3 p-2 rounded-lg transition-all",
-                  activeAgent === agent ? "bg-secondary ring-1 ring-accent/50" : "opacity-60"
+        <div className="flex-1">
+          <h3 className="font-semibold text-white text-sm">Agent Collaboration</h3>
+          <p className="text-xs text-white/80">
+            {isProcessing ? (
+              <>
+                {typingAgent && agentConfig[typingAgent] ? (
+                  <>{agentConfig[typingAgent].name} is typing...</>
+                ) : (
+                  <>5 agents working...</>
                 )}
-              >
-                <div className="relative">
-                  <AgentAvatar agent={agent} size="sm" isActive={activeAgent === agent} />
-                  {idx < 4 && (
-                    <div className="absolute top-full left-1/2 w-0.5 h-3 bg-border -translate-x-1/2" />
-                  )}
-                </div>
-                <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium capitalize">{agent.replace('_', ' ')}</p>
-                  {agentConfig[agent] && (
-                    <p className="text-xs text-muted-foreground truncate">{agentConfig[agent].role}</p>
-                  )}
-                </div>
-                {activeAgent === agent && isProcessing && (
-                  <div className="typing-indicator flex gap-1">
-                    <span className="w-1.5 h-1.5" />
-                    <span className="w-1.5 h-1.5" />
-                    <span className="w-1.5 h-1.5" />
+              </>
+            ) : isComplete ? (
+              <>Analysis complete</>
+            ) : (
+              <>Ready to analyze</>
+            )}
+          </p>
+        </div>
+      </div>
+
+      {/* WhatsApp Background Pattern */}
+      <div 
+        className="relative"
+        style={{ 
+          backgroundColor: WHATSAPP_COLORS.background,
+          backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23d9d9d9' fill-opacity='0.08'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")`,
+        }}
+      >
+        <ScrollArea className="h-[400px] md:h-[500px]">
+          <div className="p-4 space-y-2" ref={scrollRef}>
+            {messages.length === 0 && !isProcessing && (
+              <div className="flex items-center justify-center h-full py-20">
+                <div className="text-center space-y-2">
+                  <div className="w-16 h-16 mx-auto rounded-full bg-white/50 flex items-center justify-center">
+                    <span className="text-3xl">💬</span>
                   </div>
-                )}
+                  <p className="text-sm text-gray-600">
+                    Upload a document to see agents collaborate
+                  </p>
+                </div>
               </div>
-            ))}
+            )}
+
+            {messages.map((msg, idx) => {
+              const agent = agentConfig[msg.agent];
+              const isDebate = msg.isDebate;
+              
+              return (
+                <div key={msg.id} className="animate-in slide-in-from-bottom-2 duration-300">
+                  {/* Agent name (like WhatsApp group chat) */}
+                  <div className="flex items-center gap-2 mb-1 ml-14">
+                    <span 
+                      className="text-xs font-semibold"
+                      style={{ color: agent?.color || WHATSAPP_COLORS.teal }}
+                    >
+                      {agent?.name || msg.agent}
+                    </span>
+                  </div>
+
+                  {/* Message bubble */}
+                  <div className="flex items-start gap-2">
+                    {/* Avatar */}
+                    <div className="flex-shrink-0">
+                      <AgentAvatar agent={msg.agent} size="sm" />
+                    </div>
+
+                    {/* Message content */}
+                    <div className="flex-1 max-w-[85%]">
+                      <div
+                        className={cn(
+                          "rounded-lg px-3 py-2 shadow-sm relative",
+                          isDebate && "ring-2 ring-green-400/50"
+                        )}
+                        style={{
+                          backgroundColor: WHATSAPP_COLORS.theirMessage,
+                        }}
+                      >
+                        {/* Debate badge */}
+                        {isDebate && (
+                          <div className="absolute -top-2 -right-2 bg-green-500 text-white text-[10px] px-2 py-0.5 rounded-full font-semibold">
+                            🤝 Collaborating
+                          </div>
+                        )}
+
+                        {/* Message text */}
+                        <p className="text-sm text-gray-800 leading-relaxed whitespace-pre-wrap break-words">
+                          {msg.message}
+                        </p>
+
+                        {/* Confidence badge */}
+                        {msg.confidence !== undefined && msg.confidence > 0 && (
+                          <div className="mt-1 inline-flex items-center gap-1 text-[10px] text-gray-500">
+                            <span className="font-medium">{msg.confidence.toFixed(0)}% confident</span>
+                          </div>
+                        )}
+
+                        {/* Timestamp and checkmarks */}
+                        <div className="flex items-center justify-end gap-1 mt-1">
+                          <span 
+                            className="text-[11px]"
+                            style={{ color: WHATSAPP_COLORS.timestamp }}
+                          >
+                            {msg.timestamp}
+                          </span>
+                          {idx === messages.length - 1 && isComplete && (
+                            <CheckCheck className="w-3 h-3" style={{ color: "#53BDEB" }} />
+                          )}
+                          {idx < messages.length - 1 && (
+                            <CheckCheck className="w-3 h-3 text-gray-400" />
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+
+            {/* Typing indicator (WhatsApp style) */}
+            {typingAgent && (
+              <div className="flex items-start gap-2 animate-in fade-in duration-300">
+                <div className="flex-shrink-0">
+                  <AgentAvatar agent={typingAgent} size="sm" />
+                </div>
+                <div 
+                  className="rounded-lg px-4 py-3 shadow-sm"
+                  style={{ backgroundColor: WHATSAPP_COLORS.theirMessage }}
+                >
+                  <div className="flex gap-1">
+                    <span className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: "0ms" }} />
+                    <span className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: "150ms" }} />
+                    <span className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: "300ms" }} />
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
-        </div>
+        </ScrollArea>
       </div>
 
-      {/* Messages Area */}
-      <ScrollArea className="h-[300px] md:h-[400px]">
-        <div className="p-4 space-y-3" ref={scrollRef}>
-          {messages.map((msg) => (
-            <div key={msg.id} className={cn(msg.isDebate && "relative")}>
-              {msg.isDebate && (
-                <div className="absolute -left-1 top-0 bottom-0 w-1 bg-gradient-to-b from-accent via-accent to-transparent rounded-full" />
-              )}
-              <AgentMessage
-                agent={msg.agent}
-                message={msg.message}
-                timestamp={msg.timestamp}
-                animateIn
-                delay={0}
-                confidence={msg.confidence}
-                documentSection={msg.documentSection}
-                isDebate={msg.isDebate}
-              />
-            </div>
-          ))}
-          
-          {currentTyping && <TypingIndicator agent={currentTyping} />}
-          
-          {!isProcessing && messages.length === 0 && (
-            <div className="text-center py-16 text-muted-foreground">
-              <p className="font-serif text-lg italic">
-                Upload a document to watch the agents collaborate...
-              </p>
-            </div>
-          )}
+      {/* WhatsApp Footer */}
+      <div 
+        className="p-2 border-t flex items-center gap-2"
+        style={{ backgroundColor: "#F0F0F0" }}
+      >
+        <div className="flex-1 bg-white rounded-full px-4 py-2 text-sm text-gray-500">
+          {isProcessing ? "Agents are analyzing..." : isComplete ? "Analysis complete ✓" : "Waiting for document..."}
         </div>
-      </ScrollArea>
+        <div 
+          className="w-10 h-10 rounded-full flex items-center justify-center"
+          style={{ backgroundColor: WHATSAPP_COLORS.green }}
+        >
+          <span className="text-white text-lg">🤖</span>
+        </div>
+      </div>
     </Card>
   );
 };

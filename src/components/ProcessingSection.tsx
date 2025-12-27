@@ -5,6 +5,7 @@ import { DocumentPreview } from "./DocumentPreview";
 import { AgentTheater } from "./AgentTheater";
 import { ProcessingTimer } from "./ProcessingTimer";
 import { SampleDocuments } from "./SampleDocuments";
+import { ImageComparison } from "./ImageComparison";
 import { Button } from "./ui/button";
 import { Card } from "./ui/card";
 import { Switch } from "./ui/switch";
@@ -629,6 +630,16 @@ export const ProcessingSection = ({ autoStart = false }: ProcessingSectionProps)
                 isProcessing={isProcessing || isBatchProcessing}
                 isComplete={isComplete}
                 currentAgent={currentAgent}
+                className="mt-4"
+              />
+            )}
+
+            {/* Image Comparison - Show after processing */}
+            {isComplete && selectedFile && enhancedImageBase64 && restorationSummary && (
+              <ImageComparison
+                originalImage={URL.createObjectURL(selectedFile)}
+                enhancedImage={`data:image/png;base64,${enhancedImageBase64}`}
+                enhancements={restorationSummary.enhancements_applied}
                 className="mt-4"
               />
             )}

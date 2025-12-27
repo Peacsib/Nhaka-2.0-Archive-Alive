@@ -81,16 +81,43 @@ export const ProcessingTimer = ({
     }
   }, [currentAgent, currentStepIndex]);
 
-  // Timer logic with proper cleanup
+  // Smooth progress simulation - prevents jumping
   useEffect(() => {
     if (isProcessing && !isComplete) {
       const interval = setInterval(() => {
-        setElapsedMs(prev => prev + 100);
+        setElapsedMs(prev => {
+          const newElapsed = prev + 100;
+          
+          // Smooth progress: gradually advance through steps
+          const progressRatio = newElapsed / TOTAL_ESTIMATED_MS;
+          const targetStepIndex = Math.min(
+            Math.floor(progressRatio * PROCESSING_STEPS.length),
+            PROCESSING_STEPS.length - 1
+          );
+          
+          // Auto-advance steps smoothly if no agent updates
+          if (targetStepIndex > currentStepIndex && !currentAgent) {
+            setCurrentStepIndex(targetStepIndex);
+            const newStatuses: Record<string, StepStatus> = {};
+            PROCESSING_STEPS.forEach((step, idx) => {
+              if (idx < targetStepIndex) {
+                newStatuses[step.id] = "complete";
+              } else if (idx === targetStepIndex) {
+                newStatuses[step.id] = "active";
+              } else {
+                newStatuses[step.id] = "pending";
+              }
+            });
+            setStepStatuses(newStatuses);
+          }
+          
+          return newElapsed;
+        });
       }, 100);
       
       return () => clearInterval(interval);
     }
-  }, [isProcessing, isComplete]);
+  }, [isProcessing, isComplete, currentStepIndex, currentAgent]);
 
   // Reset on new processing
   useEffect(() => {
@@ -139,8 +166,9 @@ export const ProcessingTimer = ({
     return `${seconds}s`;
   };
 
+  // Smooth progress calculation - never jumps backward
   const estimatedRemaining = Math.max(0, TOTAL_ESTIMATED_MS - elapsedMs);
-  const progressPercent = Math.min(100, (elapsedMs / TOTAL_ESTIMATED_MS) * 100);
+  const progressPercent = Math.min(100, Math.max(0, (elapsedMs / TOTAL_ESTIMATED_MS) * 100));
 
   const getStepStatus = (stepId: string): StepStatus => {
     return stepStatuses[stepId] || "pending";

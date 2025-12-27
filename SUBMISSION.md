@@ -109,7 +109,7 @@ class BaseAgent:
   - Multimodal OCR trained on degraded documents
   - Handles water stains, foxing, ink bleed better than alternatives
   
-- **ERNIE 4.0** (`baidu/ernie-4.0-8b-chat`) via Novita AI
+- **ERNIE 4.5** (`baidu/ernie-4.5-21B-a3b`) via Novita AI
   - Powers 4 language-based agents
   - Each agent has distinct system prompt and personality
   - Sequential pipeline with context passing
