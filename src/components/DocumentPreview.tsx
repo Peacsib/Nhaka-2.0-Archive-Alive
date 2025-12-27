@@ -62,10 +62,11 @@ export const DocumentPreview = ({ file, isProcessing, isComplete, restoredData, 
   }, [file]);
 
   useEffect(() => {
-    if (isComplete) {
-      setActiveTab("restored");
+    if (isComplete && enhancedImageBase64) {
+      // Auto-switch to enhanced tab when processing completes
+      setActiveTab("enhanced");
     }
-  }, [isComplete]);
+  }, [isComplete, enhancedImageBase64]);
 
   const downloadEnhancedImage = () => {
     if (!enhancedImageBase64) return;
@@ -90,7 +91,30 @@ export const DocumentPreview = ({ file, isProcessing, isComplete, restoredData, 
   const overallConfidence = restoredData?.overallConfidence ?? 89;
 
   return (
-    <Card className="overflow-hidden border-2 border-border">
+    <Card className="overflow-hidden border-0 shadow-lg">
+      {/* WhatsApp-style Teal Header */}
+      <div 
+        className="p-3 flex items-center justify-between"
+        style={{ backgroundColor: "#075E54" }}
+      >
+        <div className="flex items-center gap-3">
+          <div className="w-10 h-10 rounded-full bg-white/20 flex items-center justify-center text-white font-bold">
+            📄
+          </div>
+          <div>
+            <h3 className="font-semibold text-white text-sm">Document Preview</h3>
+            <p className="text-xs text-white/80">
+              {isProcessing ? "Processing..." : isComplete ? "Restoration complete" : file.name}
+            </p>
+          </div>
+        </div>
+        {isComplete && (
+          <Badge className="bg-white/20 text-white border-0">
+            {overallConfidence.toFixed(1)}% Confidence
+          </Badge>
+        )}
+      </div>
+
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
         <div className="p-4 border-b border-border bg-secondary/30">
           <div className="flex items-center justify-between mb-3">
@@ -115,11 +139,6 @@ export const DocumentPreview = ({ file, isProcessing, isComplete, restoredData, 
                   <Download className="w-3 h-3" />
                   Save Enhanced
                 </Button>
-              )}
-              {isComplete && (
-                <Badge variant="default" className="bg-agent-validator">
-                  {overallConfidence.toFixed(1)}% Confidence
-                </Badge>
               )}
             </div>
           </div>

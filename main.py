@@ -1980,6 +1980,9 @@ class PhysicalRepairAdvisorAgent(BaseAgent):
         ocr_confidence = context.get("ocr_confidence", 70)
         image_data = context.get("image_data")
         
+        # Initialize damage_detected
+        damage_detected = {}
+        
         # Call AI for damage analysis - SHOW THE INSIGHTS
         ai_damage = await self._get_ai_damage_analysis(raw_text, ocr_confidence, image_data)
         
@@ -2005,6 +2008,11 @@ class PhysicalRepairAdvisorAgent(BaseAgent):
                         estimated_cost="$100-300"
                     )
                     self.recommendations.append(rec)
+                    # Track damage types for priority calculation
+                    damage_detected[hotspot.damage_type] = {
+                        "severity": hotspot.severity,
+                        "description": hotspot.label
+                    }
         else:
             # Fallback to rule-based detection
             damage_detected = self._analyze_damage_indicators(raw_text, ocr_confidence)
@@ -2029,18 +2037,10 @@ class PhysicalRepairAdvisorAgent(BaseAgent):
                 f"{severity_icon} {top_rec.issue}: {top_rec.recommendation[:100]}",
                 is_debate=True
             )
-            yield await self.emit(
-                f"🔍 DAMAGE DETECTED: {len(damage_detected)} conservation issues identified.",
-                confidence=80
-            )
-            
-            # Show top recommendation only
-            if self.recommendations:
-                top_rec = self.recommendations[0]
-                severity_icon = "🔴" if top_rec.severity == "critical" else "🟡" if top_rec.severity == "moderate" else "🟢"
+            if damage_detected:
                 yield await self.emit(
-                    f"{severity_icon} {top_rec.issue}: {top_rec.recommendation}",
-                    section="Repair Recommendation"
+                    f"🔍 DAMAGE DETECTED: {len(damage_detected)} conservation issues identified.",
+                    confidence=80
                 )
         else:
             yield await self.emit("✓ No critical damage indicators detected.", confidence=85)
