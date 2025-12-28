@@ -2,6 +2,24 @@
 Nhaka 2.0 - Augmented Heritage Document Resurrection System
 Multi-Agent Swarm Architecture with FastAPI
 
+THREE-MODEL ERNIE STRATEGY (Novita AI):
+1. PaddleOCR-VL (0.9B) - Scanner Agent
+   - Ultra-compact SOTA OCR model
+   - 109 languages, optimized for document parsing
+   - Fast inference, minimal resource consumption
+   
+2. ERNIE 4.5 VL 424B A47B - Repair & Enhancement (FLAGSHIP)
+   - 424B total params, 47B active (MoE)
+   - BEST QUALITY vision model for damage assessment
+   - Used for: Document repair analysis, enhancement planning
+   - Precision: Low temperature (0.2), high token limit (600)
+   
+3. ERNIE 4.5 VL 28B A3B Thinking - Agent Reasoning
+   - 28B total params, 3B active (MoE)
+   - THINKING MODE: Shows reasoning process
+   - Used for: Linguist, Historian, Validator agents
+   - Reasoning: Higher temperature (0.7), multi-step analysis
+
 Agents:
 1. Scanner - PaddleOCR-VL via Novita API for document analysis
 2. Linguist - Doke Shona (Pre-1955) transliteration expert
@@ -227,7 +245,9 @@ async def call_ernie_llm(system_prompt: str, user_input: str, max_tokens: int = 
     - Optimized for quick responses
     
     ERNIE INTEGRATION FOR CONTEST:
-    - Uses ERNIE-4.5-21B-A3B for better multilingual understanding
+    - Uses ERNIE-4.5-21B-A3B-Thinking for superior reasoning and multilingual understanding
+    - 21B parameters with 3B active (MoE architecture) - optimal speed/quality balance
+    - Specifically designed for complex thinking and reasoning tasks
     - Optimized for African heritage document analysis
     - Enhanced cultural context processing
     
@@ -273,7 +293,7 @@ async def call_ernie_llm(system_prompt: str, user_input: str, max_tokens: int = 
                     "Content-Type": "application/json"
                 },
                 json={
-                    "model": "baidu/ernie-4.5-21B-a3b",  # ERNIE 4.5 21B (3B active) - optimized for speed
+                    "model": "baidu/ernie-4.5-vl-28b-a3b-thinking",  # ERNIE 4.5 VL 28B A3B Thinking - multimodal reasoning
                     "messages": [
                         {"role": "system", "content": system_prompt},
                         {"role": "user", "content": user_input}
@@ -288,10 +308,10 @@ async def call_ernie_llm(system_prompt: str, user_input: str, max_tokens: int = 
                 data = response.json()
                 result = data["choices"][0]["message"]["content"].strip()
                 
-                # Track usage - updated for ERNIE model
+                # Track usage - updated for ERNIE VL Thinking model
                 usage = data.get("usage", {})
                 api_tracker.record(
-                    model="ernie-4.5-21b-a3b",
+                    model="ernie-4.5-vl-28b-thinking",
                     input_tokens=usage.get("prompt_tokens", 400),
                     output_tokens=usage.get("completion_tokens", max_tokens),
                     cost=estimated_cost
@@ -310,15 +330,19 @@ async def call_ernie_llm(system_prompt: str, user_input: str, max_tokens: int = 
         return None
 
 
-async def call_ernie_45_vision(image_base64: str, prompt: str, timeout: float = 30.0) -> Optional[str]:
+async def call_ernie_45_vision_repair(image_base64: str, prompt: str, timeout: float = 30.0) -> Optional[str]:
     """
-    Call ERNIE 4.5 with vision capabilities for advanced image analysis.
+    Call ERNIE 4.5 VL 424B (BEST QUALITY) for document repair and enhancement analysis.
     
-    ERNIE 4.5 MULTIMODAL FEATURES:
-    - Superior image understanding for document restoration
-    - Detects subtle damage patterns (foxing, water stains, ink bleed)
-    - Provides intelligent enhancement recommendations
-    - Competes with Gemini 3 Pro for document analysis
+    ERNIE 4.5 VL 424B A47B - FLAGSHIP MULTIMODAL MODEL:
+    - 424B total parameters with 47B active (MoE architecture)
+    - BEST-IN-CLASS image understanding for document restoration
+    - Superior damage detection: foxing, water stains, ink bleed, tears
+    - Advanced enhancement recommendations with precision
+    - Competes with GPT-4o Vision at lower cost
+    - Optimal for critical restoration decisions
+    
+    Use this for: Damage assessment, repair planning, quality enhancement
     
     Args:
         image_base64: Base64 encoded image
@@ -333,7 +357,7 @@ async def call_ernie_45_vision(image_base64: str, prompt: str, timeout: float = 
         print("⚠️ NOVITA_AI_API_KEY not set")
         return None
     
-    estimated_cost = 0.008  # Higher cost for vision model
+    estimated_cost = 0.015  # Higher cost for flagship 424B model
     if not api_tracker.can_spend(estimated_cost):
         print(f"⚠️ Daily budget exceeded")
         return None
@@ -347,7 +371,90 @@ async def call_ernie_45_vision(image_base64: str, prompt: str, timeout: float = 
                     "Content-Type": "application/json"
                 },
                 json={
-                    "model": "baidu/ernie-4.5-vl-28b-a3b",  # ERNIE 4.5 Vision (28B, 3B active)
+                    "model": "baidu/ernie-4.5-vl-424b-a47b",  # FLAGSHIP: 424B total, 47B active
+                    "messages": [
+                        {
+                            "role": "user",
+                            "content": [
+                                {"type": "text", "text": prompt},
+                                {
+                                    "type": "image_url",
+                                    "image_url": {
+                                        "url": f"data:image/jpeg;base64,{image_base64}"
+                                    }
+                                }
+                            ]
+                        }
+                    ],
+                    "max_tokens": 600,  # More tokens for detailed repair analysis
+                    "temperature": 0.2  # Lower temp for precise technical analysis
+                }
+            )
+            
+            if response.status_code == 200:
+                data = response.json()
+                result = data["choices"][0]["message"]["content"].strip()
+                
+                usage = data.get("usage", {})
+                api_tracker.record(
+                    model="ernie-4.5-vl-424b",
+                    input_tokens=usage.get("prompt_tokens", 1000),
+                    output_tokens=usage.get("completion_tokens", 400),
+                    cost=estimated_cost
+                )
+                
+                return result
+            else:
+                print(f"⚠️ ERNIE 4.5 VL 424B error: {response.status_code}")
+                return None
+                
+    except Exception as e:
+        print(f"⚠️ ERNIE 4.5 VL 424B exception: {e}")
+        return None
+
+
+async def call_ernie_45_vision_thinking(image_base64: str, prompt: str, timeout: float = 30.0) -> Optional[str]:
+    """
+    Call ERNIE 4.5 VL 28B A3B THINKING for reasoning-based image analysis.
+    
+    ERNIE 4.5 VL 28B A3B THINKING - REASONING SPECIALIST:
+    - 28B parameters with 3B active (MoE architecture)
+    - THINKING MODE: Shows reasoning process for complex analysis
+    - Enhanced multi-step reasoning for document interpretation
+    - Superior for cultural context, historical analysis, validation
+    - Optimized for agent collaboration and debate
+    - Fast inference with deep reasoning capabilities
+    
+    Use this for: Historian analysis, Validator checks, Linguist reasoning
+    
+    Args:
+        image_base64: Base64 encoded image
+        prompt: Analysis prompt
+        timeout: Request timeout
+    
+    Returns:
+        AI analysis response with reasoning
+    """
+    api_key = os.getenv("NOVITA_AI_API_KEY", "")
+    if not api_key:
+        print("⚠️ NOVITA_AI_API_KEY not set")
+        return None
+    
+    estimated_cost = 0.010  # Moderate cost for thinking model
+    if not api_tracker.can_spend(estimated_cost):
+        print(f"⚠️ Daily budget exceeded")
+        return None
+    
+    try:
+        async with httpx.AsyncClient(timeout=timeout) as client:
+            response = await client.post(
+                "https://api.novita.ai/v3/openai/chat/completions",
+                headers={
+                    "Authorization": f"Bearer {api_key}",
+                    "Content-Type": "application/json"
+                },
+                json={
+                    "model": "baidu/ernie-4.5-vl-28b-a3b-thinking",  # THINKING: 28B, 3B active
                     "messages": [
                         {
                             "role": "user",
@@ -363,7 +470,7 @@ async def call_ernie_45_vision(image_base64: str, prompt: str, timeout: float = 
                         }
                     ],
                     "max_tokens": 500,
-                    "temperature": 0.3
+                    "temperature": 0.7  # Higher temp for creative reasoning
                 }
             )
             
@@ -373,20 +480,19 @@ async def call_ernie_45_vision(image_base64: str, prompt: str, timeout: float = 
                 
                 usage = data.get("usage", {})
                 api_tracker.record(
-                    model="ernie-4.5-vision",
+                    model="ernie-4.5-vl-28b-thinking",
                     input_tokens=usage.get("prompt_tokens", 800),
-                    output_tokens=usage.get("completion_tokens", 300),
+                    output_tokens=usage.get("completion_tokens", 350),
                     cost=estimated_cost
                 )
                 
                 return result
             else:
-                print(f"⚠️ ERNIE 4.5 Vision error: {response.status_code}")
+                print(f"⚠️ ERNIE 4.5 VL 28B Thinking error: {response.status_code}")
                 return None
                 
     except Exception as e:
-        print(f"⚠️ ERNIE 4.5 Vision exception: {e}")
-        return None
+        print(f"⚠️ ERNIE 4.5 VL 28B Thinking exception: {e}")
         return None
 
 
@@ -431,7 +537,17 @@ class BaseAgent:
 class ScannerAgent(BaseAgent):
     """
     Eyes of the System - Multimodal OCR Analysis with OpenCV
-    Uses PaddleOCR-VL via Novita API + OpenCV for:
+    Uses PaddleOCR-VL-0.9B via Novita API + OpenCV for:
+    
+    PaddleOCR-VL-0.9B FEATURES:
+    - Ultra-compact 0.9B vision-language model
+    - SOTA performance on OmniDocBench benchmarks
+    - Integrates NaViT-style dynamic resolution visual encoder with ERNIE-4.5-0.3B
+    - Supports 109 languages including Shona
+    - Excels at recognizing complex elements: text, tables, formulas, charts
+    - Fast inference with minimal resource consumption
+    
+    OPENCV ENHANCEMENTS:
     - Document type detection (scan, photo, digital)
     - Proper skew detection and correction (Hough Transform)
     - Perspective correction (4-point transform)
@@ -444,7 +560,7 @@ class ScannerAgent(BaseAgent):
     
     agent_type = AgentType.SCANNER
     name = "Scanner"
-    description = "PaddleOCR-VL multimodal document analyzer with OpenCV enhancement"
+    description = "PaddleOCR-VL-0.9B multimodal document analyzer with OpenCV enhancement"
     
     DOKE_CHARACTERS = ['ɓ', 'ɗ', 'ȿ', 'ɀ', 'ŋ', 'ʃ', 'ʒ', 'ṱ', 'ḓ', 'ḽ', 'ṋ']
     NOVITA_BASE_URL = "https://api.novita.ai/openai"
@@ -794,8 +910,8 @@ class ScannerAgent(BaseAgent):
     
     async def _ernie_45_analyze_damage(self, image_base64: str) -> Optional[Dict]:
         """
-        Use ERNIE 4.5 vision to analyze document damage with AI precision.
-        Competes with Gemini 3 Pro for document understanding.
+        Use ERNIE 4.5 VL 424B (BEST QUALITY) to analyze document damage with AI precision.
+        This is the flagship model for critical restoration decisions.
         """
         prompt = """Analyze this historical document image for restoration. Provide a JSON response with:
 {
@@ -819,7 +935,7 @@ class ScannerAgent(BaseAgent):
 }
 Be precise and technical. Focus on actionable restoration insights."""
 
-        result = await call_ernie_45_vision(image_base64, prompt)
+        result = await call_ernie_45_vision_repair(image_base64, prompt)  # Use 424B flagship model
         if result:
             try:
                 # Try to parse JSON from response
