@@ -258,7 +258,7 @@ async def call_ernie_llm(system_prompt: str, user_input: str, max_tokens: int = 
     4. Usage tracking - visibility into spend
     
     Args:
-        system_prompt: The agent's persona and instructions
+        system_prompt: The agent persona and instructions
         user_input: The text/context to analyze
         max_tokens: Maximum response length (default 200 for speed)
         timeout: Request timeout in seconds (default 20s for demo safety)
@@ -880,14 +880,14 @@ class ScannerAgent(BaseAgent):
             enhancements.append("Yellowing corrected (LAB color balance)")
             enhanced = True
         
-        # 5. Contrast enhancement (ONLY if faded - don't touch good images)
+        # 5. Contrast enhancement (ONLY if faded - do not touch good images)
         is_faded = doc_analysis.get("is_faded", False)
         if is_faded:
             cv2_img = self._enhance_contrast(cv2_img, is_faded)
             enhancements.append("Faded text restored (CLAHE)")
             enhanced = True
         
-        # 6. Sharpening (ONLY if blur detected - don't sharpen good images)
+        # 6. Sharpening (ONLY if blur detected - do not sharpen good images)
         blur_level = doc_analysis.get("blur_level", "none")
         if blur_level in ["high", "moderate"]:
             cv2_img = self._sharpen_image(cv2_img, blur_level)
@@ -1327,7 +1327,7 @@ Instructions:
 2. Transcribe the handwritten words exactly as they appear
 3. For words you cannot read clearly, write [unclear]
 4. Do NOT output any mathematical formulas, LaTeX, or code
-5. Do NOT make up text that isn't visible in the image
+5. Do NOT make up text that is not visible in the image
 6. Output plain text only, preserving line breaks
 
 Begin transcription:"""
@@ -1542,21 +1542,21 @@ class LinguistAgent(BaseAgent):
         """Call ERNIE LLM for real AI linguistic analysis and text cleanup"""
         system_prompt = """You are a Shona linguistics expert in a team meeting analyzing a historical document.
 
-SPEAK NATURALLY like you're in a WhatsApp group chat with colleagues. Be conversational (2-3 sentences).
+SPEAK NATURALLY like you are in a WhatsApp group chat with colleagues. Be conversational (2-3 sentences).
 
 Example natural responses:
-- "Hmm, Scanner got most of it but I'm seeing colonial-era English mixed with Shona names. The handwriting threw off the OCR in a few spots."
-- "Interesting! This looks like a 1920s letter - notice the formal British style? I'm detecting some Doke orthography characters that need updating."
+- "Hmm, Scanner got most of it but I am seeing colonial-era English mixed with Shona names. The handwriting threw off the OCR in a few spots."
+- "Interesting! This looks like a 1920s letter - notice the formal British style? I am detecting some Doke orthography characters that need updating."
 - "The writer switches between English and Shona mid-sentence - typical of educated Zimbabweans back then. Let me clean up those OCR errors."
 
 Your role: Comment on what Scanner found, then add your linguistic insights:
 - Language mix (English/Shona/other)
-- OCR quality and what you'll fix
+- OCR quality and what you will fix
 - Notable linguistic features
 - Cultural or historical terminology
 
-Be specific about what YOU see. Reference Scanner's work. Sound like a colleague in a meeting, not a formal report.
-IMPORTANT: Start by acknowledging Scanner's work, then add YOUR insights.
+Be specific about what YOU see. Reference Scanner work. Sound like a colleague in a meeting, not a formal report.
+IMPORTANT: Start by acknowledging Scanner work, then add YOUR insights."""
         
         user_input = f"What do you observe in this document text? Be specific about what you actually see:\n\n{text[:1500]}"
         
@@ -1596,7 +1596,7 @@ IMPORTANT: Start by acknowledging Scanner's work, then add YOUR insights.
     # === NEW: Cultural Context Methods (ERNIE-powered) ===
     
     async def _get_ernie_cultural_analysis(self, text: str) -> Optional[str]:
-        """Use ERNIE's multilingual capabilities for cultural context analysis"""
+        """Use ERNIE multilingual capabilities for cultural context analysis"""
         system_prompt = """You are an African Heritage and Cultural Context Specialist. Analyze this historical document for:
 
 1. CULTURAL ELEMENTS: Traditional names, customs, social structures
@@ -1767,11 +1767,11 @@ class HistorianAgent(BaseAgent):
         """Call ERNIE LLM for real AI historical verification"""
         system_prompt = """You are a historian in a team meeting, analyzing a colonial-era Zimbabwean document.
 
-SPEAK NATURALLY like you're in a WhatsApp group with colleagues. Be conversational (2-3 sentences).
+SPEAK NATURALLY like you are in a WhatsApp group with colleagues. Be conversational (2-3 sentences).
 
 Example natural responses:
-- "Nice work Scanner! I'm seeing references to the Rudd Concession here - that's 1888. The mention of Lobengula confirms this is from the early colonial period."
-- "Interesting find, Linguist! Those Shona names alongside British officials? Classic 1890s BSAC administration. I'm cross-referencing the dates now."
+- "Nice work Scanner! I am seeing references to the Rudd Concession here - that is 1888. The mention of Lobengula confirms this is from the early colonial period."
+- "Interesting find, Linguist! Those Shona names alongside British officials? Classic 1890s BSAC administration. I am cross-referencing the dates now."
 - "Building on what Scanner extracted - this looks like a post office record from the 1920s. The Queen Elizabeth II reference dates it post-1952 actually."
 
 Your role: Reference what Scanner/Linguist found, then add YOUR historical insights:
@@ -1780,8 +1780,8 @@ Your role: Reference what Scanner/Linguist found, then add YOUR historical insig
 - Historical context (treaties, concessions, conflicts)
 - Cross-verification with known events
 
-Be specific about what YOU see. Acknowledge other agents' work. Sound like a colleague in a meeting.
-IMPORTANT: Start by referencing Scanner's or Linguist's findings, then add YOUR historical context."""
+Be specific about what YOU see. Acknowledge other agents work. Sound like a colleague in a meeting.
+IMPORTANT: Start by referencing Scanner or Linguist findings, then add YOUR historical context."""
         
         user_input = f"What historical elements do you see in this document? Be specific:\n\n{text[:1500]}"
         
@@ -1923,12 +1923,12 @@ class ValidatorAgent(BaseAgent):
         """Call ERNIE LLM for real AI validation and hallucination detection"""
         system_prompt = """You are a quality control expert in a team meeting, reviewing the document analysis.
 
-SPEAK NATURALLY like you're in a WhatsApp group with colleagues. Be conversational (2-3 sentences).
+SPEAK NATURALLY like you are in a WhatsApp group with colleagues. Be conversational (2-3 sentences).
 
 Example natural responses:
-- "Good work team! The text reads pretty smoothly overall. I'm noticing one odd detail though - it uses 'He' for Tandi George, which seems off if Tandi is female."
-- "Nice job Linguist on the cleanup! Historian's dates check out too. I'm giving this a solid 85% confidence - the only issue is some faded text in the bottom corner."
-- "Hmm, not bad Scanner, but I'm seeing some inconsistencies. The handwriting quality varies a lot, so I'd say we're at about 67% confidence on this one."
+- Good work team! The text reads pretty smoothly overall. I am noticing one odd detail though - it uses He for Tandi George, which seems off if Tandi is female.
+- Nice job Linguist on the cleanup! Historian dates check out too. I am giving this a solid 85 percent confidence - the only issue is some faded text in the bottom corner.
+- Hmm, not bad Scanner, but I am seeing some inconsistencies. The handwriting quality varies a lot, so I would say we are at about 67 percent confidence on this one.
 
 Your role: Review what Scanner, Linguist, and Historian found, then give YOUR quality assessment:
 - Overall readability and accuracy
@@ -1936,8 +1936,8 @@ Your role: Review what Scanner, Linguist, and Historian found, then give YOUR qu
 - Your confidence level and why
 - Specific issues (if any)
 
-Be honest and specific. Reference other agents' work. Sound like a colleague doing QA in a meeting.
-IMPORTANT: Start by acknowledging the team's work, then give YOUR specific quality assessment."""
+Be honest and specific. Reference other agents work. Sound like a colleague doing QA in a meeting.
+IMPORTANT: Start by acknowledging the team work, then give YOUR specific quality assessment."""
         
         user_input = f"""Review this document and give your honest assessment:
 
@@ -1947,7 +1947,7 @@ Processed: {transliterated[:800]}
 
 Historical facts found: {len(verified_facts)} items
 
-What's your specific assessment of THIS document?"""
+What is your specific assessment of THIS document?"""
         
         return await call_ernie_llm(system_prompt, user_input, max_tokens=100)  # Very brief
     
@@ -2000,11 +2000,11 @@ What's your specific assessment of THIS document?"""
 RULES:
 1. Fix obvious OCR errors (broken words, misread characters)
 2. Add proper paragraph breaks and formatting
-3. Keep the original meaning - do NOT add content that wasn't there
+3. Keep the original meaning - do NOT add content that was not there
 4. For illegible sections, use: [illegible] or [damaged section]
 5. Preserve any dates, names, and historical references exactly
-6. If it's a letter, format it like a letter (date, salutation, body, signature)
-7. If it's a certificate or official document, format it formally
+6. If it is a letter, format it like a letter (date, salutation, body, signature)
+7. If it is a certificate or official document, format it formally
 8. Output ONLY the restored text - no explanations
 
 The document is from Zimbabwe/Rhodesia (1888-1960), likely in English with possible Shona words."""
@@ -2202,28 +2202,23 @@ class PhysicalRepairAdvisorAgent(BaseAgent):
         """Call Novita LLM for real AI conservation analysis with damage hotspot detection"""
         system_prompt = """You are an Archival Conservator in a team meeting, doing the final damage assessment.
 
-SPEAK NATURALLY like you're in a WhatsApp group with colleagues. Be conversational (2-3 sentences).
+SPEAK NATURALLY like you are in a WhatsApp group with colleagues. Be conversational (2-3 sentences).
 
 Example natural responses:
-- "Thanks for the analysis team! Based on what Scanner found, I'm seeing moderate yellowing across the top-left and top-center regions. There's also some foxing in the center and critical iron-gall ink degradation in the bottom-right corner."
-- "Good work everyone! The document shows minor yellowing from acidity - I'd recommend a magnesium bicarbonate wash. No visible tears or brittleness, which is great news."
-- "Nice job on the OCR, Scanner! I'm detecting water damage in the top-right corner and some fading throughout. Priority: HIGH - we should digitize this ASAP before it degrades further."
+- "Thanks for the analysis team! Based on what Scanner found, I am seeing moderate yellowing across the top-left and top-center regions. There is also some foxing in the center and critical iron-gall ink degradation in the bottom-right corner."
+- "Good work everyone! The document shows minor yellowing from acidity - I would recommend a magnesium bicarbonate wash. No visible tears or brittleness, which is great news."
+- "Nice job on the OCR, Scanner! I am detecting water damage in the top-right corner and some fading throughout. Priority: HIGH - we should digitize this ASAP before it degrades further."
 
-Your role: Review the team's findings, then give YOUR conservation assessment:
+Your role: Review the team findings, then give YOUR conservation assessment:
 - Specific damage types you detect (yellowing, foxing, tears, fading, etc.)
 - Where the damage is located (be specific about regions)
 - Severity levels (critical/moderate/minor)
 - Treatment recommendations
 
-Be specific and professional. Reference the team's work. Sound like a conservator in a meeting.
-IMPORTANT: Start by acknowledging the team's analysis, then give YOUR specific damage assessment and recommendations."""
+Be specific and professional. Reference the team work. Sound like a conservator in a meeting.
+IMPORTANT: Start by acknowledging the team analysis, then give YOUR specific damage assessment and recommendations."""
         
-        user_input = f"""Analyze this historical document:
-
-OCR CONFIDENCE: {ocr_confidence:.1f}%
-TEXT SAMPLE: {text[:800]}
-
-Identify damage types and their approximate regions on the document."""
+        user_input = f"Analyze this historical document: OCR CONFIDENCE: {ocr_confidence:.1f} percent. TEXT SAMPLE: {text[:800]}. Identify damage types and their approximate regions on the document."
         
         response = await call_ernie_llm(system_prompt, user_input, max_tokens=200)  # Moderate length
         
@@ -2419,7 +2414,7 @@ class SwarmOrchestrator:
         # STEP 2: Run Linguist, Historian, Validator in PARALLEL (backend speed)
         # But collect messages to display them naturally (visual collaboration)
         async def run_agent_with_context(agent, agent_name):
-            """Run agent and let it reference other agents' findings"""
+            """Run agent and let it reference other agents findings"""
             messages = []
             
             # Add context about what Scanner found (for natural collaboration)
@@ -2439,7 +2434,7 @@ class SwarmOrchestrator:
         )
         
         # VISUAL COLLABORATION: Display messages in natural order
-        # Make it look like they're responding to each other
+        # Make it look like they are responding to each other
         all_messages = []
         for result in parallel_results:
             if isinstance(result, tuple):
@@ -2479,7 +2474,7 @@ class SwarmOrchestrator:
         async for message in self.repair_advisor.process(context):
             yield message
         
-        # COMPLETION SUMMARY - Let users know we're done!
+        # COMPLETION SUMMARY - Let users know we are done!
         processing_time = (datetime.utcnow() - context["start_time"]).total_seconds()
         final_conf = context.get("final_confidence", 70)
         
@@ -2667,7 +2662,7 @@ class DeduplicationCache:
     """
     Smart caching system for document resurrection results.
     Saves expensive AI computation by caching results based on image hash.
-    Optimized for Zimbabwe's expensive data and slow internet.
+    Optimized for Zimbabwe expensive data and slow internet.
     """
     
     def __init__(self):
@@ -2950,8 +2945,8 @@ async def resurrect_document_stream(file: UploadFile = File(...)):
     Streams agent messages in real-time as they process.
     
     OPTIMIZED FOR RENDER:
-    - Sends keepalive pings every 10s
-    - Has 90s total timeout (Render allows 100s for SSE)
+    - Sends keepalive pings every 10 seconds
+    - Has 90 second total timeout (Render allows 100 seconds for SSE)
     - Graceful error handling
     """
     if not file.content_type or not file.content_type.startswith("image/"):
@@ -3173,7 +3168,7 @@ async def resurrect_batch_stream(files: List[UploadFile] = File(...)):
     """
     SSE streaming batch resurrection - process up to 5 documents with real-time updates.
     
-    Streams progress for each document as it's processed.
+    Streams progress for each document as it is processed.
     """
     MAX_BATCH_SIZE = 5
     
@@ -3349,15 +3344,12 @@ async def list_agents():
 
 @app.get("/cache/stats")
 async def get_cache_stats():
-    """
-    Get deduplication cache statistics.
-    Shows bandwidth savings and hit rate for demo purposes.
-    """
+    """Get deduplication cache statistics."""
     return {
         "feature": "Deduplication Caching",
         "description": "Smart caching for low-bandwidth environments (Zimbabwe optimization)",
         "stats": dedup_cache.get_stats(),
-        "benefit": "Reduces API costs and speeds up repeat document analysis by 90%"
+        "benefit": "Reduces API costs and speeds up repeat document analysis by 90 percent"
     }
 
 
