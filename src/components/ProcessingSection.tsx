@@ -161,7 +161,7 @@ export const ProcessingSection = ({ autoStart = false }: ProcessingSectionProps)
     const formData = new FormData();
     formData.append("file", file);
 
-    const apiUrl = import.meta.env.VITE_API_URL || "https://nhaka-api.onrender.com";
+    const apiUrl = import.meta.env.VITE_API_URL || "https://nhaka-2-0-archive-alive.onrender.com";
     
     try {
       abortControllerRef.current = new AbortController();
