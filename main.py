@@ -1231,8 +1231,8 @@ Be precise and technical. Focus on actionable restoration insights."""
         """Process document image through PaddleOCR-VL with enhanced analysis"""
         image_data = context.get("image_data")
         
-        # Single initialization message
-        yield await self.emit("🔬 Scanner analyzing...")
+        # Natural opening message
+        yield await self.emit("Hey team! Let me take a first look at this document... 📸")
         
         # Analyze image properties
         enhanced_image_data = image_data
@@ -1240,13 +1240,22 @@ Be precise and technical. Focus on actionable restoration insights."""
             try:
                 image = Image.open(io.BytesIO(image_data))
                 
-                # Document analysis (silent - no message spam)
+                # Document analysis
                 self.document_analysis = self._analyze_document_type(image)
+                doc_type = self.document_analysis.get("type", "document")
+                quality_issues = self.document_analysis.get("quality_issues", [])
                 
-                # Apply enhancements (silent)
+                # Tell the team what we see
+                if quality_issues:
+                    issues_text = ", ".join(quality_issues[:2])
+                    yield await self.emit(f"Hmm, this looks like a {doc_type}. I am noticing some issues: {issues_text}. Let me enhance it first...", confidence=70)
+                else:
+                    yield await self.emit(f"Nice! This is a {doc_type} in decent condition. Running my enhancement pipeline...", confidence=80)
+                
+                # Apply enhancements
                 enhanced_image, self.enhancements_applied = self._enhance_image(image, self.document_analysis)
                 
-                # Layout detection (silent)
+                # Layout detection
                 layout = self._detect_layout(enhanced_image)
                 
                 # Convert enhanced image back to bytes for OCR
@@ -1263,8 +1272,12 @@ Be precise and technical. Focus on actionable restoration insights."""
                 context["enhancements_applied"] = self.enhancements_applied
                 context["enhanced_image_base64"] = enhanced_image_b64
                 
+                if self.enhancements_applied:
+                    enhancements_text = ", ".join(self.enhancements_applied[:3])
+                    yield await self.emit(f"Applied: {enhancements_text}. Now extracting the text with PaddleOCR-VL...", confidence=75)
+                
             except Exception as e:
-                yield await self.emit(f"⚠️ Image analysis warning: {str(e)}", confidence=50)
+                yield await self.emit(f"Oops, hit a snag with image analysis: {str(e)}. Trying OCR anyway...", confidence=50)
         
         # Call Novita PaddleOCR-VL with ENHANCED image
         ocr_result = await self._call_paddleocr_vl(enhanced_image_data)
@@ -1273,16 +1286,16 @@ Be precise and technical. Focus on actionable restoration insights."""
             self.raw_text = ocr_result["text"]
             self.ocr_confidence = ocr_result["confidence"]
             
-            # Single result message with dynamic content
-            enhancements_summary = f"{len(self.enhancements_applied)} enhancements" if self.enhancements_applied else "minimal processing"
+            # Natural result message
+            text_preview = self.raw_text[:100].replace('\n', ' ').strip()
             yield await self.emit(
-                f"✅ Extracted {len(self.raw_text)} chars ({enhancements_summary})",
+                f"Got it! Extracted {len(self.raw_text)} characters. Here is a preview: \"{text_preview}...\" Linguist, over to you! 👋",
                 confidence=self.ocr_confidence
             )
         else:
             self.raw_text = ""
             self.ocr_confidence = 0
-            yield await self.emit("❌ OCR failed", confidence=0)
+            yield await self.emit("Ugh, OCR failed on this one. The image might be too damaged. Sorry team! 😔", confidence=0)
             raise Exception("PaddleOCR-VL API failed")
         
         # Store in context for next agents
@@ -1494,10 +1507,10 @@ class LinguistAgent(BaseAgent):
         """Process text for Doke Shona transliteration and cultural context analysis"""
         raw_text = context.get("raw_text", "")
         
-        # Single initialization
-        yield await self.emit("📚 Linguist analyzing...")
+        # Natural opening - acknowledge Scanner
+        yield await self.emit("Thanks Scanner! Let me analyze the language and cultural elements here... 📖")
         
-        # Call AI for enhanced linguistic analysis - SHOW THE RESULT
+        # Call AI for enhanced linguistic analysis
         ai_analysis = await self._get_ai_linguistic_analysis(raw_text)
         
         # Perform transliteration
@@ -1506,31 +1519,24 @@ class LinguistAgent(BaseAgent):
         markers_found = self._detect_cultural_markers(raw_text)
         self.cultural_significance = self._calculate_cultural_significance(markers_found)
         
-        # EMIT AI INSIGHTS - Make it conversational!
+        # Show AI insights naturally
         if ai_analysis:
-            # Extract key insight from AI response
-            yield await self.emit(
-                f"🤖 {ai_analysis[:200]}",
-                confidence=80,
-                is_debate=True
-            )
+            yield await self.emit(ai_analysis, confidence=80, is_debate=True)
             self.cultural_insights.append(ai_analysis)
         
-        # Build dynamic findings message
-        findings = []
+        # Share specific findings conversationally
         if self.changes:
-            findings.append(f"{len(self.changes)} Doke characters transliterated")
-        if self.terms_found:
-            terms_preview = ", ".join(list(self.terms_found.keys())[:2])
-            findings.append(f"colonial terms: {terms_preview}")
-        if markers_found:
-            findings.append(f"{self.cultural_significance}% cultural significance")
+            changes_preview = ", ".join([f"{c[0]}→{c[1]}" for c in self.changes[:2]])
+            yield await self.emit(f"Found some old Doke Shona characters! Converting: {changes_preview}. This helps date the document to pre-1955.", confidence=85)
         
-        if findings:
-            summary = " | ".join(findings)
-            yield await self.emit(f"✅ {summary}", confidence=85)
-        else:
-            yield await self.emit("✅ Modern script, no historical markers", confidence=85)
+        if self.terms_found:
+            terms_list = list(self.terms_found.keys())[:3]
+            yield await self.emit(f"Interesting colonial terminology here: {', '.join(terms_list)}. Historian, you will want to see this! 🔍", confidence=85, is_debate=True)
+        
+        if markers_found and self.cultural_significance > 50:
+            yield await self.emit(f"This document has {self.cultural_significance}% cultural significance for African heritage. Really valuable find!", confidence=88)
+        elif not self.changes and not self.terms_found:
+            yield await self.emit("This appears to be modern script - no historical Shona markers. Passing to Historian for date verification.", confidence=85)
         
         context["transliterated_text"] = self.transliterated_text
         context["linguistic_changes"] = self.changes
@@ -1707,57 +1713,43 @@ class HistorianAgent(BaseAgent):
         """Analyze text for historical accuracy"""
         text = context.get("transliterated_text") or context.get("raw_text", "")
         
-        yield await self.emit("📜 Historian analyzing...")
+        # Natural opening - acknowledge previous agents
+        yield await self.emit("Great work so far team! Now let me dig into the historical context... 📜")
         
-        # Call AI for real historical analysis - SHOW IT
+        # Call AI for real historical analysis
         ai_analysis = await self._get_ai_historical_analysis(text)
         
         if ai_analysis:
-            # Show AI insight conversationally
-            yield await self.emit(
-                f"🤖 {ai_analysis[:250]}",
-                confidence=90,
-                is_debate=True
-            )
+            yield await self.emit(ai_analysis, confidence=90, is_debate=True)
             self.verified_facts.append(f"AI: {ai_analysis[:100]}")
         
         # Detect key figures
         figures_found = self._detect_figures(text)
         if figures_found:
-            figures_list = ", ".join(list(figures_found.keys())[:3])
-            yield await self.emit(
-                f"👤 Detected: {figures_list}",
-                confidence=88,
-                is_debate=True
-            )
-            for name, role in figures_found.items():
+            figures_list = list(figures_found.items())[:2]
+            for name, role in figures_list:
+                yield await self.emit(f"Found a key figure: {name} - {role}. This helps us date and contextualize the document!", confidence=88, is_debate=True)
                 self.findings.append(f"{name}: {role}")
         
         # Extract and verify dates
         dates = self._extract_dates(text)
+        if dates:
+            yield await self.emit(f"Spotted dates: {', '.join(dates[:3])}. Cross-referencing with my historical database...", confidence=85)
         
         # Cross-reference verification
         verifications = self._verify_historical_context(text, figures_found, dates)
         
-        # Show most significant verification only
         if verifications:
             top_verification = verifications[0]
-            yield await self.emit(
-                top_verification["message"],
-                confidence=top_verification.get("confidence", 85),
-                is_debate=True
-            )
+            yield await self.emit(top_verification["message"], confidence=top_verification.get("confidence", 85), is_debate=True)
         
-        # Final assessment
+        # Final assessment with context
         if "Rudd" in text and any(d for d in dates if "1888" in d):
-            yield await self.emit(
-                "⚡ Cross-verified: Rudd Concession (Oct 30, 1888)",
-                confidence=92,
-                is_debate=True
-            )
+            yield await self.emit("This is significant! I can confirm this relates to the Rudd Concession of October 30, 1888 - a pivotal moment in Zimbabwean history. ⚡", confidence=92, is_debate=True)
             self.verified_facts.append("Rudd Concession reference verified")
         
-        yield await self.emit("✅ Historian complete", confidence=87)
+        # Handoff to Validator
+        yield await self.emit(f"Historical analysis complete. Found {len(self.findings)} key references and {len(self.verified_facts)} verified facts. Validator, your turn to check our work! ✅", confidence=87)
         
         context["historian_findings"] = self.findings
         context["verified_facts"] = self.verified_facts
@@ -1870,7 +1862,8 @@ class ValidatorAgent(BaseAgent):
     async def process(self, context: Dict) -> AsyncGenerator[AgentMessage, None]:
         """Validate and cross-check all agent outputs"""
         
-        yield await self.emit("🔍 Validator checking...")
+        # Natural opening
+        yield await self.emit("Alright team, let me review everything and do a quality check... 🔍")
         
         ocr_confidence = context.get("ocr_confidence", 0)
         verified_facts = context.get("verified_facts", [])
@@ -1878,42 +1871,36 @@ class ValidatorAgent(BaseAgent):
         raw_text = context.get("raw_text", "")
         transliterated = context.get("transliterated_text", "")
         
-        # Call AI for validation - SHOW THE RESULT
+        # Call AI for validation
         ai_validation = await self._get_ai_validation(raw_text, transliterated, verified_facts)
         if ai_validation:
-            # Show AI quality assessment
-            yield await self.emit(
-                f"🤖 {ai_validation[:250]}",
-                confidence=85,
-                is_debate=True
-            )
+            yield await self.emit(ai_validation, confidence=85, is_debate=True)
             
-            # Extract quality from AI
-            if "Good" in ai_validation:
+            if "Good" in ai_validation or "good" in ai_validation:
                 self.corrections.append("AI: Quality Good")
-            elif "Fair" in ai_validation:
+            elif "Fair" in ai_validation or "fair" in ai_validation:
                 self.warnings.append("AI: Quality Fair")
-            elif "Poor" in ai_validation:
+            elif "Poor" in ai_validation or "poor" in ai_validation:
                 self.warnings.append("AI: Quality Poor")
         
         # Check inconsistencies
         inconsistencies = self._detect_inconsistencies(context)
         
-        # Show inconsistencies as debate
         if inconsistencies:
-            for inc in inconsistencies[:1]:  # Show top issue only
-                yield await self.emit(f"⚠️ {inc}", is_debate=True)
+            for inc in inconsistencies[:1]:
+                yield await self.emit(f"Heads up - I spotted an issue: {inc}. This might affect accuracy.", is_debate=True)
                 self.warnings.append(inc)
         
         # Calculate final confidence
         self.final_confidence = self._calculate_final_confidence(context)
         
-        # Final completion message
-        level = "HIGH" if self.final_confidence >= 80 else "MEDIUM" if self.final_confidence >= 60 else "LOW"
-        yield await self.emit(
-            f"✅ Confidence: {level} ({self.final_confidence:.0f}%)",
-            confidence=self.final_confidence
-        )
+        # Natural confidence assessment
+        if self.final_confidence >= 80:
+            yield await self.emit(f"Excellent work everyone! I am giving this a HIGH confidence score of {self.final_confidence:.0f}%. The restoration looks solid! 🎯", confidence=self.final_confidence)
+        elif self.final_confidence >= 60:
+            yield await self.emit(f"Pretty good job team. MEDIUM confidence at {self.final_confidence:.0f}%. Some parts are uncertain but overall readable. 👍", confidence=self.final_confidence)
+        else:
+            yield await self.emit(f"This one is tricky. LOW confidence at {self.final_confidence:.0f}%. The document has significant damage or unclear sections. ⚠️", confidence=self.final_confidence)
         
         context["final_confidence"] = self.final_confidence
         context["validator_warnings"] = self.warnings
@@ -2106,7 +2093,8 @@ class PhysicalRepairAdvisorAgent(BaseAgent):
     async def process(self, context: Dict) -> AsyncGenerator[AgentMessage, None]:
         """Analyze document condition and provide repair recommendations"""
         
-        yield await self.emit("🔧 Repair advisor analyzing...")
+        # Natural opening - acknowledge team work
+        yield await self.emit("Last but not least - let me assess the physical condition and preservation needs! 🔧")
         
         raw_text = context.get("raw_text", "")
         ocr_confidence = context.get("ocr_confidence", 70)
@@ -2115,24 +2103,18 @@ class PhysicalRepairAdvisorAgent(BaseAgent):
         # Initialize damage_detected
         damage_detected = {}
         
-        # Call AI for damage analysis - SHOW THE INSIGHTS
+        # Call AI for damage analysis
         ai_damage = await self._get_ai_damage_analysis(raw_text, ocr_confidence, image_data)
         
         if ai_damage:
-            # Show AI damage assessment
             analysis_text = ai_damage.get("analysis", "")
             if analysis_text:
-                yield await self.emit(
-                    f"🤖 {analysis_text[:250]}",
-                    confidence=85,
-                    is_debate=True
-                )
+                yield await self.emit(analysis_text, confidence=85, is_debate=True)
             
             # Use AI-generated hotspots
             if ai_damage.get("hotspots"):
                 self.hotspots = ai_damage["hotspots"]
-                # Generate recommendations from AI hotspots
-                for hotspot in self.hotspots[:3]:  # Top 3 only
+                for hotspot in self.hotspots[:3]:
                     rec = RepairRecommendation(
                         issue=hotspot.label,
                         severity=hotspot.severity,
@@ -2140,7 +2122,6 @@ class PhysicalRepairAdvisorAgent(BaseAgent):
                         estimated_cost="$100-300"
                     )
                     self.recommendations.append(rec)
-                    # Track damage types for priority calculation
                     damage_detected[hotspot.damage_type] = {
                         "severity": hotspot.severity,
                         "description": hotspot.label
@@ -2161,38 +2142,35 @@ class PhysicalRepairAdvisorAgent(BaseAgent):
                     )
                     self.recommendations.append(rec)
         
-        # Show results
+        # Share findings naturally
         if self.recommendations:
             top_rec = self.recommendations[0]
-            severity_icon = "🔴" if top_rec.severity == "critical" else "🟡" if top_rec.severity == "moderate" else "🟢"
-            yield await self.emit(
-                f"{severity_icon} {top_rec.issue}: {top_rec.recommendation[:100]}",
-                is_debate=True
-            )
-            if damage_detected:
-                yield await self.emit(
-                    f"🔍 DAMAGE DETECTED: {len(damage_detected)} conservation issues identified.",
-                    confidence=80
-                )
+            if top_rec.severity == "critical":
+                yield await self.emit(f"⚠️ Critical issue found: {top_rec.issue}. Recommended treatment: {top_rec.recommendation}. This needs attention soon!", confidence=80, is_debate=True)
+            elif top_rec.severity == "moderate":
+                yield await self.emit(f"Found some moderate damage: {top_rec.issue}. Treatment: {top_rec.recommendation}. Not urgent but should be addressed.", confidence=80, is_debate=True)
+            else:
+                yield await self.emit(f"Minor issue: {top_rec.issue}. Easy fix with {top_rec.recommendation}.", confidence=85)
         else:
-            yield await self.emit("✓ No critical damage indicators detected.", confidence=85)
+            yield await self.emit("Good news! No significant damage detected. This document is in decent condition for its age. 👍", confidence=85)
         
-        # Calculate priority (silent)
+        # Calculate priority
         priority = self._calculate_priority(damage_detected, ocr_confidence)
         self.priority_score = priority
         
-        # Single priority message
-        priority_label = "HIGH" if priority > 70 else "MEDIUM" if priority > 40 else "LOW"
-        yield await self.emit(
-            f"📸 DIGITIZATION PRIORITY: {priority_label} ({priority}%) - {'Immediate scanning recommended' if priority > 70 else 'Schedule within 6 months'}",
-            confidence=priority
-        )
+        # Natural priority assessment
+        if priority > 70:
+            yield await self.emit(f"🚨 DIGITIZATION PRIORITY: HIGH ({priority}%). I strongly recommend immediate high-resolution scanning before further degradation!", confidence=priority)
+        elif priority > 40:
+            yield await self.emit(f"📸 DIGITIZATION PRIORITY: MEDIUM ({priority}%). Should be digitized within the next 6 months.", confidence=priority)
+        else:
+            yield await self.emit(f"📁 DIGITIZATION PRIORITY: LOW ({priority}%). Document is stable - can be scheduled for routine digitization.", confidence=priority)
         
-        # Final completion
-        yield await self.emit(
-            f"✅ {len(self.recommendations)} repair recommendations",
-            confidence=82
-        )
+        # Final summary
+        if self.recommendations:
+            yield await self.emit(f"Conservation assessment complete! Found {len(self.recommendations)} items needing attention. The restored document is now ready! 🎉", confidence=82)
+        else:
+            yield await self.emit("Conservation assessment complete! Document is in good shape. Your restored document is ready! 🎉", confidence=85)
         
         context["repair_recommendations"] = self.recommendations
         context["damage_hotspots"] = self.hotspots
@@ -2474,14 +2452,21 @@ class SwarmOrchestrator:
         async for message in self.repair_advisor.process(context):
             yield message
         
-        # COMPLETION SUMMARY - Let users know we are done!
+        # COMPLETION SUMMARY - Natural team wrap-up
         processing_time = (datetime.utcnow() - context["start_time"]).total_seconds()
         final_conf = context.get("final_confidence", 70)
         
-        # Create a completion summary message
+        # Create a natural completion message
+        if final_conf >= 80:
+            completion_text = f"🎉 Amazing work team! We have successfully resurrected this document in {processing_time:.1f} seconds with {final_conf:.0f}% confidence. The restored text is now available - check the Text tab to see our work!"
+        elif final_conf >= 60:
+            completion_text = f"✅ Good job everyone! Document resurrection complete in {processing_time:.1f}s. We achieved {final_conf:.0f}% confidence - some parts were tricky but the restored text is ready for you!"
+        else:
+            completion_text = f"📄 We did our best with this challenging document. Completed in {processing_time:.1f}s with {final_conf:.0f}% confidence. The restored text is available but please review carefully - some sections may need manual verification."
+        
         summary_msg = AgentMessage(
-            agent=AgentType.VALIDATOR,  # Validator announces completion
-            message=f"🎉 Document resurrection complete! Processed in {processing_time:.1f}s with {final_conf:.0f}% confidence. All agents have finished their analysis.",
+            agent=AgentType.VALIDATOR,
+            message=completion_text,
             confidence=final_conf,
             timestamp=datetime.utcnow()
         )
