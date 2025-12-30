@@ -193,9 +193,13 @@ export const ProcessingSection = ({ autoStart = false }: ProcessingSectionProps)
         const lines = chunk.split("\n");
 
         for (const line of lines) {
+          console.log("📨 Raw line:", line);
           if (line.startsWith("data: ")) {
             try {
-              const data = JSON.parse(line.slice(6));
+              const jsonStr = line.slice(6);
+              console.log("📨 JSON string:", jsonStr);
+              const data = JSON.parse(jsonStr);
+              console.log("📨 Parsed data:", data);
               console.log("📨 Stream data received:", data.type, data.agent || "");
               
               if (data.type === "complete") {
