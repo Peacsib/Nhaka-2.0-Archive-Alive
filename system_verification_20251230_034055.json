@@ -1,0 +1,16 @@
+{
+  "timestamp": "2025-12-30T03:40:55.603444",
+  "summary": {
+    "tests_passed": 3,
+    "total_tests": 5,
+    "success_rate": 0.6,
+    "total_time_seconds": 63.18740701675415
+  },
+  "detailed_results": {
+    "Environment Setup": true,
+    "File Structure": true,
+    "Backend Agents": false,
+    "Frontend Slider": true,
+    "Integration": false
+  }
+}

@@ -1,0 +1,260 @@
+{
+  "timestamp": "2025-12-30T04:03:25.724342",
+  "test_type": "detailed_timing_console",
+  "timing_events": [
+    {
+      "type": "UPLOAD",
+      "description": "\ud83d\udcc1 Starting upload of linguist_test.png",
+      "timestamp": "04:03:07.894",
+      "elapsed_seconds": 0.0,
+      "data": null
+    },
+    {
+      "type": "UPLOAD",
+      "description": "\ud83d\udcca Image loaded: 50.4 KB",
+      "timestamp": "04:03:07.894",
+      "elapsed_seconds": 0.0,
+      "data": null
+    },
+    {
+      "type": "UPLOAD",
+      "description": "\ud83e\udd16 Orchestrator initialized, ready to process",
+      "timestamp": "04:03:07.894",
+      "elapsed_seconds": 0.0,
+      "data": null
+    },
+    {
+      "type": "AGENT_START",
+      "description": "\ud83d\ude80 First agent message - agents are working!",
+      "timestamp": "04:03:07.894",
+      "elapsed_seconds": 0.0,
+      "data": null
+    },
+    {
+      "type": "AGENT_MSG",
+      "description": "SCANNER: Hey team! Let me take a first look at this document... \ud83d\udcf8...",
+      "timestamp": "04:03:07.894",
+      "elapsed_seconds": 0.0,
+      "data": null
+    },
+    {
+      "type": "AGENT_MSG",
+      "description": "SCANNER: Nice! This is a photograph in decent condition. Running my enhancement pipeline.... (80.0%)",
+      "timestamp": "04:03:08.310",
+      "elapsed_seconds": 0.416,
+      "data": null
+    },
+    {
+      "type": "AGENT_MSG",
+      "description": "SCANNER: Applied: Noise reduction (NLM denoising). Now extracting the text with PaddleOCR... (75.0%)",
+      "timestamp": "04:03:09.683",
+      "elapsed_seconds": 1.788,
+      "data": null
+    },
+    {
+      "type": "AGENT_MSG",
+      "description": "SCANNER: Got it! Extracted 1059 characters. Here is a preview: \"A. BLADON, C. CLARK AND K... (82.0%)",
+      "timestamp": "04:03:14.376",
+      "elapsed_seconds": 6.482,
+      "data": null
+    },
+    {
+      "type": "AGENT_MSG",
+      "description": "LINGUIST: Thanks Scanner! Let me analyze the language and cultural elements here... \ud83d\udcd6...",
+      "timestamp": "04:03:20.854",
+      "elapsed_seconds": 12.959,
+      "data": null
+    },
+    {
+      "type": "AGENT_MSG",
+      "description": "HISTORIAN: Great work so far team! Now let me dig into the historical context... \ud83d\udcdc...",
+      "timestamp": "04:03:20.967",
+      "elapsed_seconds": 13.072,
+      "data": null
+    },
+    {
+      "type": "AGENT_MSG",
+      "description": "VALIDATOR: Alright team, let me review everything and do a quality check... \ud83d\udd0d...",
+      "timestamp": "04:03:21.069",
+      "elapsed_seconds": 13.175,
+      "data": null
+    },
+    {
+      "type": "AGENT_MSG",
+      "description": "VALIDATOR: Pretty good job team. MEDIUM confidence at 63%. Some parts are uncertain but ove... (62.8%)",
+      "timestamp": "04:03:21.171",
+      "elapsed_seconds": 13.277,
+      "data": null
+    },
+    {
+      "type": "AGENT_MSG",
+      "description": "LINGUIST: This appears to be modern script - no historical Shona markers. Passing to Histo... (85.0%)",
+      "timestamp": "04:03:21.277",
+      "elapsed_seconds": 13.383,
+      "data": null
+    },
+    {
+      "type": "AGENT_MSG",
+      "description": "HISTORIAN: Historical analysis complete. Found 0 key references and 0 verified facts. Valid... (87.0%)",
+      "timestamp": "04:03:21.383",
+      "elapsed_seconds": 13.489,
+      "data": null
+    },
+    {
+      "type": "AGENT_MSG",
+      "description": "REPAIR_ADVISOR: Last but not least - let me assess the physical condition and preservation needs...",
+      "timestamp": "04:03:21.484",
+      "elapsed_seconds": 13.589,
+      "data": null
+    },
+    {
+      "type": "AGENT_MSG",
+      "description": "REPAIR_ADVISOR: Good news! No significant damage detected. This document is in decent condition ... (85.0%)",
+      "timestamp": "04:03:25.310",
+      "elapsed_seconds": 17.416,
+      "data": null
+    },
+    {
+      "type": "AGENT_MSG",
+      "description": "REPAIR_ADVISOR: \ud83d\udcf8 DIGITIZATION PRIORITY: MEDIUM (50%). Should be digitized within the next 6 mon... (50.0%)",
+      "timestamp": "04:03:25.411",
+      "elapsed_seconds": 17.516,
+      "data": null
+    },
+    {
+      "type": "AGENT_MSG",
+      "description": "REPAIR_ADVISOR: Conservation assessment complete! Document is in good shape. Your restored docum... (85.0%)",
+      "timestamp": "04:03:25.513",
+      "elapsed_seconds": 17.619,
+      "data": null
+    },
+    {
+      "type": "AGENT_MSG",
+      "description": "VALIDATOR: \u2705 Good job everyone! Document resurrection complete in 17.7s. We achieved 63% co... (62.8%)",
+      "timestamp": "04:03:25.614",
+      "elapsed_seconds": 17.719,
+      "data": null
+    },
+    {
+      "type": "AGENT_DONE",
+      "description": "\u2705 Agents say they are DONE!",
+      "timestamp": "04:03:25.614",
+      "elapsed_seconds": 17.72,
+      "data": null
+    },
+    {
+      "type": "ENHANCED",
+      "description": "\ud83d\uddbc\ufe0f Enhanced image and text ready",
+      "timestamp": "04:03:25.714",
+      "elapsed_seconds": 17.82,
+      "data": null
+    }
+  ],
+  "agent_messages": [
+    {
+      "agent": "SCANNER",
+      "message": "Hey team! Let me take a first look at this document... \ud83d\udcf8",
+      "confidence": null,
+      "timestamp": 0.0
+    },
+    {
+      "agent": "SCANNER",
+      "message": "Nice! This is a photograph in decent condition. Running my enhancement pipeline...",
+      "confidence": 80.0,
+      "timestamp": 0.41574811935424805
+    },
+    {
+      "agent": "SCANNER",
+      "message": "Applied: Noise reduction (NLM denoising). Now extracting the text with PaddleOCR-VL...",
+      "confidence": 75.0,
+      "timestamp": 1.7880940437316895
+    },
+    {
+      "agent": "SCANNER",
+      "message": "Got it! Extracted 1059 characters. Here is a preview: \"A. BLADON, C. CLARK AND K. MICKEY TABLE II:  Frequency of main spectral peak (Bark), in the six sibi...\" Linguist, over to you! \ud83d\udc4b",
+      "confidence": 82.0,
+      "timestamp": 6.481670618057251
+    },
+    {
+      "agent": "LINGUIST",
+      "message": "Thanks Scanner! Let me analyze the language and cultural elements here... \ud83d\udcd6",
+      "confidence": null,
+      "timestamp": 12.959339141845703
+    },
+    {
+      "agent": "HISTORIAN",
+      "message": "Great work so far team! Now let me dig into the historical context... \ud83d\udcdc",
+      "confidence": null,
+      "timestamp": 13.070932626724243
+    },
+    {
+      "agent": "VALIDATOR",
+      "message": "Alright team, let me review everything and do a quality check... \ud83d\udd0d",
+      "confidence": null,
+      "timestamp": 13.174671173095703
+    },
+    {
+      "agent": "VALIDATOR",
+      "message": "Pretty good job team. MEDIUM confidence at 63%. Some parts are uncertain but overall readable. \ud83d\udc4d",
+      "confidence": 62.800000000000004,
+      "timestamp": 13.276723861694336
+    },
+    {
+      "agent": "LINGUIST",
+      "message": "This appears to be modern script - no historical Shona markers. Passing to Historian for date verification.",
+      "confidence": 85.0,
+      "timestamp": 13.382665157318115
+    },
+    {
+      "agent": "HISTORIAN",
+      "message": "Historical analysis complete. Found 0 key references and 0 verified facts. Validator, your turn to check our work! \u2705",
+      "confidence": 87.0,
+      "timestamp": 13.48884630203247
+    },
+    {
+      "agent": "REPAIR_ADVISOR",
+      "message": "Last but not least - let me assess the physical condition and preservation needs! \ud83d\udd27",
+      "confidence": null,
+      "timestamp": 13.589075326919556
+    },
+    {
+      "agent": "REPAIR_ADVISOR",
+      "message": "Good news! No significant damage detected. This document is in decent condition for its age. \ud83d\udc4d",
+      "confidence": 85.0,
+      "timestamp": 17.415610551834106
+    },
+    {
+      "agent": "REPAIR_ADVISOR",
+      "message": "\ud83d\udcf8 DIGITIZATION PRIORITY: MEDIUM (50%). Should be digitized within the next 6 months.",
+      "confidence": 50.0,
+      "timestamp": 17.516337394714355
+    },
+    {
+      "agent": "REPAIR_ADVISOR",
+      "message": "Conservation assessment complete! Document is in good shape. Your restored document is ready! \ud83c\udf89",
+      "confidence": 85.0,
+      "timestamp": 17.61854314804077
+    },
+    {
+      "agent": "VALIDATOR",
+      "message": "\u2705 Good job everyone! Document resurrection complete in 17.7s. We achieved 63% confidence - some parts were tricky but the restored text is ready for you!",
+      "confidence": 62.800000000000004,
+      "timestamp": 17.719171285629272
+    }
+  ],
+  "slider_timing": {
+    "agents_done": 17.71959924697876,
+    "react_update": 17.81959924697876,
+    "component_mount": 17.869599246978762,
+    "slider_start": 18.669599246978763,
+    "slider_complete": 20.669599246978763,
+    "total_delay": 2.950000000000003
+  },
+  "metrics": {
+    "total_processing_time": 17.82,
+    "message_count": 15,
+    "uniqueness_ratio": 1.0,
+    "agents_start_delay": null,
+    "processing_duration": null
+  }
+}

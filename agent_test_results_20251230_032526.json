@@ -1,0 +1,586 @@
+{
+  "timestamp": "2025-12-30T03:25:26.255545",
+  "total_time_seconds": 94.4011824131012,
+  "api_usage": {
+    "today_spend": 0.048,
+    "budget_remaining": 4.952,
+    "total_calls_today": 16,
+    "budget_percent_used": 1.0
+  },
+  "results": {
+    "bsac_decay": {
+      "name": "bsac_decay",
+      "image_path": "src/assets/BSAC_Archive_Record_1896.png",
+      "image_size_kb": 636.1640625,
+      "total_time_seconds": 28.259294986724854,
+      "agent_timings": {
+        "AgentType.SCANNER": 24.34876036643982,
+        "AgentType.LINGUIST": 0.0,
+        "AgentType.HISTORIAN": 0.0,
+        "AgentType.VALIDATOR": 0.0006766319274902344,
+        "AgentType.REPAIR_ADVISOR": 3.9081180095672607
+      },
+      "message_count": 15,
+      "messages": [
+        {
+          "agent": "scanner",
+          "message": "Hey team! Let me take a first look at this document... \ud83d\udcf8",
+          "confidence": null,
+          "timestamp": "2025-12-30T01:23:52.008781",
+          "is_debate": false
+        },
+        {
+          "agent": "scanner",
+          "message": "Hmm, this looks like a photograph. I am noticing some issues: Document skew: -0.9\u00b0. Let me enhance it first...",
+          "confidence": 70.0,
+          "timestamp": "2025-12-30T01:23:59.180707",
+          "is_debate": false
+        },
+        {
+          "agent": "scanner",
+          "message": "Applied: Noise reduction (NLM denoising). Now extracting the text with PaddleOCR-VL...",
+          "confidence": 75.0,
+          "timestamp": "2025-12-30T01:24:01.258057",
+          "is_debate": false
+        },
+        {
+          "agent": "scanner",
+          "message": "Got it! Extracted 908 characters. Here is a preview: \"Chats respecting the Recognition of a Renewal of the Era (India Company\u2019s Exclusive Privileges, Lond...\" Linguist, over to you! \ud83d\udc4b",
+          "confidence": 82.0,
+          "timestamp": "2025-12-30T01:24:10.066869",
+          "is_debate": false
+        },
+        {
+          "agent": "linguist",
+          "message": "Thanks Scanner! Let me analyze the language and cultural elements here... \ud83d\udcd6",
+          "confidence": null,
+          "timestamp": "2025-12-30T01:24:10.066869",
+          "is_debate": false
+        },
+        {
+          "agent": "historian",
+          "message": "Great work so far team! Now let me dig into the historical context... \ud83d\udcdc",
+          "confidence": null,
+          "timestamp": "2025-12-30T01:24:11.313393",
+          "is_debate": true
+        },
+        {
+          "agent": "validator",
+          "message": "Alright team, let me review everything and do a quality check... \ud83d\udd0d",
+          "confidence": null,
+          "timestamp": "2025-12-30T01:24:12.520324",
+          "is_debate": true
+        },
+        {
+          "agent": "validator",
+          "message": "Pretty good job team. MEDIUM confidence at 63%. Some parts are uncertain but overall readable. \ud83d\udc4d",
+          "confidence": 62.800000000000004,
+          "timestamp": "2025-12-30T01:24:15.956820",
+          "is_debate": false
+        },
+        {
+          "agent": "linguist",
+          "message": "This appears to be modern script - no historical Shona markers. Passing to Historian for date verification.",
+          "confidence": 85.0,
+          "timestamp": "2025-12-30T01:24:16.356544",
+          "is_debate": true
+        },
+        {
+          "agent": "historian",
+          "message": "Historical analysis complete. Found 0 key references and 0 verified facts. Validator, your turn to check our work! \u2705",
+          "confidence": 87.0,
+          "timestamp": "2025-12-30T01:24:16.356544",
+          "is_debate": true
+        },
+        {
+          "agent": "repair_advisor",
+          "message": "Last but not least - let me assess the physical condition and preservation needs! \ud83d\udd27",
+          "confidence": null,
+          "timestamp": "2025-12-30T01:24:16.358268",
+          "is_debate": false
+        },
+        {
+          "agent": "repair_advisor",
+          "message": "Good news! No significant damage detected. This document is in decent condition for its age. \ud83d\udc4d",
+          "confidence": 85.0,
+          "timestamp": "2025-12-30T01:24:20.263861",
+          "is_debate": false
+        },
+        {
+          "agent": "repair_advisor",
+          "message": "\ud83d\udcf8 DIGITIZATION PRIORITY: MEDIUM (50%). Should be digitized within the next 6 months.",
+          "confidence": 50.0,
+          "timestamp": "2025-12-30T01:24:20.263861",
+          "is_debate": false
+        },
+        {
+          "agent": "repair_advisor",
+          "message": "Conservation assessment complete! Document is in good shape. Your restored document is ready! \ud83c\udf89",
+          "confidence": 85.0,
+          "timestamp": "2025-12-30T01:24:20.265674",
+          "is_debate": false
+        },
+        {
+          "agent": "validator",
+          "message": "\u2705 Good job everyone! Document resurrection complete in 28.3s. We achieved 63% confidence - some parts were tricky but the restored text is ready for you!",
+          "confidence": 62.800000000000004,
+          "timestamp": "2025-12-30T01:24:20.266386",
+          "is_debate": false
+        }
+      ],
+      "overall_confidence": 62.800000000000004,
+      "raw_text_length": 908,
+      "transliterated_text_length": 908,
+      "has_enhanced_image": true,
+      "enhanced_image_size_kb": 345.7236328125,
+      "repair_recommendations_count": 0,
+      "damage_hotspots_count": 0,
+      "has_restoration_summary": true,
+      "api_calls_made": {
+        "ai_insights": 0,
+        "dynamic_content": 4,
+        "specific_details": 7,
+        "hardcoded_patterns": 3
+      },
+      "unique_insights": [
+        "Validator: Pretty good job team. MEDIUM confidence at 63%. Some parts are uncertain but overall readable. \ud83d\udc4d...",
+        "Linguist: This appears to be modern script - no historical Shona markers. Passing to Historian for date verifi...",
+        "Repair: Good news! No significant damage detected. This document is in decent condition for its age. \ud83d\udc4d...",
+        "Repair: Conservation assessment complete! Document is in good shape. Your restored document is ready! \ud83c\udf89...",
+        "Validator: \u2705 Good job everyone! Document resurrection complete in 28.3s. We achieved 63% confidence - some part..."
+      ]
+    },
+    "linguist_test": {
+      "name": "linguist_test",
+      "image_path": "src/assets/linguist_test.png",
+      "image_size_kb": 50.4453125,
+      "total_time_seconds": 16.046783685684204,
+      "agent_timings": {
+        "AgentType.SCANNER": 11.85844874382019,
+        "AgentType.LINGUIST": 0.0010373592376708984,
+        "AgentType.HISTORIAN": 0.0010004043579101562,
+        "AgentType.VALIDATOR": 0.0009965896606445312,
+        "AgentType.REPAIR_ADVISOR": 4.180800199508667
+      },
+      "message_count": 15,
+      "messages": [
+        {
+          "agent": "scanner",
+          "message": "Hey team! Let me take a first look at this document... \ud83d\udcf8",
+          "confidence": null,
+          "timestamp": "2025-12-30T01:24:20.428129",
+          "is_debate": false
+        },
+        {
+          "agent": "scanner",
+          "message": "Nice! This is a photograph in decent condition. Running my enhancement pipeline...",
+          "confidence": 80.0,
+          "timestamp": "2025-12-30T01:24:20.473832",
+          "is_debate": false
+        },
+        {
+          "agent": "scanner",
+          "message": "Applied: Noise reduction (NLM denoising). Now extracting the text with PaddleOCR-VL...",
+          "confidence": 75.0,
+          "timestamp": "2025-12-30T01:24:21.832481",
+          "is_debate": false
+        },
+        {
+          "agent": "scanner",
+          "message": "Got it! Extracted 465 characters. Here is a preview: \"<fcel>7. Subtract the X and Y from the numerical value of x 8. Subtract the X to Y, to get this valu...\" Linguist, over to you! \ud83d\udc4b",
+          "confidence": 82.0,
+          "timestamp": "2025-12-30T01:24:25.675560",
+          "is_debate": false
+        },
+        {
+          "agent": "linguist",
+          "message": "Thanks Scanner! Let me analyze the language and cultural elements here... \ud83d\udcd6",
+          "confidence": null,
+          "timestamp": "2025-12-30T01:24:25.675560",
+          "is_debate": false
+        },
+        {
+          "agent": "historian",
+          "message": "Great work so far team! Now let me dig into the historical context... \ud83d\udcdc",
+          "confidence": null,
+          "timestamp": "2025-12-30T01:24:26.988699",
+          "is_debate": true
+        },
+        {
+          "agent": "validator",
+          "message": "Alright team, let me review everything and do a quality check... \ud83d\udd0d",
+          "confidence": null,
+          "timestamp": "2025-12-30T01:24:28.176994",
+          "is_debate": true
+        },
+        {
+          "agent": "validator",
+          "message": "Pretty good job team. MEDIUM confidence at 63%. Some parts are uncertain but overall readable. \ud83d\udc4d",
+          "confidence": 62.800000000000004,
+          "timestamp": "2025-12-30T01:24:31.827898",
+          "is_debate": false
+        },
+        {
+          "agent": "linguist",
+          "message": "This appears to be modern script - no historical Shona markers. Passing to Historian for date verification.",
+          "confidence": 85.0,
+          "timestamp": "2025-12-30T01:24:32.214523",
+          "is_debate": true
+        },
+        {
+          "agent": "historian",
+          "message": "Historical analysis complete. Found 0 key references and 0 verified facts. Validator, your turn to check our work! \u2705",
+          "confidence": 87.0,
+          "timestamp": "2025-12-30T01:24:32.286577",
+          "is_debate": true
+        },
+        {
+          "agent": "repair_advisor",
+          "message": "Last but not least - let me assess the physical condition and preservation needs! \ud83d\udd27",
+          "confidence": null,
+          "timestamp": "2025-12-30T01:24:32.292476",
+          "is_debate": false
+        },
+        {
+          "agent": "repair_advisor",
+          "message": "Minor issue: Ink fading from light exposure. Easy fix with Multispectral imaging for text recovery.",
+          "confidence": 85.0,
+          "timestamp": "2025-12-30T01:24:36.473276",
+          "is_debate": false
+        },
+        {
+          "agent": "repair_advisor",
+          "message": "\ud83d\udcf8 DIGITIZATION PRIORITY: MEDIUM (55%). Should be digitized within the next 6 months.",
+          "confidence": 55.0,
+          "timestamp": "2025-12-30T01:24:36.473276",
+          "is_debate": false
+        },
+        {
+          "agent": "repair_advisor",
+          "message": "Conservation assessment complete! Found 1 items needing attention. The restored document is now ready! \ud83c\udf89",
+          "confidence": 82.0,
+          "timestamp": "2025-12-30T01:24:36.473276",
+          "is_debate": false
+        },
+        {
+          "agent": "validator",
+          "message": "\u2705 Good job everyone! Document resurrection complete in 16.0s. We achieved 63% confidence - some parts were tricky but the restored text is ready for you!",
+          "confidence": 62.800000000000004,
+          "timestamp": "2025-12-30T01:24:36.473276",
+          "is_debate": false
+        }
+      ],
+      "overall_confidence": 62.800000000000004,
+      "raw_text_length": 465,
+      "transliterated_text_length": 465,
+      "has_enhanced_image": true,
+      "enhanced_image_size_kb": 43.5986328125,
+      "repair_recommendations_count": 1,
+      "damage_hotspots_count": 1,
+      "has_restoration_summary": true,
+      "api_calls_made": {
+        "ai_insights": 0,
+        "dynamic_content": 4,
+        "specific_details": 5,
+        "hardcoded_patterns": 3
+      },
+      "unique_insights": [
+        "Validator: Pretty good job team. MEDIUM confidence at 63%. Some parts are uncertain but overall readable. \ud83d\udc4d...",
+        "Linguist: This appears to be modern script - no historical Shona markers. Passing to Historian for date verifi...",
+        "Repair: Conservation assessment complete! Found 1 items needing attention. The restored document is now read...",
+        "Validator: \u2705 Good job everyone! Document resurrection complete in 16.0s. We achieved 63% confidence - some part..."
+      ]
+    },
+    "colonial_cert": {
+      "name": "colonial_cert",
+      "image_path": "src/assets/Colonial_Certificate_1957.jpg",
+      "image_size_kb": 46.09375,
+      "total_time_seconds": 17.83262348175049,
+      "agent_timings": {
+        "AgentType.SCANNER": 14.105822563171387,
+        "AgentType.LINGUIST": 0.00036978721618652344,
+        "AgentType.HISTORIAN": 0.0012278556823730469,
+        "AgentType.VALIDATOR": 0.0,
+        "AgentType.REPAIR_ADVISOR": 3.7219879627227783
+      },
+      "message_count": 15,
+      "messages": [
+        {
+          "agent": "scanner",
+          "message": "Hey team! Let me take a first look at this document... \ud83d\udcf8",
+          "confidence": null,
+          "timestamp": "2025-12-30T01:24:36.477274",
+          "is_debate": false
+        },
+        {
+          "agent": "scanner",
+          "message": "Hmm, this looks like a digital. I am noticing some issues: Document skew: 2.9\u00b0. Let me enhance it first...",
+          "confidence": 70.0,
+          "timestamp": "2025-12-30T01:24:38.133201",
+          "is_debate": false
+        },
+        {
+          "agent": "scanner",
+          "message": "Applied: Skew corrected (2.9\u00b0 via Hough). Now extracting the text with PaddleOCR-VL...",
+          "confidence": 75.0,
+          "timestamp": "2025-12-30T01:24:38.595365",
+          "is_debate": false
+        },
+        {
+          "agent": "scanner",
+          "message": "Got it! Extracted 39 characters. Here is a preview: \"In the name of ValerieBF \u2014You must\u00e9v......\" Linguist, over to you! \ud83d\udc4b",
+          "confidence": 82.0,
+          "timestamp": "2025-12-30T01:24:43.165382",
+          "is_debate": false
+        },
+        {
+          "agent": "linguist",
+          "message": "Thanks Scanner! Let me analyze the language and cultural elements here... \ud83d\udcd6",
+          "confidence": null,
+          "timestamp": "2025-12-30T01:24:43.165382",
+          "is_debate": false
+        },
+        {
+          "agent": "historian",
+          "message": "Great work so far team! Now let me dig into the historical context... \ud83d\udcdc",
+          "confidence": null,
+          "timestamp": "2025-12-30T01:24:44.394581",
+          "is_debate": true
+        },
+        {
+          "agent": "validator",
+          "message": "Alright team, let me review everything and do a quality check... \ud83d\udd0d",
+          "confidence": null,
+          "timestamp": "2025-12-30T01:24:45.558972",
+          "is_debate": true
+        },
+        {
+          "agent": "validator",
+          "message": "Pretty good job team. MEDIUM confidence at 63%. Some parts are uncertain but overall readable. \ud83d\udc4d",
+          "confidence": 62.800000000000004,
+          "timestamp": "2025-12-30T01:24:49.927739",
+          "is_debate": false
+        },
+        {
+          "agent": "linguist",
+          "message": "This appears to be modern script - no historical Shona markers. Passing to Historian for date verification.",
+          "confidence": 85.0,
+          "timestamp": "2025-12-30T01:24:50.340512",
+          "is_debate": true
+        },
+        {
+          "agent": "historian",
+          "message": "Historical analysis complete. Found 0 key references and 0 verified facts. Validator, your turn to check our work! \u2705",
+          "confidence": 87.0,
+          "timestamp": "2025-12-30T01:24:50.583097",
+          "is_debate": true
+        },
+        {
+          "agent": "repair_advisor",
+          "message": "Last but not least - let me assess the physical condition and preservation needs! \ud83d\udd27",
+          "confidence": null,
+          "timestamp": "2025-12-30T01:24:50.587909",
+          "is_debate": false
+        },
+        {
+          "agent": "repair_advisor",
+          "message": "Good news! No significant damage detected. This document is in decent condition for its age. \ud83d\udc4d",
+          "confidence": 85.0,
+          "timestamp": "2025-12-30T01:24:54.307900",
+          "is_debate": false
+        },
+        {
+          "agent": "repair_advisor",
+          "message": "\ud83d\udcf8 DIGITIZATION PRIORITY: MEDIUM (50%). Should be digitized within the next 6 months.",
+          "confidence": 50.0,
+          "timestamp": "2025-12-30T01:24:54.308897",
+          "is_debate": false
+        },
+        {
+          "agent": "repair_advisor",
+          "message": "Conservation assessment complete! Document is in good shape. Your restored document is ready! \ud83c\udf89",
+          "confidence": 85.0,
+          "timestamp": "2025-12-30T01:24:54.308897",
+          "is_debate": false
+        },
+        {
+          "agent": "validator",
+          "message": "\u2705 Good job everyone! Document resurrection complete in 17.8s. We achieved 63% confidence - some parts were tricky but the restored text is ready for you!",
+          "confidence": 62.800000000000004,
+          "timestamp": "2025-12-30T01:24:54.309898",
+          "is_debate": false
+        }
+      ],
+      "overall_confidence": 62.800000000000004,
+      "raw_text_length": 39,
+      "transliterated_text_length": 39,
+      "has_enhanced_image": true,
+      "enhanced_image_size_kb": 381.5595703125,
+      "repair_recommendations_count": 0,
+      "damage_hotspots_count": 0,
+      "has_restoration_summary": true,
+      "api_calls_made": {
+        "ai_insights": 0,
+        "dynamic_content": 4,
+        "specific_details": 7,
+        "hardcoded_patterns": 3
+      },
+      "unique_insights": [
+        "Validator: Pretty good job team. MEDIUM confidence at 63%. Some parts are uncertain but overall readable. \ud83d\udc4d...",
+        "Linguist: This appears to be modern script - no historical Shona markers. Passing to Historian for date verifi...",
+        "Repair: Good news! No significant damage detected. This document is in decent condition for its age. \ud83d\udc4d...",
+        "Repair: Conservation assessment complete! Document is in good shape. Your restored document is ready! \ud83c\udf89...",
+        "Validator: \u2705 Good job everyone! Document resurrection complete in 17.8s. We achieved 63% confidence - some part..."
+      ]
+    },
+    "shanghai_postcard": {
+      "name": "shanghai_postcard",
+      "image_path": "src/assets/Salisbury to China.webp",
+      "image_size_kb": 423.19921875,
+      "total_time_seconds": 31.815109968185425,
+      "agent_timings": {
+        "AgentType.SCANNER": 27.599611043930054,
+        "AgentType.LINGUIST": 0.0,
+        "AgentType.HISTORIAN": 0.0006351470947265625,
+        "AgentType.VALIDATOR": 0.0010099411010742188,
+        "AgentType.REPAIR_ADVISOR": 4.212608814239502
+      },
+      "message_count": 16,
+      "messages": [
+        {
+          "agent": "scanner",
+          "message": "Hey team! Let me take a first look at this document... \ud83d\udcf8",
+          "confidence": null,
+          "timestamp": "2025-12-30T01:24:54.381579",
+          "is_debate": false
+        },
+        {
+          "agent": "scanner",
+          "message": "Hmm, this looks like a photograph. I am noticing some issues: Paper yellowing (level: 18). Let me enhance it first...",
+          "confidence": 70.0,
+          "timestamp": "2025-12-30T01:25:00.056548",
+          "is_debate": false
+        },
+        {
+          "agent": "scanner",
+          "message": "Applied: Yellowing corrected (LAB color balance), Noise reduction (NLM denoising). Now extracting the text with PaddleOCR-VL...",
+          "confidence": 75.0,
+          "timestamp": "2025-12-30T01:25:08.373881",
+          "is_debate": false
+        },
+        {
+          "agent": "scanner",
+          "message": "Got it! Extracted 62 characters. Here is a preview: \"\"Thedots stand out on the paper,\" meaning \"\" Thisrev Royal<nl>...\" Linguist, over to you! \ud83d\udc4b",
+          "confidence": 82.0,
+          "timestamp": "2025-12-30T01:25:15.538785",
+          "is_debate": false
+        },
+        {
+          "agent": "linguist",
+          "message": "Thanks Scanner! Let me analyze the language and cultural elements here... \ud83d\udcd6",
+          "confidence": null,
+          "timestamp": "2025-12-30T01:25:15.540827",
+          "is_debate": false
+        },
+        {
+          "agent": "historian",
+          "message": "Great work so far team! Now let me dig into the historical context... \ud83d\udcdc",
+          "confidence": null,
+          "timestamp": "2025-12-30T01:25:16.727750",
+          "is_debate": true
+        },
+        {
+          "agent": "validator",
+          "message": "Alright team, let me review everything and do a quality check... \ud83d\udd0d",
+          "confidence": null,
+          "timestamp": "2025-12-30T01:25:18.115351",
+          "is_debate": true
+        },
+        {
+          "agent": "validator",
+          "message": "Pretty good job team. MEDIUM confidence at 63%. Some parts are uncertain but overall readable. \ud83d\udc4d",
+          "confidence": 62.800000000000004,
+          "timestamp": "2025-12-30T01:25:21.556557",
+          "is_debate": false
+        },
+        {
+          "agent": "historian",
+          "message": "Hey team, thanks for the find.\n\nThat initial",
+          "confidence": 90.0,
+          "timestamp": "2025-12-30T01:25:21.973159",
+          "is_debate": true
+        },
+        {
+          "agent": "historian",
+          "message": "Historical analysis complete. Found 0 key references and 1 verified facts. Validator, your turn to check our work! \u2705",
+          "confidence": 87.0,
+          "timestamp": "2025-12-30T01:25:21.973159",
+          "is_debate": false
+        },
+        {
+          "agent": "linguist",
+          "message": "This appears to be modern script - no historical Shona markers. Passing to Historian for date verification.",
+          "confidence": 85.0,
+          "timestamp": "2025-12-30T01:25:21.981189",
+          "is_debate": true
+        },
+        {
+          "agent": "repair_advisor",
+          "message": "Last but not least - let me assess the physical condition and preservation needs! \ud83d\udd27",
+          "confidence": null,
+          "timestamp": "2025-12-30T01:25:21.983070",
+          "is_debate": false
+        },
+        {
+          "agent": "repair_advisor",
+          "message": "Good news! No significant damage detected. This document is in decent condition for its age. \ud83d\udc4d",
+          "confidence": 85.0,
+          "timestamp": "2025-12-30T01:25:26.192684",
+          "is_debate": false
+        },
+        {
+          "agent": "repair_advisor",
+          "message": "\ud83d\udcf8 DIGITIZATION PRIORITY: MEDIUM (50%). Should be digitized within the next 6 months.",
+          "confidence": 50.0,
+          "timestamp": "2025-12-30T01:25:26.193677",
+          "is_debate": false
+        },
+        {
+          "agent": "repair_advisor",
+          "message": "Conservation assessment complete! Document is in good shape. Your restored document is ready! \ud83c\udf89",
+          "confidence": 85.0,
+          "timestamp": "2025-12-30T01:25:26.194682",
+          "is_debate": false
+        },
+        {
+          "agent": "validator",
+          "message": "\u2705 Good job everyone! Document resurrection complete in 31.8s. We achieved 63% confidence - some parts were tricky but the restored text is ready for you!",
+          "confidence": 62.800000000000004,
+          "timestamp": "2025-12-30T01:25:26.195679",
+          "is_debate": false
+        }
+      ],
+      "overall_confidence": 62.800000000000004,
+      "raw_text_length": 62,
+      "transliterated_text_length": 62,
+      "has_enhanced_image": true,
+      "enhanced_image_size_kb": 1390.9541015625,
+      "repair_recommendations_count": 0,
+      "damage_hotspots_count": 0,
+      "has_restoration_summary": true,
+      "api_calls_made": {
+        "ai_insights": 0,
+        "dynamic_content": 4,
+        "specific_details": 8,
+        "hardcoded_patterns": 3
+      },
+      "unique_insights": [
+        "Validator: Pretty good job team. MEDIUM confidence at 63%. Some parts are uncertain but overall readable. \ud83d\udc4d...",
+        "Linguist: This appears to be modern script - no historical Shona markers. Passing to Historian for date verifi...",
+        "Repair: Good news! No significant damage detected. This document is in decent condition for its age. \ud83d\udc4d...",
+        "Repair: Conservation assessment complete! Document is in good shape. Your restored document is ready! \ud83c\udf89...",
+        "Validator: \u2705 Good job everyone! Document resurrection complete in 31.8s. We achieved 63% confidence - some part..."
+      ]
+    }
+  }
+}

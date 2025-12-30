@@ -1,0 +1,67 @@
+{
+  "timestamp": "2025-12-30T04:08:07.011480",
+  "test_type": "precision_timing",
+  "events": {
+    "IMPORT_COMPLETE": {
+      "timestamp": "04:07:48.818",
+      "elapsed_seconds": 0.0,
+      "description": "SwarmOrchestrator imported"
+    },
+    "IMAGE_LOADED": {
+      "timestamp": "04:07:48.818",
+      "elapsed_seconds": 0.0,
+      "description": "Image loaded (51656 bytes)"
+    },
+    "ORCHESTRATOR_READY": {
+      "timestamp": "04:07:48.818",
+      "elapsed_seconds": 0.0,
+      "description": "Orchestrator created"
+    },
+    "PROCESSING_START": {
+      "timestamp": "04:07:48.818",
+      "elapsed_seconds": 0.0,
+      "description": "Starting document resurrection"
+    },
+    "AGENTS_START": {
+      "timestamp": "04:07:48.818",
+      "elapsed_seconds": 0.0,
+      "description": "First agent message: AgentType.SCANNER"
+    },
+    "AGENTS_DONE": {
+      "timestamp": "04:08:03.958",
+      "elapsed_seconds": 15.140098333358765,
+      "description": "Agents completed: AgentType.VALIDATOR"
+    },
+    "REACT_UPDATE": {
+      "timestamp": "04:08:04.062",
+      "elapsed_seconds": 15.24480652809143,
+      "description": "React state updated (isComplete = true)"
+    },
+    "COMPONENT_MOUNT": {
+      "timestamp": "04:08:04.126",
+      "elapsed_seconds": 15.308414936065674,
+      "description": "ImageComparison component mounted"
+    },
+    "SLIDER_START": {
+      "timestamp": "04:08:04.930",
+      "elapsed_seconds": 16.112071752548218,
+      "description": "Slider animation STARTS (0% \u2192 100%)"
+    },
+    "SLIDER_COMPLETE": {
+      "timestamp": "04:08:07.004",
+      "elapsed_seconds": 18.186015844345093,
+      "description": "Slider animation COMPLETE (100% enhanced visible)"
+    }
+  },
+  "durations": {
+    "agent_processing": 15.140098333358765,
+    "slider_delay": 0.9719734191894531,
+    "animation_duration": 2.073944091796875,
+    "total_ux_time": 18.186015844345093,
+    "total_delay": 3.045917510986328
+  },
+  "assessment": {
+    "slider_delay_rating": "excellent",
+    "total_ux_rating": "ok"
+  }
+}

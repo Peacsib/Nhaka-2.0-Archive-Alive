@@ -196,6 +196,10 @@ export const ProcessingSection = ({ autoStart = false }: ProcessingSectionProps)
               
               if (data.type === "complete") {
                 const completeData = data as StreamCompleteData;
+                // CRITICAL FIX: Set completion state immediately when receiving completion signal
+                setIsComplete(true);
+                setIsProcessing(false);
+                setCurrentAgent(undefined);
                 return completeData.result;
               } else {
                 const msgData = data as AgentMessageData;
@@ -292,6 +296,10 @@ export const ProcessingSection = ({ autoStart = false }: ProcessingSectionProps)
     const total = queuedFiles.length;
     
     if (completed === total) {
+      // CRITICAL FIX: Set completion state for batch processing
+      setIsComplete(true);
+      setIsProcessing(false);
+      setCurrentAgent(undefined);
       toast.success(`Batch complete! ${completed}/${total} documents processed`);
     }
   }, [queuedFiles, isBatchPaused, currentBatchIndex, processFile]);
@@ -431,11 +439,17 @@ export const ProcessingSection = ({ autoStart = false }: ProcessingSectionProps)
           description: `Processing time: ${(result.processing_time_ms / 1000).toFixed(1)}s`,
           duration: 4000,
         });
+      } else {
+        // CRITICAL FIX: Handle abort case - processFile returned null
+        setIsProcessing(false);
+        setCurrentAgent(undefined);
+        // Don't set isComplete to true for aborted processing
       }
     } catch (error) {
       console.error("Processing error:", error);
       toast.error("Failed to process document. Is the backend running?");
       setIsProcessing(false);
+      setCurrentAgent(undefined);
     }
   };
 

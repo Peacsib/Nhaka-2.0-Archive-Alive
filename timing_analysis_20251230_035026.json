@@ -1,0 +1,36 @@
+{
+  "timestamp": "2025-12-30T03:50:26.926823",
+  "test_type": "real_time_flow",
+  "backend_events": [
+    {
+      "timestamp": "03:50:25.785",
+      "elapsed_seconds": 0.0,
+      "event_type": "UPLOAD",
+      "description": "Starting upload of linguist_test.png",
+      "data": null
+    },
+    {
+      "timestamp": "03:50:25.785",
+      "elapsed_seconds": 0.0,
+      "event_type": "UPLOAD",
+      "description": "Sending to https://nhaka-2-0-archive-alive.onrender.com/resurrect/stream",
+      "data": null
+    },
+    {
+      "timestamp": "03:50:26.905",
+      "elapsed_seconds": 1.12,
+      "event_type": "ERROR",
+      "description": "HTTP 400: {\"detail\":\"File must be an image\"}",
+      "data": null
+    }
+  ],
+  "agent_messages": [],
+  "frontend_timing": null,
+  "summary": {
+    "total_events": 3,
+    "processing_time": 1.12,
+    "agent_message_count": 0,
+    "enhanced_image_received": false,
+    "processing_complete": false
+  }
+}
