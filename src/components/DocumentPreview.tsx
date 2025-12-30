@@ -52,6 +52,16 @@ export const DocumentPreview = ({ file, isProcessing, isComplete, restoredData, 
   const [activeTab, setActiveTab] = useState<string>("original");
   const [showComparison, setShowComparison] = useState(false);
 
+  // Debug logging
+  console.log("📋 DocumentPreview props:", {
+    file: file?.name,
+    isProcessing,
+    isComplete,
+    hasRestoredData: !!restoredData,
+    hasEnhancedImage: !!enhancedImageBase64,
+    enhancedImageLength: enhancedImageBase64?.length
+  });
+
   useEffect(() => {
     if (file && file.type.startsWith("image/")) {
       // Always use actual file URL
@@ -63,8 +73,11 @@ export const DocumentPreview = ({ file, isProcessing, isComplete, restoredData, 
 
   useEffect(() => {
     if (isComplete && enhancedImageBase64) {
+      console.log("🔄 Auto-switching to enhanced tab!");
       // Auto-switch to enhanced tab when processing completes
       setActiveTab("enhanced");
+    } else {
+      console.log("🔄 Auto-switch conditions not met:", { isComplete, hasEnhancedImage: !!enhancedImageBase64 });
     }
   }, [isComplete, enhancedImageBase64]);
 

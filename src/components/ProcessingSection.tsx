@@ -196,7 +196,11 @@ export const ProcessingSection = ({ autoStart = false }: ProcessingSectionProps)
               
               if (data.type === "complete") {
                 const completeData = data as StreamCompleteData;
+                console.log("🎯 COMPLETION SIGNAL RECEIVED!");
+                console.log("📊 Complete data:", completeData);
+                
                 // CRITICAL FIX: Set completion state immediately when receiving completion signal
+                console.log("✅ Setting isComplete = true");
                 setIsComplete(true);
                 setIsProcessing(false);
                 setCurrentAgent(undefined);
@@ -208,6 +212,8 @@ export const ProcessingSection = ({ autoStart = false }: ProcessingSectionProps)
                 if (result.enhanced_image_base64) {
                   console.log("✅ Setting enhanced image:", result.enhanced_image_base64.length, "chars");
                   setEnhancedImageBase64(result.enhanced_image_base64);
+                } else {
+                  console.log("❌ No enhanced_image_base64 found!");
                 }
                 
                 // Check for both restored_text and transliterated_text
@@ -218,6 +224,8 @@ export const ProcessingSection = ({ autoStart = false }: ProcessingSectionProps)
                     segments: [{ text: restoredText, confidence: "high" }],
                     overallConfidence: result.overall_confidence || 89
                   });
+                } else {
+                  console.log("❌ No restored text found!");
                 }
                 
                 if (result.damage_hotspots) {
