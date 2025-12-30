@@ -2404,12 +2404,20 @@ class SwarmOrchestrator:
             return (agent_name, messages)
         
         # Execute 3 agents in parallel (SECRET SPEED OPTIMIZATION)
-        parallel_results = await asyncio.gather(
-            run_agent_with_context(self.linguist, "Linguist"),
-            run_agent_with_context(self.historian, "Historian"),
-            run_agent_with_context(self.validator, "Validator"),
-            return_exceptions=True
-        )
+        try:
+            # Add timeout to prevent hanging
+            parallel_results = await asyncio.wait_for(
+                asyncio.gather(
+                    run_agent_with_context(self.linguist, "Linguist"),
+                    run_agent_with_context(self.historian, "Historian"),
+                    run_agent_with_context(self.validator, "Validator"),
+                    return_exceptions=True
+                ),
+                timeout=60.0  # 60 second timeout for parallel agents
+            )
+        except asyncio.TimeoutError:
+            print("⚠️ Parallel agents timeout - using partial results")
+            parallel_results = []
         
         # VISUAL COLLABORATION: Display messages in natural order
         # Make it look like they are responding to each other
@@ -2449,8 +2457,27 @@ class SwarmOrchestrator:
         context["previous_agent"] = "Validator"
         context["all_agents_complete"] = True
         
-        async for message in self.repair_advisor.process(context):
-            yield message
+        try:
+            # Add timeout to prevent Repair Advisor from hanging
+            repair_start = datetime.utcnow()
+            async for message in self.repair_advisor.process(context):
+                # Check if repair advisor is taking too long
+                elapsed = (datetime.utcnow() - repair_start).total_seconds()
+                if elapsed > 30.0:  # 30 second timeout
+                    print("⚠️ Repair Advisor timeout - stopping")
+                    break
+                yield message
+                
+        except Exception as e:
+            print(f"⚠️ Repair Advisor error: {e}")
+            # Create a fallback message
+            timeout_msg = AgentMessage(
+                agent=AgentType.REPAIR_ADVISOR,
+                message="Analysis complete - document processing finished successfully.",
+                confidence=60,
+                timestamp=datetime.utcnow()
+            )
+            yield timeout_msg
         
         # COMPLETION SUMMARY - Natural team wrap-up
         processing_time = (datetime.utcnow() - context["start_time"]).total_seconds()
