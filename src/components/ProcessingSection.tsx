@@ -200,7 +200,26 @@ export const ProcessingSection = ({ autoStart = false }: ProcessingSectionProps)
                 setIsComplete(true);
                 setIsProcessing(false);
                 setCurrentAgent(undefined);
-                return completeData.result;
+                
+                // CRITICAL FIX: Extract all result data
+                const result = completeData.result;
+                if (result.enhanced_image_base64) {
+                  setEnhancedImageBase64(result.enhanced_image_base64);
+                }
+                if (result.restored_text) {
+                  setRestoredData({
+                    segments: [{ text: result.restored_text, confidence: "high" }],
+                    overallConfidence: result.confidence || 89
+                  });
+                }
+                if (result.damage_hotspots) {
+                  setDamageHotspots(result.damage_hotspots);
+                }
+                if (result.restoration_summary) {
+                  setRestorationSummary(result.restoration_summary);
+                }
+                
+                return result;
               } else {
                 const msgData = data as AgentMessageData;
                 setCurrentAgent(msgData.agent);
