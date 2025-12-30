@@ -3057,8 +3057,15 @@ async def resurrect_document_stream(file: UploadFile = File(...)):
                 "result": result_dict
             })
             print(f"🔍 DEBUG: About to send completion signal: type=complete")
+            
+            # CRITICAL FIX: Add small delay to ensure final message is sent
+            await asyncio.sleep(0.2)  # 200ms delay before final yield
+            
             yield f"data: {final_data}\n\n"
             print(f"🔍 DEBUG: Completion signal sent successfully!")
+            
+            # CRITICAL FIX: Add final delay to ensure message is flushed
+            await asyncio.sleep(0.1)  # 100ms delay after final yield
             
         except asyncio.TimeoutError:
             error_data = json.dumps({
