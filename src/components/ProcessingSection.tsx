@@ -184,7 +184,10 @@ export const ProcessingSection = ({ autoStart = false }: ProcessingSectionProps)
 
       while (true) {
         const { done, value } = await reader.read();
-        if (done) break;
+        if (done) {
+          console.log("📡 Stream ended without completion signal!");
+          break;
+        }
 
         const chunk = decoder.decode(value);
         const lines = chunk.split("\n");
@@ -193,6 +196,7 @@ export const ProcessingSection = ({ autoStart = false }: ProcessingSectionProps)
           if (line.startsWith("data: ")) {
             try {
               const data = JSON.parse(line.slice(6));
+              console.log("📨 Stream data received:", data.type, data.agent || "");
               
               if (data.type === "complete") {
                 const completeData = data as StreamCompleteData;
@@ -260,8 +264,15 @@ export const ProcessingSection = ({ autoStart = false }: ProcessingSectionProps)
       if ((error as Error).name === "AbortError") {
         return null;
       }
+      console.error("❌ Stream processing error:", error);
       throw error;
     }
+    
+    console.log("⚠️ Stream ended without completion signal - setting completion manually");
+    // Fallback: if stream ends without completion signal, set completion anyway
+    setIsComplete(true);
+    setIsProcessing(false);
+    setCurrentAgent(undefined);
     
     return null;
   }, []);
