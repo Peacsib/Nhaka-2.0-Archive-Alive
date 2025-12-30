@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Card } from "./ui/card";
 import { Button } from "./ui/button";
 import { Slider } from "./ui/slider";
@@ -10,6 +10,7 @@ interface ImageComparisonProps {
   enhancedImage: string; // base64 or URL
   enhancements?: string[];
   className?: string;
+  autoReveal?: boolean; // NEW: Auto-animate slider to show enhanced version
 }
 
 export const ImageComparison = ({
@@ -17,9 +18,48 @@ export const ImageComparison = ({
   enhancedImage,
   enhancements = [],
   className,
+  autoReveal = true, // Default to true for automatic reveal
 }: ImageComparisonProps) => {
-  const [sliderPosition, setSliderPosition] = useState(50);
+  const [sliderPosition, setSliderPosition] = useState(0); // Start at 0 (original)
   const [showSideBySide, setShowSideBySide] = useState(false);
+  const [hasAutoRevealed, setHasAutoRevealed] = useState(false);
+
+  // AUTO-REVEAL EFFECT: Animate slider from original (0%) to enhanced (100%) when component mounts
+  useEffect(() => {
+    if (autoReveal && !hasAutoRevealed && !showSideBySide) {
+      // Wait a moment for the component to render, then start the reveal animation
+      const timer = setTimeout(() => {
+        let currentPosition = 0;
+        const targetPosition = 100; // Show fully enhanced
+        const animationDuration = 2000; // 2 seconds
+        const frameRate = 60; // 60fps
+        const increment = (targetPosition - currentPosition) / (animationDuration / (1000 / frameRate));
+
+        const animate = () => {
+          currentPosition += increment;
+          if (currentPosition >= targetPosition) {
+            currentPosition = targetPosition;
+            setSliderPosition(currentPosition);
+            setHasAutoRevealed(true);
+            return;
+          }
+          setSliderPosition(currentPosition);
+          requestAnimationFrame(animate);
+        };
+
+        requestAnimationFrame(animate);
+      }, 800); // Wait 800ms before starting animation
+
+      return () => clearTimeout(timer);
+    }
+  }, [autoReveal, hasAutoRevealed, showSideBySide]);
+
+  // Reset auto-reveal when switching back from side-by-side
+  useEffect(() => {
+    if (showSideBySide) {
+      setHasAutoRevealed(true); // Prevent auto-reveal when switching back
+    }
+  }, [showSideBySide]);
 
   return (
     <Card className={cn("p-4 space-y-4", className)}>
@@ -130,14 +170,23 @@ export const ImageComparison = ({
           <div className="space-y-2">
             <Slider
               value={[sliderPosition]}
-              onValueChange={(value) => setSliderPosition(value[0])}
+              onValueChange={(value) => {
+                setSliderPosition(value[0]);
+                setHasAutoRevealed(true); // Stop auto-reveal if user manually adjusts
+              }}
               min={0}
               max={100}
               step={1}
               className="w-full"
             />
             <p className="text-xs text-center text-muted-foreground">
-              Drag to compare • {sliderPosition}% enhanced visible
+              {!hasAutoRevealed && autoReveal ? (
+                <span className="text-accent animate-pulse">
+                  ✨ Watch the AI restoration reveal automatically...
+                </span>
+              ) : (
+                <>Drag to compare • {sliderPosition.toFixed(0)}% enhanced visible</>
+              )}
             </p>
           </div>
         </div>
