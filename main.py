@@ -3009,6 +3009,19 @@ async def resurrect_document_stream(file: UploadFile = File(...)):
             # Get compiled result
             result = orchestrator.get_result()
             
+            # DEBUG: Check if enhanced image is present
+            print(f"🔍 DEBUG: Enhanced image in result: {bool(result.enhanced_image_base64)}")
+            if result.enhanced_image_base64:
+                print(f"🔍 DEBUG: Enhanced image length: {len(result.enhanced_image_base64)} chars")
+            else:
+                print("🔍 DEBUG: No enhanced image found in result!")
+                # Check the context directly
+                final_context = getattr(orchestrator, 'final_context', {})
+                enhanced_in_context = final_context.get("enhanced_image_base64")
+                print(f"🔍 DEBUG: Enhanced image in context: {bool(enhanced_in_context)}")
+                if enhanced_in_context:
+                    print(f"🔍 DEBUG: Context enhanced image length: {len(enhanced_in_context)} chars")
+            
             # Save to archive (with timeout)
             try:
                 archive_id = await asyncio.wait_for(
@@ -3033,12 +3046,19 @@ async def resurrect_document_stream(file: UploadFile = File(...)):
                 "enhanced_image_base64": result.enhanced_image_base64
             }
             
+            # DEBUG: Check what's being sent in completion signal
+            print(f"🔍 DEBUG: Sending completion signal with enhanced_image_base64: {bool(result_dict['enhanced_image_base64'])}")
+            if result_dict['enhanced_image_base64']:
+                print(f"🔍 DEBUG: Completion signal enhanced image length: {len(result_dict['enhanced_image_base64'])} chars")
+            
             final_data = json.dumps({
                 "type": "complete",
                 "cached": False,
                 "result": result_dict
             })
+            print(f"🔍 DEBUG: About to send completion signal: type=complete")
             yield f"data: {final_data}\n\n"
+            print(f"🔍 DEBUG: Completion signal sent successfully!")
             
         except asyncio.TimeoutError:
             error_data = json.dumps({
