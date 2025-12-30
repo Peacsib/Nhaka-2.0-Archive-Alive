@@ -648,7 +648,7 @@ export const ProcessingSection = ({ autoStart = false }: ProcessingSectionProps)
             {uploadMode === "single" && selectedFile && (
               <div className="flex flex-wrap gap-3">
                 {!isProcessing && !isComplete && (
-                  <Button onClick={() => startProcessing()} size="lg" className="gap-2">
+                  <Button onClick={() => startProcessing()} variant="hero" size="xl" className="gap-2">
                     <Play className="w-5 h-5" />
                     Start Resurrection
                   </Button>
@@ -667,9 +667,9 @@ export const ProcessingSection = ({ autoStart = false }: ProcessingSectionProps)
                   </>
                 )}
 
-                <Button onClick={resetProcessing} variant="ghost" className="gap-2">
+                <Button onClick={resetProcessing} variant="outline" className="gap-2">
                   <RotateCcw className="w-4 h-4" />
-                  Reset
+                  Retry
                 </Button>
 
                 {isComplete && (
