@@ -203,19 +203,29 @@ export const ProcessingSection = ({ autoStart = false }: ProcessingSectionProps)
                 
                 // CRITICAL FIX: Extract all result data
                 const result = completeData.result;
+                console.log("🎯 Completion data received:", result);
+                
                 if (result.enhanced_image_base64) {
+                  console.log("✅ Setting enhanced image:", result.enhanced_image_base64.length, "chars");
                   setEnhancedImageBase64(result.enhanced_image_base64);
                 }
-                if (result.restored_text) {
+                
+                // Check for both restored_text and transliterated_text
+                const restoredText = result.restored_text || result.transliterated_text;
+                if (restoredText) {
+                  console.log("✅ Setting restored text:", restoredText.length, "chars");
                   setRestoredData({
-                    segments: [{ text: result.restored_text, confidence: "high" }],
-                    overallConfidence: result.confidence || 89
+                    segments: [{ text: restoredText, confidence: "high" }],
+                    overallConfidence: result.overall_confidence || 89
                   });
                 }
+                
                 if (result.damage_hotspots) {
+                  console.log("✅ Setting damage hotspots:", result.damage_hotspots.length);
                   setDamageHotspots(result.damage_hotspots);
                 }
                 if (result.restoration_summary) {
+                  console.log("✅ Setting restoration summary");
                   setRestorationSummary(result.restoration_summary);
                 }
                 
